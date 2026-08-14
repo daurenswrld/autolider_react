@@ -1,0 +1,228 @@
+@use 'variables' as *;
+@use 'sass:color';
+
+.company-profile-page {
+    background-color: #F4F5F6;
+    padding: 30px 0 60px;
+
+    &__container {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 25px;
+        align-items: flex-start;
+
+        @media (max-width: 992px) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    &__sidebar-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    &__main {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+    }
+
+    // Title box with action buttons
+    &__title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+
+        .page-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            .btn-cancel {
+                background-color: #FFEAEA;
+                color: $primary-red;
+                font-size: 14px;
+                font-weight: 600;
+                padding: 10px 20px;
+                border-radius: 10px;
+                text-decoration: none;
+                transition: opacity 0.2s ease;
+
+                &:hover {
+                    opacity: 0.85;
+                }
+            }
+
+            .btn-save {
+                background-color: $primary-red;
+                color: $white;
+                font-size: 14px;
+                font-weight: 600;
+                padding: 10px 22px;
+                border-radius: 10px;
+                border: none;
+                cursor: pointer;
+                text-decoration: none;
+                transition: opacity 0.2s ease;
+
+                &:hover {
+                    opacity: 0.9;
+                }
+            }
+        }
+    }
+
+    // Company Avatar/Logo Box
+    .company-info-box {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding-top: 5px;
+
+        &__logo {
+            width: 84px;
+            height: 84px;
+            border-radius: 14px;
+            background-color: #FFF5F5;
+            border: 1.5px dashed #FCE5E5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: $primary-red;
+            flex-shrink: 0;
+
+            svg {
+                width: 32px;
+                height: 32px;
+            }
+        }
+
+        &__details {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+
+            .company-name {
+                font-size: 18px;
+                font-weight: 700;
+                color: #11141A;
+            }
+
+            .company-legal {
+                font-size: 14px;
+                font-weight: 500;
+                color: $primary-red;
+            }
+
+            .company-bin {
+                font-size: 13px;
+                color: #8E94A5;
+                font-weight: 400;
+            }
+        }
+
+        // Logo Upload Controls (Edit mode)
+        &__upload-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+
+            .meta-title {
+                font-size: 14px;
+                font-weight: 700;
+                color: #11141A;
+            }
+
+            .meta-hint {
+                font-size: 12px;
+                color: #9499A8;
+                font-weight: 400;
+            }
+
+            .meta-actions {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-top: 2px;
+                font-size: 13px;
+
+                .action-upload {
+                    color: $primary-red;
+                    font-weight: 700;
+                    cursor: pointer;
+                    text-decoration: none;
+
+                    &:hover {
+                        text-decoration: underline;
+                    }
+                }
+
+                .action-delete {
+                    color: #9499A8;
+                    font-weight: 500;
+                    cursor: pointer;
+                    text-decoration: none;
+
+                    &:hover {
+                        color: #555;
+                    }
+                }
+            }
+        }
+    }
+
+    // Editable Inputs inside Cards
+    .field-input,
+    .field-select {
+        background-color: #FFF5F5;
+        border: 1px solid #FCE5E5;
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #11141A;
+        font-family: inherit;
+        outline: none;
+        width: 100%;
+        box-sizing: border-box;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+        &:focus {
+            border-color: $primary-red;
+            box-shadow: 0 0 0 3px rgba(227, 6, 19, 0.1);
+        }
+    }
+
+    .field-select-wrapper {
+        position: relative;
+        width: 100%;
+
+        select {
+            appearance: none;
+            cursor: pointer;
+            padding-right: 40px;
+        }
+
+        .select-arrow {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            width: 18px;
+            height: 18px;
+            color: #4A4D57;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+    }
+}

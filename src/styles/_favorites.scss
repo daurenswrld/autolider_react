@@ -1,0 +1,112 @@
+@use 'variables' as *;
+@use 'sass:color';
+
+.favorites-page {
+    background-color: #F8F9FA;
+
+    &__main {
+        padding: 40px 0 80px;
+    }
+
+    &__header {
+        margin-bottom: 30px;
+    }
+
+    &__title {
+        font-size: 32px;
+        font-weight: 700;
+        color: $text-dark;
+    }
+
+    &__empty-box {
+        background: $white;
+        border-radius: 20px;
+        padding: 80px 40px;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        margin-bottom: 40px;
+    }
+
+    &__empty-icon {
+        width: 120px;
+        height: 120px;
+        background: #F4F5F7;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 30px;
+
+        svg {
+            width: 60px;
+            height: 60px;
+            color: #CCC;
+        }
+    }
+
+    &__empty-title {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+
+    &__empty-subtitle {
+        font-size: 15px;
+        color: #999;
+        margin-bottom: 40px;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    &__empty-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: $primary-red;
+        color: $white;
+        height: 50px;
+        padding: 0 40px;
+        border-radius: 10px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+
+        &:hover {
+            background: color.adjust($primary-red, $lightness: -5%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba($primary-red, 0.2);
+        }
+    }
+
+    &__recommendations {
+        margin-top: 20px;
+        
+        .recommend-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 30px;
+        }
+    }
+}
+
+// Reuse breadcrumbs if not already defined globally
+.breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 25px;
+    font-size: 14px;
+
+    a {
+        color: #888;
+        text-decoration: none;
+        transition: color 0.3s;
+        &:hover { color: $primary-red; }
+    }
+
+    span {
+        color: #CCC;
+        &.current { color: #555; }
+    }
+}

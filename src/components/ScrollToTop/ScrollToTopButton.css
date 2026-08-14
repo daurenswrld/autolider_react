@@ -1,0 +1,53 @@
+.scroll-to-top-widget {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #111216 0%, #e63125 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 24px rgba(230, 49, 37, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 999;
+  transition: transform 0.25s ease, opacity 0.25s ease, box-shadow 0.25s ease;
+  animation: scrollBtnAppear 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scroll-to-top-widget:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 12px 32px rgba(230, 49, 37, 0.5);
+  background: linear-gradient(135deg, #e63125 0%, #ff4d3d 100%);
+}
+
+.scroll-widget-icon {
+  transition: transform 0.2s ease;
+}
+
+.scroll-to-top-widget:hover .scroll-widget-icon {
+  transform: translateY(-2px);
+}
+
+@keyframes scrollBtnAppear {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .scroll-to-top-widget {
+    bottom: 24px;
+    right: 20px;
+    width: 42px;
+    height: 42px;
+  }
+}

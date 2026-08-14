@@ -1,0 +1,39 @@
+@use 'reset';
+@use 'variables' as *;
+@use 'header';
+@use 'hero';
+@use 'catalog';
+@use 'about';
+@use 'info';
+@use 'slider';
+@use 'footer';
+@use 'catalog_page';
+@use 'auth';
+@use 'categories';
+@use 'cart';
+@use 'checkout';
+@use 'favorites';
+@use 'product';
+@use 'profile';
+@use 'orders';
+@use 'info_delivery';
+@use 'company_profile';
+@use 'my_products';
+@use 'product_edit';
+@use 'my_sales';
+@use 'seller_order_detail';
+@use 'analytics';
+
+.container {
+    max-width: $container-width;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+body {
+    font-family: $font-main;
+    font-size: 16px;
+    color: $text-dark;
+    background-color: $white;
+    -webkit-font-smoothing: antialiased;
+}

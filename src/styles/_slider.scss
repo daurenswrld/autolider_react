@@ -1,0 +1,55 @@
+@use 'variables' as *;
+
+.promo-slider {
+    padding: 60px 0 30px;
+    width: 100%;
+    overflow: hidden;
+
+    .swiper {
+        width: 100%;
+        padding: 20px 0;
+    }
+
+    .swiper-slide {
+        width: auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: transform 0.3s ease;
+        cursor: pointer;
+
+        img {
+            display: block;
+            width: 100%;
+            max-width: 900px;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        &-active {
+            transform: scale(1.02);
+        }
+    }
+}
+@media (max-width: 992px) {
+    .promo-slider {
+        padding: 40px 0 20px;
+        
+        .swiper-slide {
+            img {
+                max-width: calc(100vw - 60px);
+            }
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    .promo-slider {
+        .swiper-slide {
+            img {
+                max-width: calc(100vw - 30px);
+            }
+        }
+    }
+}

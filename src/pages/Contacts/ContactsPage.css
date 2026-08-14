@@ -1,0 +1,566 @@
+/* Contacts Page Styles - Pixel-Perfect Left Alignment Architecture */
+.contacts-page {
+  width: 100%;
+  background-color: #ffffff;
+  font-family: 'Raleway', sans-serif;
+  color: #262626;
+  overflow-x: hidden;
+  text-align: left;
+}
+
+.contacts-container {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 24px;
+  box-sizing: border-box;
+}
+
+.highlight-red {
+  color: #e63125;
+}
+
+/* ==========================================================================
+   1. HERO HEADER
+   ========================================================================== */
+.contacts-hero-section {
+  position: relative;
+  background-color: #111216;
+  background-image: radial-gradient(circle at 80% 20%, rgba(230, 49, 37, 0.15) 0%, transparent 60%),
+                    linear-gradient(180deg, #121318 0%, #1a1c24 100%);
+  padding: 48px 0 56px;
+  color: #ffffff;
+  border-bottom: 1px solid #282a36;
+  text-align: left;
+}
+
+.contacts-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: url('/assets/img/hero_bg.webp') center/cover no-repeat;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+.contacts-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #9999a0;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.contacts-breadcrumbs a {
+  color: #c0c0c8;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.contacts-breadcrumbs a:hover {
+  color: #ffffff;
+}
+
+.contacts-breadcrumbs .current {
+  color: #e63125;
+  font-weight: 500;
+}
+
+.contacts-hero-title {
+  font-size: 44px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 12px 0;
+  letter-spacing: -0.5px;
+  text-align: left;
+}
+
+.contacts-hero-subtitle {
+  font-size: 16px;
+  color: #bcbcc5;
+  margin: 0;
+  font-weight: 300;
+  text-align: left;
+}
+
+/* ==========================================================================
+   2. MAIN CONTENT GRID
+   ========================================================================== */
+.contacts-main-section {
+  padding: 64px 0 80px;
+  background-color: #ffffff;
+  text-align: left;
+}
+
+.contacts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: flex-start;
+}
+
+.contacts-info-column, .contacts-requisites-column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  width: 100%;
+}
+
+.section-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #e63125;
+  letter-spacing: 1.2px;
+  margin-bottom: 8px;
+  display: block;
+  text-align: left;
+}
+
+.section-heading {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111216;
+  margin: 0 0 28px 0;
+  text-align: left;
+}
+
+/* Left Column Info Cards */
+.info-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 28px;
+  width: 100%;
+}
+
+.info-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  border: 1px solid #eef0f4;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+  text-align: left;
+}
+
+.info-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(230, 49, 37, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.card-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: rgba(230, 49, 37, 0.08);
+  color: #e63125;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.card-label {
+  font-size: 12px;
+  color: #777780;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  text-align: left;
+}
+
+.card-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111216;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.card-value.link {
+  color: #111216;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.card-value.link:hover {
+  color: #e63125;
+}
+
+/* WhatsApp Banner */
+.whatsapp-banner {
+  background: linear-gradient(135deg, #111216 0%, #1e202a 100%);
+  border-radius: 14px;
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  color: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.wa-text-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
+}
+
+.wa-icon {
+  color: #25d366;
+  flex-shrink: 0;
+}
+
+.wa-title {
+  font-size: 16px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.wa-desc {
+  font-size: 13px;
+  color: #a0a0b0;
+  margin-top: 2px;
+  text-align: left;
+}
+
+.btn-wa {
+  background: #25d366;
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.btn-wa:hover {
+  background: #20bd5a;
+  transform: translateY(-1px);
+}
+
+/* Right Column: Requisites Card */
+.requisites-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px;
+  border: 1px solid #eef0f4;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+  margin-bottom: 28px;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.requisites-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eef0f4;
+  text-align: left;
+}
+
+.req-header-icon {
+  color: #e63125;
+  flex-shrink: 0;
+}
+
+.req-company-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #111216;
+  margin: 0;
+  text-align: left;
+}
+
+.req-company-subtitle {
+  font-size: 13px;
+  color: #777782;
+  text-align: left;
+}
+
+.requisites-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.req-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8f9fa;
+  padding: 14px 18px;
+  border-radius: 10px;
+  border: 1px solid #edf0f5;
+  text-align: left;
+}
+
+.req-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.req-label {
+  font-size: 12px;
+  color: #777782;
+  font-weight: 600;
+  text-align: left;
+}
+
+.req-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111216;
+  text-align: left;
+}
+
+.font-mono {
+  font-family: monospace;
+  letter-spacing: 0.5px;
+}
+
+.btn-copy {
+  background: #ffffff;
+  border: 1px solid #dcdfe6;
+  border-radius: 6px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555560;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-copy:hover {
+  background: #e63125;
+  color: #ffffff;
+  border-color: #e63125;
+}
+
+.copied {
+  color: #25d366;
+}
+
+/* Feedback Form Card */
+.feedback-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 28px 32px;
+  border: 1px solid #eef0f4;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.feedback-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111216;
+  margin: 0 0 16px 0;
+  text-align: left;
+}
+
+.feedback-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.feedback-input, .feedback-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #dcdee6;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.feedback-input:focus, .feedback-textarea:focus {
+  border-color: #e63125;
+}
+
+.btn-send-message {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(90deg, #540b08 0%, #e63125 100%);
+  color: #ffffff;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.btn-send-message:hover {
+  opacity: 0.92;
+}
+
+.feedback-success {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #eefbf3;
+  color: #1e8e49;
+  padding: 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  text-align: left;
+}
+
+/* ==========================================================================
+   3. SWIPER SHOWROOM & LOGISTICS SLIDER SECTION ("и слайдер")
+   ========================================================================== */
+.contacts-slider-section {
+  padding: 72px 0 96px;
+  background-color: #f8f9fa;
+  border-top: 1px solid #eef0f4;
+  text-align: left;
+}
+
+.section-header-left {
+  max-width: 720px;
+  margin: 0 0 32px 0;
+  text-align: left;
+}
+
+.section-title-dark {
+  font-size: 32px;
+  font-weight: 700;
+  color: #111216;
+  margin: 6px 0 0 0;
+  text-align: left;
+}
+
+.contacts-swiper-wrapper {
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+  width: 100%;
+}
+
+.facility-slide-card {
+  position: relative;
+  width: 100%;
+  height: 480px;
+  background-color: #111216;
+}
+
+.facility-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.facility-caption-overlay {
+  position: absolute;
+  bottom: 0;
+  inset-x: 0;
+  background: linear-gradient(0deg, rgba(17, 18, 22, 0.95) 0%, rgba(17, 18, 22, 0) 100%);
+  padding: 40px 48px 48px;
+  color: #ffffff;
+  text-align: left;
+}
+
+.facility-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 6px 0;
+  text-align: left;
+}
+
+.facility-sub {
+  font-size: 15px;
+  color: #bcbcc5;
+  margin: 0;
+  text-align: left;
+}
+
+/* Swiper Controls Customization */
+.contacts-swiper-wrapper .swiper-button-next,
+.contacts-swiper-wrapper .swiper-button-prev {
+  color: #ffffff;
+  background: rgba(17, 18, 22, 0.6);
+  backdrop-filter: blur(8px);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+.contacts-swiper-wrapper .swiper-button-next:after,
+.contacts-swiper-wrapper .swiper-button-prev:after {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.contacts-swiper-wrapper .swiper-pagination-bullet-active {
+  background: #e63125 !important;
+}
+
+/* RESPONSIVE BREAKPOINTS */
+@media (max-width: 1024px) {
+  .contacts-grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+}
+
+@media (max-width: 640px) {
+  .contacts-hero-title {
+    font-size: 32px;
+  }
+  .whatsapp-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .btn-wa {
+    width: 100%;
+    text-align: center;
+  }
+  .facility-slide-card {
+    height: 320px;
+  }
+  .facility-caption-overlay {
+    padding: 24px 20px 32px;
+  }
+}

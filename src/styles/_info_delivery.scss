@@ -1,0 +1,289 @@
+@use 'variables' as *;
+@use 'sass:color';
+
+.info-delivery-page {
+    background-color: #F4F5F6;
+    padding: 30px 0 60px;
+
+    &__container {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 25px;
+        align-items: flex-start;
+
+        @media (max-width: 992px) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    &__main {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+    }
+
+    // Title Section
+    &__title-box {
+        margin-bottom: 5px;
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #11141A;
+            margin-bottom: 6px;
+            letter-spacing: -0.3px;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: #8E94A5;
+            font-weight: 400;
+        }
+    }
+
+    // 2x2 Grid
+    &__grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+
+        @media (max-width: 992px) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    // Info Card
+    .info-card {
+        background: $white;
+        border-radius: 20px;
+        padding: 32px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+
+        & > * {
+            width: 100%;
+        }
+
+        &__header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 22px;
+
+            .card-icon {
+                width: 26px;
+                height: 26px;
+                color: $primary-red;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+
+                svg {
+                    width: 24px;
+                    height: 24px;
+                }
+            }
+
+            .card-title {
+                font-size: 20px;
+                font-weight: 700;
+                color: #11141A;
+            }
+        }
+
+        &__text {
+            font-size: 14px;
+            color: #4A4D57;
+            font-weight: 400;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        &__subhead {
+            font-size: 15px;
+            font-weight: 600;
+            color: #11141A;
+            margin-bottom: 10px;
+        }
+
+        // List with checkmarks
+        &__check-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+
+            li {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-size: 14px;
+                font-weight: 500;
+                color: #2D3139;
+
+                .check-icon {
+                    width: 20px;
+                    height: 20px;
+                    color: $primary-red;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+
+                    svg {
+                        width: 20px;
+                        height: 20px;
+                    }
+                }
+            }
+        }
+
+        // Table for Delivery Times
+        &__table {
+            width: 100%;
+            border-collapse: collapse;
+
+            th {
+                text-align: left;
+                font-size: 13px;
+                font-weight: 500;
+                color: #9499A8;
+                padding-bottom: 14px;
+                border-bottom: 1px solid #F0F1F4;
+
+                &:last-child {
+                    text-align: right;
+                }
+            }
+
+            td {
+                font-size: 14px;
+                padding: 13px 0;
+                color: #2D3139;
+                border-bottom: 1px solid #F0F1F4;
+
+                &:first-child {
+                    font-weight: 500;
+                }
+
+                &:last-child {
+                    text-align: right;
+                    font-weight: 600;
+                    color: #11141A;
+                }
+            }
+
+            tr:last-child td {
+                border-bottom: none;
+                padding-bottom: 0;
+            }
+        }
+
+        // Stats Callouts (Warranty Card)
+        &__stats {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid #F0F1F4;
+
+            .stat-item {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+
+                .stat-value {
+                    font-size: 32px;
+                    font-weight: 700;
+                    color: $primary-red;
+                    line-height: 1;
+                }
+
+                .stat-label {
+                    font-size: 11px;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    color: #9499A8;
+                    letter-spacing: 0.5px;
+                }
+            }
+
+            .stat-divider {
+                width: 1px;
+                height: 40px;
+                background-color: #F0F1F4;
+            }
+        }
+
+        // Form Fields (Contacts Card)
+        &__fields {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+
+            .field-group {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+
+                .field-label {
+                    font-size: 11px;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    color: #9499A8;
+                    letter-spacing: 0.5px;
+                }
+
+                .field-box {
+                    background-color: #FFF5F5;
+                    border: 1px solid #FCE5E5;
+                    border-radius: 12px;
+                    padding: 12px 16px;
+                    font-size: 14px;
+                    font-weight: 500;
+                    color: #2D3139;
+                    min-height: 48px;
+                    display: flex;
+                    align-items: center;
+                    flex: 1;
+
+                    a {
+                        color: #0091FF;
+                        text-decoration: underline;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        display: block;
+                        max-width: 100%;
+
+                        &:hover {
+                            opacity: 0.8;
+                        }
+                    }
+                }
+            }
+
+            .fields-row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+                align-items: stretch;
+
+                .field-group {
+                    height: 100%;
+                }
+
+                @media (max-width: 480px) {
+                    grid-template-columns: 1fr;
+                }
+            }
+        }
+    }
+}

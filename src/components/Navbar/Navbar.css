@@ -1,0 +1,245 @@
+.autolider-navbar {
+  background-color: #121214;
+  color: #ffffff;
+  width: 100%;
+  border-bottom: 1px solid #222226;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  font-family: 'Raleway', sans-serif;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.navbar-container {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 6px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Logo */
+.navbar-logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.navbar-logo {
+  height: 68px;
+  width: auto;
+  object-fit: contain;
+  transition: transform 0.2s ease;
+}
+
+.navbar-logo:hover {
+  transform: scale(1.02);
+}
+
+/* Nav Links Center */
+.navbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.navbar-link {
+  color: #f1f1f1;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 400;
+  padding: 6px 4px;
+  transition: color 0.2s ease;
+  white-space: nowrap;
+}
+
+.navbar-link:hover,
+.navbar-link.active {
+  color: #ea2427;
+}
+
+.navbar-divider {
+  color: #4a4a52;
+  font-size: 14px;
+  font-weight: 300;
+  margin: 0 16px;
+  user-select: none;
+}
+
+/* Actions Right */
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.navbar-action-btn {
+  background: none;
+  border: none;
+  color: #e0e0e0;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 2px 4px;
+  transition: color 0.2s ease, transform 0.15s ease;
+}
+
+.navbar-action-btn:hover {
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.navbar-icon {
+  color: #e0e0e0;
+  transition: color 0.2s ease;
+}
+
+.navbar-action-btn:hover .navbar-icon {
+  color: #ea2427;
+}
+
+.navbar-action-label {
+  font-size: 12px;
+  font-weight: 400;
+  color: #cccccc;
+  line-height: 1.1;
+}
+
+.navbar-action-btn:hover .navbar-action-label {
+  color: #ffffff;
+}
+
+/* Relative icon wrapper for badge / red dot */
+.icon-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Red notification dot on Profile icon */
+.profile-notification-dot {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 9px;
+  height: 9px;
+  background-color: #ea2427;
+  border-radius: 50%;
+  border: 1.5px solid #121214;
+}
+
+/* Cart Badge Count */
+.cart-badge-count {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  background-color: #ea2427;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 1.5px solid #121214;
+}
+
+/* Expandable search bar */
+.navbar-search-bar {
+  background-color: #1a1a1d;
+  border-top: 1px solid #2a2a30;
+  padding: 12px 24px;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.search-bar-inner {
+  max-width: 1320px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #242428;
+  border-radius: 8px;
+  padding: 8px 16px;
+  border: 1px solid #36363d;
+}
+
+.search-input-icon {
+  color: #888894;
+}
+
+.search-bar-inner input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.search-bar-inner input::placeholder {
+  color: #777785;
+}
+
+.search-close-btn {
+  background: none;
+  border: none;
+  color: #888894;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.2s, background 0.2s;
+}
+
+.search-close-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 900px) {
+  .navbar-container {
+    padding: 10px 16px;
+  }
+  .navbar-divider {
+    margin: 0 8px;
+  }
+  .navbar-link {
+    font-size: 13px;
+  }
+  .navbar-actions {
+    gap: 18px;
+  }
+}
+
+@media (max-width: 720px) {
+  .navbar-nav {
+    display: none; /* Mobile menu can be added when drawer design is sent */
+  }
+  .navbar-logo {
+    height: 40px;
+  }
+}

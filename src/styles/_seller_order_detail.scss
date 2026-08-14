@@ -1,0 +1,468 @@
+@use "variables" as *;
+
+.seller-order-detail-page {
+  padding: 30px 0 60px;
+  background-color: $bg-light;
+}
+
+// Back to orders link above sidebar
+.back-to-orders {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: $primary-red;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  margin-bottom: 16px;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+// Header Row with Title and Download Button
+.seller-order-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+
+  @media (max-width: 576px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .page-title {
+    font-size: 28px;
+    font-weight: 800;
+    color: $text-dark;
+    margin: 0;
+  }
+
+  .btn-download-waybill {
+    background-color: $primary-red;
+    color: $white;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 12px 24px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+}
+
+// Top 3 Info Cards Grid
+.order-info-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+
+  @media (max-width: 992px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.order-detail-card {
+  background: $white;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  border: 1px solid #f0f0f2;
+
+  .card-header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    color: $text-dark;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f3f3f5;
+
+    .header-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background-color: $primary-red;
+      color: $white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      svg {
+        width: 14px;
+        height: 14px;
+      }
+    }
+  }
+
+  // Customer Avatar / Logo Box
+  .customer-logo-box {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+
+    .logo-thumb {
+      width: 56px;
+      height: 56px;
+      border-radius: 10px;
+      border: 1.5px dashed #ffb4b4;
+      background-color: #fff8f8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      svg {
+        width: 20px;
+        height: 20px;
+        color: $primary-red;
+      }
+    }
+
+    .logo-meta {
+      .meta-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: $text-dark;
+      }
+
+      .meta-sub {
+        font-size: 11px;
+        color: #999999;
+        margin-top: 2px;
+      }
+
+      .meta-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 4px;
+        font-size: 12px;
+
+        .action-upload {
+          color: $primary-red;
+          font-weight: 600;
+          text-decoration: none;
+        }
+
+        .action-delete {
+          color: #8c93a3;
+          text-decoration: none;
+        }
+      }
+    }
+  }
+
+  // Input fields inside card
+  .info-field-group {
+    margin-bottom: 16px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .field-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #8c93a3;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .field-box {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 10px;
+      background-color: #fff6f6;
+      border: 1px solid #ffebeb;
+      font-size: 13px;
+      color: #333333;
+      font-weight: 500;
+      box-sizing: border-box;
+
+      &--badge {
+        background-color: #8fd6bb;
+        border-color: #8fd6bb;
+        color: #113626;
+        font-weight: 600;
+        text-align: center;
+      }
+    }
+  }
+
+  // Timeline / Tracking History List
+  .tracking-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: relative;
+    padding-left: 12px;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 14px;
+      bottom: 14px;
+      left: 23px;
+      width: 2px;
+      background-color: #f0f0f2;
+      z-index: 1;
+    }
+
+    .timeline-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      position: relative;
+      z-index: 2;
+
+      .timeline-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background-color: $primary-red;
+        color: $white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+
+        svg {
+          width: 12px;
+          height: 12px;
+        }
+
+        &--active {
+          background-color: #fff0f0;
+          border: 2px solid $primary-red;
+          color: $primary-red;
+        }
+
+        &--pending {
+          background-color: #f5f5f7;
+          color: #cccccc;
+        }
+      }
+
+      .timeline-content {
+        .step-title {
+          font-size: 13px;
+          font-weight: 700;
+          color: $text-dark;
+
+          &--pending {
+            color: #aaaaaa;
+            font-weight: 500;
+          }
+        }
+
+        .step-time {
+          font-size: 11px;
+          color: #8c93a3;
+          margin-top: 2px;
+        }
+
+        .step-subtext {
+          font-size: 11px;
+          color: #666666;
+          margin-top: 4px;
+          line-height: 1.3;
+        }
+      }
+    }
+  }
+}
+
+// Products Table Card ("Топ товары")
+.order-products-card {
+  background: $white;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border: 1px solid #f0f0f2;
+  margin-bottom: 24px;
+
+  .card-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: $text-dark;
+    margin-bottom: 20px;
+  }
+
+  .products-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .products-table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th {
+      text-align: left;
+      font-size: 12px;
+      font-weight: 500;
+      color: #8c93a3;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #f0f0f2;
+
+      &:nth-child(2),
+      &:nth-child(3),
+      &:nth-child(4),
+      &:nth-child(5),
+      &:nth-child(6) {
+        text-align: center;
+      }
+
+      &:last-child {
+        text-align: right;
+      }
+    }
+
+    td {
+      padding: 16px 0;
+      border-bottom: 1px solid #f8f8fa;
+      font-size: 13px;
+      color: $text-dark;
+      vertical-align: middle;
+
+      &:nth-child(2),
+      &:nth-child(3),
+      &:nth-child(4),
+      &:nth-child(5) {
+        text-align: center;
+      }
+
+      &:last-child {
+        text-align: right;
+        font-weight: 700;
+        color: #27ae60;
+      }
+    }
+
+    .product-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .product-thumb {
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        border: 1.5px dashed #ffb4b4;
+        background-color: #fff8f8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+
+        svg {
+          width: 18px;
+          height: 18px;
+          color: $primary-red;
+        }
+      }
+
+      .product-name {
+        font-weight: 600;
+        color: $text-dark;
+      }
+    }
+
+    .sku-code {
+      font-weight: 700;
+      color: $text-dark;
+    }
+
+    .qty-val {
+      color: $text-dark;
+    }
+
+    .price-val {
+      font-weight: 600;
+      color: $text-dark;
+    }
+  }
+}
+
+// Order Total Summary Card ("Ваш заказ")
+.order-summary-card {
+  background: $white;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border: 1px solid #f0f0f2;
+
+  .card-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: $text-dark;
+    margin-bottom: 20px;
+  }
+
+  .summary-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+
+    .summary-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 14px;
+      color: #666666;
+
+      .row-val {
+        font-weight: 600;
+        color: $text-dark;
+
+        &--green {
+          color: #27ae60;
+        }
+      }
+    }
+  }
+
+  .summary-divider {
+    height: 1px;
+    background-color: #f0f0f2;
+    margin-bottom: 20px;
+  }
+
+  .total-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .total-label {
+      font-size: 20px;
+      font-weight: 700;
+      color: $primary-red;
+    }
+
+    .total-price {
+      font-size: 26px;
+      font-weight: 800;
+      color: $primary-red;
+    }
+  }
+}

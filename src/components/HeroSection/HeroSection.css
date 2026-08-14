@@ -1,0 +1,843 @@
+.autolider-hero-section {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #dce0e6 0%, #e8ebf0 50%, #dfe3e8 100%);
+  width: 100%;
+  padding: 28px 0 0px;
+  font-family: "Raleway", sans-serif;
+  box-sizing: border-box;
+}
+
+/* Background Blurred Clouds Texture Layer */
+.hero-bg-clouds {
+  position: absolute;
+  width: 1440px;
+  height: 960px;
+  left: calc(50% - 1440px / 2 + 2px);
+  top: -297px;
+  background-image: url("/assets/img/flufy.jpg");
+  background-size: cover;
+  background-position: center;
+  filter: blur(50px);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-container {
+  position: relative;
+  z-index: 1;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 24px;
+  padding-bottom: 20px;
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+/* Sidebar Left */
+.hero-sidebar {
+  width: 210px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Sidebar Top Box (Brands Card from SVG design) */
+.sidebar-brands-card {
+  width: 210px;
+  background: rgba(255, 255, 255, 0.49);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 16px;
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.12),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.12),
+    0 4px 20px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.sidebar-brands-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-brands-list li {
+  border-bottom: 1px solid rgba(206, 205, 213, 0.7);
+}
+
+.sidebar-brands-list li:last-child {
+  border-bottom: none;
+}
+
+.sidebar-brand-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 16px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.sidebar-brand-item:hover {
+  background: rgba(255, 255, 255, 0.4);
+  padding-left: 20px;
+}
+
+.sidebar-brand-item:hover span {
+  color: #ea2427;
+}
+
+.sidebar-brand-item span {
+  font-family: "Raleway", sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 114%;
+  color: #262626;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s ease;
+}
+
+.sidebar-brand-logo {
+  width: 29px;
+  height: 29px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1));
+}
+
+/* Sidebar QR Box */
+.sidebar-qr-card {
+  width: 210px;
+  background: rgba(255, 255, 255, 0.49);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 16px;
+  padding: 12px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.12),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.12),
+    0 4px 20px rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+}
+
+.qr-code-wrapper {
+  width: 186px;
+  height: 186px;
+  background: #ffffff;
+  padding: 10px;
+  border-radius: 12px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.qr-code-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.qr-divider {
+  width: calc(100% + 24px);
+  height: 1px;
+  background-color: rgba(206, 205, 213, 0.7);
+  margin: 14px -12px 12px;
+}
+
+.qr-contact-btn {
+  color: #262626;
+  text-decoration: none;
+  font-family: "Raleway", sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 114%;
+  text-align: center;
+  transition: color 0.2s ease;
+}
+
+.qr-contact-btn:hover {
+  color: #ea2427;
+}
+
+/* Right Main Content Area */
+.hero-main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+/* Top Banner Section (Floating on hero canvas) */
+.hero-banner-content {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0 10px 0;
+  min-height: 220px;
+}
+
+.banner-text-content {
+  z-index: 2;
+  max-width: 520px;
+  text-align: left;
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.hero-title-wrapper {
+  margin: 0 0 16px 0;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.hero-title-svg {
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  display: block;
+}
+
+.hero-subtitle {
+  font-family: "Raleway", sans-serif;
+  font-size: 22px;
+  font-weight: 400;
+  color: #262626;
+  text-align: left;
+  margin: 0 0 16px 0;
+  padding: 0;
+}
+
+/* SVG divider line ABOVE logos strip */
+.hero-strip-divider {
+  width: 100%;
+  max-width: 476px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.hero-strip-divider svg {
+  width: 100%;
+  max-width: 476px;
+  height: 4px;
+  display: block;
+}
+
+/* Chinese Brands Logos Strip */
+.hero-brands-strip {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.strip-brand-img {
+  max-height: 35px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+/* Buttons Row */
+.hero-buttons-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.btn-primary-red {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 28px;
+  gap: 10px;
+  width: auto;
+  max-width: 100%;
+  min-height: 48px;
+  background: linear-gradient(90deg, #540b08 0%, #e63125 100%);
+  border: 1px solid #770000;
+  box-shadow:
+    0px 9px 6px rgba(0, 0, 0, 0.05),
+    0px 4px 4px rgba(0, 0, 0, 0.09),
+    0px 1px 2px rgba(0, 0, 0, 0.1),
+    0px 17px 7px rgba(0, 0, 0, 0.01);
+  border-radius: 8px;
+  color: #ffffff;
+  font-family: "Raleway", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  letter-spacing: 0.6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary-red:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
+.btn-secondary-white {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 28px;
+  gap: 10px;
+  width: auto;
+  max-width: 100%;
+  min-height: 48px;
+  background: linear-gradient(90deg, #e2e2ea 0%, #ffffff 100%);
+  border: 1px solid #efefef;
+  box-shadow:
+    0px 17px 7px rgba(0, 0, 0, 0.01),
+    0px 9px 6px rgba(0, 0, 0, 0.05),
+    0px 4px 4px rgba(0, 0, 0, 0.09),
+    0px 1px 2px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  color: #262626;
+  font-family: "Raleway", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  letter-spacing: 0.6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary-white:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.98);
+}
+
+/* SUV Car Image */
+.banner-car-wrapper {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  max-width: 520px;
+}
+
+.banner-car-image {
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.15));
+}
+
+/* Middle Catalog Section */
+.hero-catalog-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.49);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.12),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.12),
+    0 4px 20px rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+}
+
+.catalog-section-title {
+  font-family: "Raleway", sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #262626;
+  margin: 0;
+  text-align: left;
+  align-self: flex-start;
+}
+
+/* 5 Column Grid */
+.catalog-brands-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+}
+
+.brand-grid-card {
+  background: rgba(244, 244, 246, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 12px;
+  padding: 22px 14px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 4px 14px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+  min-height: 110px;
+  box-sizing: border-box;
+}
+
+.brand-grid-card:hover {
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 8px 24px rgba(0, 0, 0, 0.07);
+}
+
+.brand-logo-img {
+  max-height: 38px;
+  width: auto;
+  object-fit: contain;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.05));
+}
+
+.brand-name-label {
+  font-family: "Raleway", sans-serif;
+  font-size: 17px;
+  font-weight: 300;
+  color: #262626;
+  letter-spacing: 0.8px;
+}
+
+/* Bottom Benefits Strip Bar  */
+.hero-benefits-bar {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px 40px 16px 16px;
+  gap: 16px;
+  min-height: 78px;
+  background: linear-gradient(
+    96.05deg,
+    #e8e8e8 0%,
+    rgba(255, 255, 255, 0.468927) 53.11%,
+    rgba(159, 159, 159, 0) 100%
+  );
+  border-radius: 0px;
+  box-sizing: border-box;
+  margin-top: 14px;
+}
+
+.benefit-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.benefit-icon-img {
+  height: 42px;
+  width: auto;
+  object-fit: contain;
+  margin-top: 2px;
+}
+
+.benefit-text-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.benefit-title {
+  font-family: "Raleway", sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  color: #262626;
+  text-align: left;
+  line-height: 1.2;
+}
+
+.benefit-subtitle {
+  font-family: "Raleway", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: #8e8e93;
+  text-align: left;
+  line-height: 1.2;
+}
+
+/* Frame 111 White Section Wrapper */
+.autolider-white-section {
+  width: 100%;
+  background: #ffffff;
+  box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.25);
+  padding: 40px 0px 60px;
+  position: relative;
+  isolation: isolate;
+  z-index: 10;
+}
+
+/* Home Sections Container (About & Accessories) */
+.home-sections-container {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+  box-sizing: border-box;
+}
+
+/* About & AD Grid */
+.about-ad-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 32px;
+  align-items: center;
+}
+
+.about-company-card {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-radius: 0;
+  border: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-shadow: none;
+  box-sizing: border-box;
+}
+
+.section-title-about {
+  font-family: "Raleway", sans-serif;
+  font-size: 34px;
+  font-weight: 400;
+  color: #262626;
+  margin: 0 0 16px 0;
+  text-align: left;
+}
+
+.about-text {
+  font-family: "Raleway", sans-serif;
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1.5;
+  color: #262626;
+  margin: 0 0 12px 0;
+  text-align: left;
+}
+
+/* Frame 94 Button */
+.btn-about-red {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 32px;
+  gap: 10px;
+  width: auto;
+  max-width: 100%;
+  min-height: 48px;
+  background: linear-gradient(90deg, #540b08 0%, #e63125 100%);
+  border: 1px solid #770000;
+  box-shadow:
+    0px 17px 7px rgba(0, 0, 0, 0.01),
+    0px 9px 6px rgba(0, 0, 0, 0.05),
+    0px 4px 4px rgba(0, 0, 0, 0.09),
+    0px 1px 2px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  color: #ffffff;
+  font-family: "Raleway", sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 23px;
+  text-decoration: none;
+  margin-top: 16px;
+  transition: all 0.2s ease;
+}
+
+.btn-about-red:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
+/* AD Banner Card with Swiper.js */
+.ad-banner-card {
+  position: relative;
+  background: rgba(235, 237, 240, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 12px;
+  overflow: hidden;
+  min-height: 280px;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.ad-swiper {
+  width: 100%;
+  height: 100%;
+  padding: 32px 36px 40px;
+  box-sizing: border-box;
+}
+
+.ad-slide-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* Swiper Pagination Styling matching Figma red dots */
+.ad-swiper .swiper-pagination-bullets {
+  bottom: 20px !important;
+  left: 36px !important;
+  text-align: left !important;
+  width: auto !important;
+  z-index: 10;
+}
+
+.ad-swiper .swiper-pagination-bullet {
+  width: 8px;
+  height: 8px;
+  background: #d4d4d8;
+  opacity: 1;
+  margin: 0 4px !important;
+  transition: all 0.2s ease;
+}
+
+.ad-swiper .swiper-pagination-bullet-active {
+  background: #e7241f;
+  width: 8px;
+  height: 8px;
+}
+
+.ad-content {
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 270px;
+}
+
+.ad-title {
+  font-family: "Raleway", sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+  color: #262626;
+  line-height: 1.25;
+  margin: 0 0 8px 0;
+  text-align: left;
+}
+
+.ad-subtitle {
+  font-family: "Raleway", sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: #555555;
+  margin: 0 0 24px 0;
+  text-align: left;
+}
+
+.btn-ad-red {
+  background: linear-gradient(90deg, #540b08 0%, #e63125 100%);
+  border: 1px solid #770000;
+  box-shadow:
+    0px 9px 6px rgba(0, 0, 0, 0.05),
+    0px 4px 4px rgba(0, 0, 0, 0.09),
+    0px 1px 2px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 14px 32px;
+  color: #ffffff;
+  font-family: "Raleway", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  width: auto;
+  max-width: 100%;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  margin-bottom: 24px;
+  transition: all 0.2s ease;
+}
+
+.btn-ad-red:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
+.ad-dots {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.ad-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d4d4d8;
+  transition: all 0.2s ease;
+}
+
+.ad-dots .dot.active {
+  background: #e7241f;
+  width: 8px;
+  height: 8px;
+}
+
+.ad-car-image {
+  position: absolute;
+  right: 0;
+  bottom: 10px;
+  height: 84%;
+  max-height: 250px;
+  object-fit: contain;
+  z-index: 1;
+  pointer-events: none;
+}
+
+
+
+/* Modal Styling */
+.vin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.vin-modal-content {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+.vin-modal-content h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.vin-modal-content p {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.vin-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #d0d2d8;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  margin-bottom: 20px;
+  box-sizing: border-box;
+}
+
+.vin-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+/* Responsive Styles */
+@media (max-width: 1100px) {
+  .catalog-brands-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .hero-container {
+    flex-direction: column;
+  }
+  .hero-sidebar {
+    width: 100%;
+    flex-direction: row;
+  }
+  .sidebar-brands-card {
+    flex: 1;
+  }
+  .sidebar-qr-card {
+    display: none;
+  }
+  .catalog-brands-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .hero-benefits-bar {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .accessories-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  .ad-banner-card {
+    min-height: auto;
+    padding: 24px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .ad-car-image {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    max-height: 180px;
+    width: 100%;
+    margin-top: 16px;
+    align-self: center;
+  }
+  .btn-about-red {
+    width: 100%;
+    font-size: 16px;
+    padding: 12px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .accessories-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}

@@ -1,0 +1,575 @@
+@use 'variables' as *;
+@use 'sass:color';
+
+.profile-page {
+    background-color: #F4F5F6;
+    padding: 30px 0 60px;
+
+    &__container {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 25px;
+        align-items: flex-start;
+
+        @media (max-width: 992px) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    // Left Sidebar
+    &__sidebar {
+        background: $white;
+        border-radius: 20px;
+        padding: 30px 24px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    }
+
+    &__user-info {
+        position: relative;
+        padding-bottom: 25px;
+        margin-bottom: 25px;
+        border-bottom: 1px solid #F0F0F0;
+
+        .user-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: $text-dark;
+            margin-bottom: 6px;
+        }
+
+        .user-phone {
+            font-size: 14px;
+            font-weight: 600;
+            color: $primary-red;
+        }
+
+        .edit-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            transition: color 0.2s ease;
+
+            &:hover {
+                color: $primary-red;
+            }
+
+            svg {
+                width: 18px;
+                height: 18px;
+            }
+        }
+    }
+
+    &__nav-group {
+        margin-bottom: 25px;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+
+        .group-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #999999;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .nav-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+
+            li {
+                margin-bottom: 6px;
+
+                &:last-child {
+                    margin-bottom: 0;
+                }
+            }
+
+            a {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px 14px;
+                border-radius: 10px;
+                color: $text-dark;
+                font-size: 14px;
+                font-weight: 500;
+                text-decoration: none;
+                transition: all 0.2s ease;
+
+                &:hover, &.active {
+                    background-color: #FFF2F2;
+                    color: $primary-red;
+                }
+            }
+        }
+    }
+
+    &__logout {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 14px;
+        border-radius: 10px;
+        color: $primary-red;
+        font-size: 15px;
+        font-weight: 700;
+        text-decoration: none;
+        margin-top: 15px;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+            background-color: #FFF2F2;
+        }
+
+        svg {
+            width: 18px;
+            height: 18px;
+        }
+    }
+
+    // Right Content
+    &__main {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    // Stat Cards
+    &__stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+
+        @media (max-width: 768px) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    &__stat-card {
+        background: $white;
+        border-radius: 16px;
+        padding: 20px 24px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        text-decoration: none;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: block;
+
+        &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: $text-dark;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #888888;
+        }
+    }
+
+    &__recommendations {
+        .recommend-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: $text-dark;
+            margin-bottom: 18px;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+
+            @media (max-width: 1200px) {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            @media (max-width: 768px) {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            @media (max-width: 480px) {
+                grid-template-columns: 1fr;
+            }
+        }
+    }
+
+    // Dedicated Edit Profile Form Card
+    &__edit-header {
+        margin-bottom: 0;
+    }
+
+    &__edit-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: $text-dark;
+        margin-bottom: 4px;
+    }
+
+    &__edit-subtitle {
+        font-size: 14px;
+        color: #888888;
+        margin-bottom: 0;
+    }
+
+    &__edit-card {
+        background: $white;
+        border-radius: 20px;
+        padding: 24px 30px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        margin-bottom: 0;
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #F0F0F0;
+            margin-bottom: 20px;
+
+            svg {
+                color: $primary-red;
+                width: 22px;
+                height: 22px;
+            }
+
+            h3 {
+                font-size: 20px;
+                font-weight: 700;
+                color: $text-dark;
+            }
+        }
+
+        .edit-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+
+            @media (max-width: 600px) {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group {
+                display: flex;
+                flex-direction: column;
+
+                label {
+                    font-size: 11px;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    color: #888899;
+                    margin-bottom: 6px;
+                }
+
+                input {
+                    height: 50px;
+                    padding: 0 16px;
+                    background-color: #FFFDFD;
+                    border: 1px solid #F5DEDE;
+                    border-radius: 10px;
+                    font-size: 15px;
+                    font-family: $font-main;
+                    color: $text-dark;
+                    outline: none;
+                    transition: all 0.2s ease-in-out;
+                    box-sizing: border-box;
+
+                    &:focus, &:hover {
+                        border-color: $primary-red;
+                        background-color: $white;
+                        box-shadow: 0 0 0 3px rgba($primary-red, 0.08);
+                    }
+                }
+            }
+        }
+
+        .edit-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 25px;
+
+            .btn-cancel {
+                background-color: #FFEBEB;
+                color: $primary-red;
+                border: none;
+                padding: 12px 28px;
+                border-radius: 10px;
+                font-size: 14px;
+                font-weight: 600;
+                font-family: $font-main;
+                text-decoration: none;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+
+                &:hover {
+                    background-color: #FFD4D4;
+                }
+            }
+
+            .btn-save {
+                background-color: $primary-red;
+                color: $white;
+                border: none;
+                padding: 12px 28px;
+                border-radius: 10px;
+                font-size: 14px;
+                font-weight: 600;
+                font-family: $font-main;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                box-shadow: 0 4px 12px rgba($primary-red, 0.2);
+
+                &:hover {
+                    background-color: color.adjust($primary-red, $lightness: -5%);
+                    box-shadow: 0 6px 16px rgba($primary-red, 0.3);
+                }
+            }
+        }
+    }
+
+    // Promo Banners Bottom Row
+    &__promo-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
+
+        @media (max-width: 992px) {
+            grid-template-columns: 1fr;
+        }
+    }
+}
+
+// Standalone Promo Banner Component (reusable across profile, edit, orders pages)
+.promo-banner {
+    background: linear-gradient(135deg, #e3e6ed 0%, #bdc3cf 100%);
+    border-radius: 20px;
+    padding: 32px 35px;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    .promo-tag {
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #2E323D;
+        margin-bottom: 12px;
+    }
+
+    .promo-title {
+        font-size: 28px;
+        font-weight: 800;
+        color: #11141A;
+        margin-bottom: 14px;
+    }
+
+    .promo-text {
+        font-size: 15px;
+        color: #4F5565;
+        line-height: 1.45;
+        margin-bottom: 30px;
+        max-width: 80%;
+
+        @media (max-width: 768px) {
+            max-width: 100%;
+        }
+    }
+
+    .promo-footer {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        margin-top: auto;
+        position: relative;
+        min-height: 44px;
+    }
+
+    .promo-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: $primary-red;
+        color: $white;
+        padding: 12px 26px;
+        border-radius: 25px;
+        font-size: 14px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        z-index: 2;
+
+        &:hover {
+            background: color.adjust($primary-red, $lightness: -5%);
+            transform: translateX(3px);
+        }
+    }
+
+    .promo-dots {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1;
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: $primary-red;
+            opacity: 1;
+            transition: all 0.3s ease;
+
+            &.inactive, &:nth-child(3) {
+                opacity: 0.45;
+            }
+        }
+    }
+
+    // Compact modifier for sidebar promo banners
+    &--compact {
+        padding: 24px 26px;
+
+        .promo-tag {
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
+
+        .promo-title {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        .promo-text {
+            font-size: 13px;
+            margin-bottom: 20px;
+            max-width: 100%;
+        }
+
+        .promo-footer {
+            min-height: auto;
+        }
+
+        .promo-btn {
+            padding: 9px 20px;
+            font-size: 13px;
+        }
+    }
+}
+
+// Edit Profile Modal
+.profile-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+
+    &.active {
+        display: flex;
+    }
+
+    &__content {
+        background: $white;
+        border-radius: 20px;
+        padding: 35px;
+        width: 100%;
+        max-width: 450px;
+        position: relative;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    }
+
+    &__close {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #999;
+        &:hover { color: $primary-red; }
+    }
+
+    &__title {
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+
+    &__form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+
+            label {
+                font-size: 12px;
+                font-weight: 600;
+                color: #888;
+            }
+
+            input {
+                height: 48px;
+                padding: 0 15px;
+                border: 1px solid #E0E0E0;
+                border-radius: 10px;
+                font-size: 15px;
+                font-family: $font-main;
+                outline: none;
+                &:focus { border-color: $primary-red; }
+            }
+        }
+
+        .save-btn {
+            height: 48px;
+            background: $primary-red;
+            color: $white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.3s;
+
+            &:hover {
+                background: color.adjust($primary-red, $lightness: -5%);
+            }
+        }
+    }
+}
