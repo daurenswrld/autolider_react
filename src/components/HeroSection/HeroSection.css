@@ -780,6 +780,11 @@
 }
 
 /* Responsive Styles */
+.hero-title-svg {
+  max-width: 100%;
+  height: auto;
+}
+
 @media (max-width: 1100px) {
   .catalog-brands-grid {
     grid-template-columns: repeat(4, 1fr);
@@ -789,16 +794,38 @@
 @media (max-width: 900px) {
   .hero-container {
     flex-direction: column;
+    padding: 0 16px 20px;
   }
   .hero-sidebar {
     width: 100%;
     flex-direction: row;
   }
   .sidebar-brands-card {
-    flex: 1;
+    width: 100%;
+  }
+  .sidebar-brands-list {
+    flex-direction: row;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  .sidebar-brands-list li {
+    border-bottom: none;
+    border-right: 1px solid rgba(206, 205, 213, 0.7);
+    flex-shrink: 0;
+  }
+  .sidebar-brands-list li:last-child {
+    border-right: none;
+  }
+  .sidebar-brand-item {
+    padding: 12px 18px;
   }
   .sidebar-qr-card {
     display: none;
+  }
+  .about-ad-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
   }
   .catalog-brands-grid {
     grid-template-columns: repeat(3, 1fr);
@@ -810,34 +837,102 @@
 }
 
 @media (max-width: 768px) {
+  .hero-banner-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  .banner-text-content {
+    max-width: 100%;
+  }
+  .hero-subtitle {
+    font-size: 15px;
+  }
+  .section-title-about {
+    font-size: 26px;
+  }
+  .about-text {
+    font-size: 15px;
+  }
+  .ad-swiper {
+    padding: 24px 20px 44px;
+  }
+  .hero-buttons-row {
+    flex-direction: column;
+    width: 100%;
+    gap: 12px;
+  }
+  .hero-buttons-row > * {
+    width: 100% !important;
+    justify-content: center;
+    text-align: center;
+  }
+  .catalog-brands-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .hero-benefits-bar {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
   .accessories-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 14px;
+    gap: 12px;
   }
   .ad-banner-card {
     min-height: auto;
-    padding: 24px;
+    width: 100%;
+  }
+  .ad-swiper {
+    padding: 24px 20px 48px;
+  }
+  .ad-slide-inner {
     flex-direction: column;
     align-items: flex-start;
+    gap: 16px;
+  }
+  .ad-content {
+    max-width: 100%;
+    width: 100%;
+  }
+  .ad-title {
+    font-size: 22px;
+  }
+  .btn-ad-red {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+    margin-bottom: 12px;
   }
   .ad-car-image {
-    position: relative;
-    right: auto;
-    bottom: auto;
-    max-height: 180px;
-    width: 100%;
-    margin-top: 16px;
-    align-self: center;
+    display: none;
+  }
+  .ad-swiper .swiper-pagination-bullets {
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    bottom: 16px !important;
+    text-align: center !important;
   }
   .btn-about-red {
     width: 100%;
-    font-size: 16px;
+    font-size: 15px;
     padding: 12px 20px;
+    justify-content: center;
+    text-align: center;
   }
 }
 
 @media (max-width: 480px) {
+  .catalog-brands-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
   .accessories-grid {
-    grid-template-columns: repeat(1, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .hero-benefits-bar {
+    grid-template-columns: 1fr;
   }
 }

@@ -276,4 +276,10 @@
   .favorites-products-grid {
     grid-template-columns: 1fr;
   }
+  .sidebar-cat-list {
+    display: none;
+  }
+  .favorites-main-content {
+    padding: 15px 20px;
+  }
 }

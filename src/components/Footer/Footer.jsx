@@ -4,10 +4,10 @@ import { Phone, Mail, MapPin } from 'lucide-react';
 import { PopularAccessories } from '../PopularAccessories/PopularAccessories';
 import './Footer.css';
 
-export const Footer = () => {
+export const Footer = ({ hideAccessories = false }) => {
   return (
     <>
-      <PopularAccessories />
+      {!hideAccessories && <PopularAccessories />}
       <footer className="autolider-footer">
       <div className="footer-container">
         {/* Main 4 Columns Section */}

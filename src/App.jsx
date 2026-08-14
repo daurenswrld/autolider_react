@@ -19,28 +19,40 @@ import { PaymentPage } from "./pages/Payment/PaymentPage";
 import { CatalogPage } from "./pages/Catalog/CatalogPage";
 import { FavoritesPage } from "./pages/Favorites/FavoritesPage";
 import { AuthPage } from "./pages/Auth/AuthPage";
+import { NotFoundPage } from "./pages/NotFound/NotFoundPage";
+import { CartPage } from "./pages/Cart/CartPage";
+import { ProductDetailsPage } from "./pages/ProductDetails/ProductDetailsPage";
+import { CheckoutPage } from "./pages/Checkout/CheckoutPage";
+import { ProfilePage } from "./pages/Profile/ProfilePage";
+import { PrivacyPage } from "./pages/Privacy/PrivacyPage";
 import "./styles/style.scss";
 
-const PlaceholderPage = ({ title }) => (
-  <div
-    style={{
-      padding: "80px 24px",
-      textAlign: "center",
-      minHeight: "50vh",
-      backgroundColor: "#f8f9fa",
-    }}
-  >
-    <h1 style={{ fontSize: "28px", color: "#111", fontWeight: "600" }}>
-      {title}
-    </h1>
-    <p style={{ color: "#666", marginTop: "12px" }}>Раздел в разработке.</p>
-  </div>
-);
+
 
 function AppContent() {
   const location = useLocation();
   const isAuthPage =
     location.pathname === "/auth" || location.pathname === "/login";
+
+  const knownRoutes = [
+    '/',
+    '/catalog',
+    '/favorites',
+    '/auth',
+    '/login',
+    '/about',
+    '/delivery',
+    '/payment',
+    '/contacts',
+    '/profile',
+    '/cart',
+    '/checkout',
+    '/privacy',
+    '/product'
+  ];
+  const isNotFoundPage = !knownRoutes.includes(location.pathname) && !location.pathname.startsWith('/product/');
+  const hideAccessoriesPages = ['/profile', '/checkout', '/cart', '/auth', '/login', '/privacy'];
+  const shouldHideAccessories = isNotFoundPage || hideAccessoriesPages.includes(location.pathname);
 
   return (
     <div
@@ -62,24 +74,18 @@ function AppContent() {
           <Route path="/delivery" element={<DeliveryPage />} />
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/contacts" element={<ContactsPage />} />
-          <Route
-            path="/profile"
-            element={<PlaceholderPage title="Кабинет покупателя" />}
-          />
-          <Route
-            path="/seller/dashboard"
-            element={<PlaceholderPage title="Кабинет продавца" />}
-          />
-          <Route path="/cart" element={<PlaceholderPage title="Корзина" />} />
-          <Route
-            path="/privacy"
-            element={<PlaceholderPage title="Политика конфиденциальности" />}
-          />
+          <Route path="/product" element={<ProductDetailsPage />} />
+          <Route path="/product/:id" element={<ProductDetailsPage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
 
       {/* Footer exact to design (hidden on auth page) */}
-      {!isAuthPage && <Footer />}
+      {!isAuthPage && <Footer hideAccessories={shouldHideAccessories} />}
 
       {/* Toast Notification system */}
       <Toast />

@@ -237,9 +237,132 @@
 
 @media (max-width: 720px) {
   .navbar-nav {
-    display: none; /* Mobile menu can be added when drawer design is sent */
+    display: none;
   }
   .navbar-logo {
-    height: 40px;
+    height: 44px;
   }
+}
+
+@media (max-width: 640px) {
+  .navbar-action-label {
+    display: none;
+  }
+  .navbar-actions {
+    gap: 14px;
+  }
+  .navbar-action-btn {
+    padding: 6px;
+  }
+}
+
+/* Mobile Drawer Styles */
+.mobile-menu-toggle-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 4px;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 720px) {
+  .mobile-menu-toggle-btn {
+    display: flex;
+  }
+}
+
+.mobile-nav-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+}
+
+.mobile-drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.mobile-drawer-content {
+  position: relative;
+  width: 280px;
+  max-width: 80%;
+  height: 100%;
+  background: #16161a;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+  animation: slideDrawerIn 0.25s ease-out;
+  margin-left: auto;
+}
+
+@keyframes slideDrawerIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.mobile-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  border-bottom: 1px solid #282830;
+}
+
+.mobile-drawer-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.mobile-drawer-close {
+  background: none;
+  border: none;
+  color: #888895;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-drawer-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 0;
+}
+
+.mobile-drawer-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  color: #d0d0d8;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.mobile-drawer-link:hover,
+.mobile-drawer-link.active {
+  background: rgba(234, 36, 39, 0.1);
+  color: #ea2427;
+  border-left-color: #ea2427;
+}
+
+.mobile-drawer-link.profile-link {
+  margin-top: 12px;
+  border-top: 1px solid #282830;
+  padding-top: 18px;
 }

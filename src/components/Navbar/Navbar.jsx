@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, User, ShoppingCart, Heart, X } from 'lucide-react';
+import { Search, User, ShoppingCart, Heart, X, Menu } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import './Navbar.css';
 
@@ -9,6 +9,7 @@ export const Navbar = ({ onOpenSearch }) => {
   const { cartCount, userRole, wishlist = [] } = useApp();
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navLinks = [
     { title: 'Каталог', path: '/catalog' },
@@ -98,8 +99,63 @@ export const Navbar = ({ onOpenSearch }) => {
             </div>
             <span className="navbar-action-label">Корзина</span>
           </Link>
+
+          {/* Mobile Menu Toggle Button */}
+          <button
+            type="button"
+            className="mobile-menu-toggle-btn"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Открыть меню"
+          >
+            {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Sliding Drawer Menu */}
+      {isMobileMenuOpen && (
+        <div className="mobile-nav-drawer">
+          <div
+            className="mobile-drawer-backdrop"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          <div className="mobile-drawer-content">
+            <div className="mobile-drawer-header">
+              <span className="mobile-drawer-title">Навигация</span>
+              <button
+                type="button"
+                className="mobile-drawer-close"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <nav className="mobile-drawer-nav">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`mobile-drawer-link ${
+                    location.pathname === link.path ? 'active' : ''
+                  }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {link.title}
+                </Link>
+              ))}
+              <Link
+                to="/profile"
+                className="mobile-drawer-link profile-link"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <User size={18} />
+                <span>Личный кабинет</span>
+              </Link>
+            </nav>
+          </div>
+        </div>
+      )}
 
       {/* Expandable Quick Search Bar overlay */}
       {isSearchActive && (

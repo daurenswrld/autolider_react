@@ -1,0 +1,362 @@
+/* Privacy Policy Page Styling */
+.privacy-page-section {
+  position: relative;
+  width: 100%;
+  min-height: 80vh;
+  padding: 40px 0 80px;
+  background-color: #f8f9fc;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.privacy-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.privacy-header-card {
+  background: #ffffff;
+  border: 1px solid #e0e2e8;
+  border-radius: 20px;
+  padding: 36px 40px;
+  margin-bottom: 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.privacy-badge {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #eff6ff;
+  color: #2563eb;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.privacy-main-title {
+  font-size: 32px;
+  font-weight: 800;
+  color: #111118;
+  margin: 0;
+  letter-spacing: -0.5px;
+  overflow-wrap: break-word;
+}
+
+.privacy-subtitle {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #555565;
+  margin: 0;
+  max-width: 800px;
+  overflow-wrap: break-word;
+}
+
+.privacy-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  font-size: 13px;
+  color: #888895;
+  border-top: 1px solid #f0f2f5;
+  padding-top: 16px;
+  margin-top: 8px;
+}
+
+.privacy-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Content Layout: Quick Nav + Main Text */
+.privacy-layout-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 32px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  .privacy-layout-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.privacy-toc-box {
+  position: sticky;
+  top: 100px;
+  background: #ffffff;
+  border: 1px solid #e0e2e8;
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.toc-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111118;
+  margin: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.toc-link {
+  font-size: 13px;
+  color: #555565;
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: block;
+}
+
+.toc-link:hover {
+  background: #f0f2f5;
+  color: #ea2427;
+  font-weight: 600;
+}
+
+/* Policy Content Blocks */
+.privacy-content-card {
+  background: #ffffff;
+  border: 1px solid #e0e2e8;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.policy-section {
+  scroll-margin-top: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-bottom: 1px solid #f0f2f5;
+  padding-bottom: 28px;
+}
+
+.policy-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.policy-sec-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111118;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}
+
+.sec-num {
+  color: #ea2427;
+}
+
+.policy-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #444455;
+  margin: 0;
+}
+
+.policy-ul {
+  padding-left: 20px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.policy-ul li {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #444455;
+}
+
+.policy-callout-box {
+  background: #fff8f8;
+  border-left: 4px solid #ea2427;
+  border-radius: 0 12px 12px 0;
+  padding: 16px 20px;
+  font-size: 14px;
+  color: #333344;
+  line-height: 1.6;
+  margin: 8px 0;
+}
+
+.privacy-contact-card {
+  background: #111118;
+  color: #ffffff;
+  border-radius: 16px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.contact-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.contact-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.contact-item-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.contact-item-box svg {
+  color: #ea2427;
+}
+
+/* Mobile & Tablet Responsive Media Queries */
+@media (max-width: 900px) {
+  .privacy-layout-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .privacy-page-section {
+    padding: 24px 0 48px;
+  }
+
+  .privacy-container {
+    padding: 0 16px;
+  }
+
+  .privacy-header-card {
+    padding: 24px 20px;
+    border-radius: 16px;
+    margin-bottom: 20px;
+    gap: 12px;
+  }
+
+  .privacy-main-title {
+    font-size: 24px;
+    letter-spacing: normal;
+  }
+
+  .privacy-subtitle {
+    font-size: 14px;
+  }
+
+  .privacy-meta-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .privacy-toc-box {
+    position: static;
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .toc-list {
+    flex-direction: row;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+
+  .toc-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .toc-link {
+    background: #f0f2f5;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+  }
+
+  .privacy-content-card {
+    padding: 24px 18px;
+    border-radius: 16px;
+    gap: 28px;
+  }
+
+  .policy-sec-title {
+    font-size: 18px;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .policy-text,
+  .policy-ul li {
+    font-size: 13px;
+  }
+
+  .privacy-contact-card {
+    padding: 20px 16px;
+    border-radius: 14px;
+  }
+
+  .contact-info-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .contact-item-box {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}

@@ -105,7 +105,7 @@ export const FavoritesPage = () => {
                         </button>
                       </div>
 
-                      <div className="product-img-box">
+                      <Link to={`/product/${p.id}`} className="product-img-box">
                         <img
                           src={displayImg}
                           alt={p.title}
@@ -115,10 +115,14 @@ export const FavoritesPage = () => {
                             e.target.src = "/assets/img/test_accessosry.png";
                           }}
                         />
-                      </div>
+                      </Link>
 
                       <div className="product-info-box">
-                        <h3 className="product-title" title={p.title}>{p.title}</h3>
+                        <h3 className="product-title" title={p.title}>
+                          <Link to={`/product/${p.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                            {p.title}
+                          </Link>
+                        </h3>
                         <p className="product-subtitle">{p.subtitle || p.categoryName || 'Автозапчасти'}</p>
 
                         <div className="product-price-row">

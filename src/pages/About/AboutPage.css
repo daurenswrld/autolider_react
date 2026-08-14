@@ -668,4 +668,7 @@
     width: 100%;
     justify-content: center;
   }
+  .stat-value-group {
+    align-items: center;
+  }
 }
