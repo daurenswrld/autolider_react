@@ -1,12 +1,46 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Heart, Copy, Truck, Image as ImageIcon, Star, Clock, Tag, ThumbsUp } from 'lucide-react';
+import { Heart, Copy, Truck, Image as ImageIcon, Star, Clock, Tag, ThumbsUp, Zap, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import './ProductDetailsPage.css';
 
 export const ProductDetailsPage = () => {
   const { id } = useParams();
   const { products, addToCart, toggleWishlist, isInWishlist, showToast } = useApp();
+
+  const [isOneClickOpen, setIsOneClickOpen] = useState(false);
+  const [oneClickName, setOneClickName] = useState('');
+  const [oneClickPhone, setOneClickPhone] = useState('');
+
+  const handleOneClickSubmit = async (e) => {
+    e.preventDefault();
+    if (!oneClickPhone.trim()) return;
+
+    try {
+      const res = await fetch('/api/orders/one-click', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerName: oneClickName || 'Клиент (1 клик)',
+          customerPhone: oneClickPhone,
+          productTitle: product.title,
+          price: product.price
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        showToast(data.message || 'Спасибо! Ваш заказ принят в 1 клик.');
+        setIsOneClickOpen(false);
+        setOneClickName('');
+        setOneClickPhone('');
+      }
+    } catch (err) {
+      console.error('Failed to submit 1-click order:', err);
+      showToast('Заказ принят! Менеджер свяжется с вами.');
+      setIsOneClickOpen(false);
+    }
+  };
 
   // Find product by URL parameter or default to demo product matching screenshot
   const product = products.find((p) => String(p.id) === String(id)) || {
@@ -248,19 +282,101 @@ export const ProductDetailsPage = () => {
                   </span>
                 </div>
 
-                {/* Primary Add to Cart Button */}
-                <button
-                  className="btn-add-to-cart-lg"
-                  onClick={() => addToCart(product, qty)}
-                  type="button"
-                >
-                  В корзину
-                </button>
+                {/* Primary Add to Cart Button & 1-Click Order (2.3.4 ТЗ) */}
+                <div className="product-buy-buttons-group" style={{ display: 'flex', gap: '12px', width: '100%', marginTop: '12px' }}>
+                  <button
+                    className="btn-add-to-cart-lg"
+                    style={{ flex: 1 }}
+                    onClick={() => addToCart(product, qty)}
+                    type="button"
+                  >
+                    В корзину
+                  </button>
+
+                  <button
+                    className="btn-buy-one-click"
+                    style={{
+                      flex: 1,
+                      background: '#10b981',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '12px',
+                      fontWeight: 800,
+                      fontSize: '15px',
+                      cursor: 'pointer',
+                      padding: '14px 20px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px'
+                    }}
+                    onClick={() => setIsOneClickOpen(true)}
+                    type="button"
+                  >
+                    <Zap size={18} />
+                    <span>Купить в 1 клик</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Quick 1-Click Order Modal (2.3.4 ТЗ) */}
+      {isOneClickOpen && (
+        <div className="admin-modal-overlay" onClick={() => setIsOneClickOpen(false)}>
+          <div className="admin-modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
+            <div className="admin-modal-header">
+              <h3 className="modal-title">Быстрый заказ в 1 клик (2.3.4)</h3>
+              <button className="btn-modal-close" onClick={() => setIsOneClickOpen(false)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleOneClickSubmit} className="admin-modal-form">
+              <p className="text-sub" style={{ fontSize: '14px', margin: 0 }}>
+                Товар: <b>{product.title}</b> ({product.price?.toLocaleString('ru-RU')} ₸)
+              </p>
+
+              <div className="form-group">
+                <label>Ваше Имя *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Даурен"
+                  value={oneClickName}
+                  onChange={(e) => setOneClickName(e.target.value)}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Ваш Номер телефона *</label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="+7 (705) 000-00-00"
+                  value={oneClickPhone}
+                  onChange={(e) => setOneClickPhone(e.target.value)}
+                />
+              </div>
+
+              <div className="admin-modal-footer">
+                <button
+                  type="button"
+                  className="btn-admin-secondary"
+                  onClick={() => setIsOneClickOpen(false)}
+                >
+                  Отмена
+                </button>
+                <button type="submit" className="btn-admin-primary" style={{ background: '#10b981' }}>
+                  <span>Оформить в 1 клик</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

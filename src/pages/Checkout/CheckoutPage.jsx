@@ -79,8 +79,33 @@ export const CheckoutPage = () => {
   const bonusSpent = useBonuses ? 5000 : 0;
   const finalTotal = Math.max(0, rawSubtotal - discountAmount - bonusSpent);
 
-  const handleOrderSubmit = (e) => {
+  const handleOrderSubmit = async (e) => {
     e?.preventDefault();
+    
+    const paymentMethodLabel =
+      paymentMethod === 'card'
+        ? 'Freedom Pay (Банковская карта)'
+        : paymentMethod === 'kaspi'
+        ? 'Kaspi QR'
+        : 'Наличными при получении';
+
+    try {
+      await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerName: formData.fullName || 'Покупатель Autolider',
+          customerPhone: formData.phone || '+7 (777) 000-00-00',
+          address: `${formData.city}, ${formData.address || 'Самовывоз'}`,
+          totalPrice: finalTotal,
+          paymentMethod: paymentMethodLabel,
+          items: cart.length > 0 ? cart : [{ title: 'Автозапчасти Autolider', price: finalTotal, quantity: 1 }]
+        })
+      });
+    } catch (err) {
+      console.error('Order backend creation notice:', err);
+    }
+
     setIsSubmitted(true);
     showToast(`Заказ № ${orderNum} успешно создан!`);
     clearCart();

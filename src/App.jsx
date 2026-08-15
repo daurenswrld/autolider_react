@@ -31,6 +31,8 @@ import { AdminProducts } from "./admin/views/AdminProducts";
 import { AdminCategories } from "./admin/views/AdminCategories";
 import { AdminOrders } from "./admin/views/AdminOrders";
 import { AdminCustomers } from "./admin/views/AdminCustomers";
+import { AdminWarehouses } from "./admin/views/AdminWarehouses";
+import { AdminRoles } from "./admin/views/AdminRoles";
 import { AdminBanners } from "./admin/views/AdminBanners";
 import { AdminSettings } from "./admin/views/AdminSettings";
 import { AdminLogin } from "./admin/views/AdminLogin";
@@ -87,6 +89,8 @@ function AppContent() {
             <Route path="categories" element={<AdminCategories />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="customers" element={<AdminCustomers />} />
+            <Route path="warehouses" element={<AdminWarehouses />} />
+            <Route path="roles" element={<AdminRoles />} />
             <Route path="banners" element={<AdminBanners />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import * as XLSX from 'xlsx';
 import {
   Search,
   Plus,
@@ -10,6 +11,9 @@ import {
   X,
   Save,
   Package,
+  FileSpreadsheet,
+  Download,
+  Upload,
   Image as ImageIcon
 } from 'lucide-react';
 import './AdminProducts.css';
@@ -173,19 +177,98 @@ export const AdminProducts = () => {
     return new Intl.NumberFormat('ru-RU').format(val || 0) + ' ₸';
   };
 
+  const [isExcelModalOpen, setIsExcelModalOpen] = useState(false);
+  const [excelFile, setExcelFile] = useState(null);
+  const [excelSuccessMsg, setExcelSuccessMsg] = useState('');
+
+  const handleExportExcel = () => {
+    try {
+      const exportData = products.map((p) => ({
+        'Артикул (SKU)': p.sku || '',
+        'Наименование товара': p.title || '',
+        'Бренд': p.brand || '',
+        'Категория': p.categoryName || '',
+        'Цена (₸)': p.price || 0,
+        'Старая цена (₸)': p.oldPrice || 0,
+        'Остаток на складе (шт)': p.stockQty || 0,
+        'Марка авто': p.carMake || '',
+        'Модель авто': p.carModel || '',
+        'Статус': p.status === 'enabled' ? 'Включен' : 'Отключен'
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Товары Autolider');
+      XLSX.writeFile(workbook, `autolider_catalog_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    } catch (err) {
+      console.error('Excel Export Error:', err);
+      alert('Ошибка при генерации Excel файла');
+    }
+  };
+
+  const handleExcelFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const bstr = evt.target.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const rawJson = XLSX.utils.sheet_to_json(ws);
+
+        if (!rawJson || rawJson.length === 0) {
+          alert('Выбранный файл Excel не содержит данных');
+          return;
+        }
+
+        // Send to backend endpoint
+        const res = await fetch('/api/products/import-excel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: rawJson })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          setExcelSuccessMsg(data.message);
+          loadData(); // reload catalog
+        } else {
+          alert(data.message || 'Ошибка импорта Excel');
+        }
+      } catch (err) {
+        console.error('Excel Import Error:', err);
+        alert('Ошибка чтении файла Excel');
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
   return (
     <div className="admin-products-view">
       {/* Header */}
       <div className="admin-page-header">
         <div>
-          <h1 className="admin-page-title">Каталог товаров (OpenCart Catalog)</h1>
-          <p className="admin-page-subtitle">Управление списком автозапчастей, ценами и остатками на складах</p>
+          <h1 className="admin-page-title">Каталог товаров (2.1 Импорт Excel)</h1>
+          <p className="admin-page-subtitle">Автоматическая загрузка товаров, обновление цен и остатков через Excel</p>
         </div>
 
-        <button className="btn-admin-primary" onClick={handleOpenAddModal}>
-          <Plus size={16} />
-          <span>Добавить товар</span>
-        </button>
+        <div className="admin-header-actions">
+          <button className="btn-admin-secondary" onClick={() => setIsExcelModalOpen(true)}>
+            <Upload size={16} />
+            <span>Импорт Excel (2.1)</span>
+          </button>
+          <button className="btn-admin-secondary" onClick={handleExportExcel}>
+            <Download size={16} />
+            <span>Экспорт Excel</span>
+          </button>
+          <button className="btn-admin-primary" onClick={handleOpenAddModal}>
+            <Plus size={16} />
+            <span>Добавить товар</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter Bar */}
@@ -453,6 +536,67 @@ export const AdminProducts = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Excel Import Modal (Requirements 2.1.1, 2.1.2, 2.1.3) */}
+      {isExcelModalOpen && (
+        <div className="admin-modal-overlay" onClick={() => setIsExcelModalOpen(false)}>
+          <div className="admin-modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="admin-modal-header">
+              <h3 className="modal-title">Импорт файлов XLS/XLSX/CSV (2.1 ТЗ)</h3>
+              <button className="btn-modal-close" onClick={() => setIsExcelModalOpen(false)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="admin-modal-form">
+              <div className="excel-drop-zone">
+                <FileSpreadsheet size={48} className="excel-icon" />
+                <h4 className="drop-title">Выберите или перетащите файл Excel (.xlsx, .csv)</h4>
+                <p className="drop-sub">
+                  Система автоматически сопоставит <b>Артикул (SKU)</b> и обновит цены и остатки на складах.
+                </p>
+
+                <label className="btn-admin-primary btn-upload-excel">
+                  <Upload size={16} />
+                  <span>Загрузить прайс-лист Excel</span>
+                  <input
+                    type="file"
+                    accept=".xlsx, .xls, .csv"
+                    style={{ display: 'none' }}
+                    onChange={handleExcelFileUpload}
+                  />
+                </label>
+              </div>
+
+              {excelSuccessMsg && (
+                <div className="settings-alert-success">
+                  <CheckCircle2 size={18} />
+                  <span>{excelSuccessMsg}</span>
+                </div>
+              )}
+
+              <div className="excel-format-hints">
+                <h5>Формат колонок в Excel файле:</h5>
+                <ul>
+                  <li><code>Артикул</code> (или <code>SKU</code>) — ключ для поиска товара</li>
+                  <li><code>Цена</code> (или <code>Price</code>) — новая цена товара в ₸</li>
+                  <li><code>Остаток</code> (или <code>Stock</code>) — количество на складе</li>
+                  <li><code>Наименование</code> (или <code>Title</code>) — название автозапчасти</li>
+                </ul>
+              </div>
+
+              <div className="admin-modal-footer">
+                <button
+                  type="button"
+                  className="btn-admin-secondary"
+                  onClick={() => setIsExcelModalOpen(false)}
+                >
+                  Закрыть
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

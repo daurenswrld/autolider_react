@@ -13,6 +13,8 @@ const INITIAL_DATA = {
       title: 'Шина Michelin Pilot Sport 5 (225/45 R17)',
       sku: 'MICH-8842',
       brand: 'Michelin',
+      carMake: 'Toyota',
+      carModel: 'Camry 70',
       price: 72000,
       oldPrice: 85000,
       stockQty: 18,
@@ -28,12 +30,14 @@ const INITIAL_DATA = {
       title: 'Моторное масло Motul 8100 X-cess 5W-40 (5L)',
       sku: 'MOTUL-5W40-5L',
       brand: 'Motul',
+      carMake: 'Hyundai',
+      carModel: 'Accent / Tucson',
       price: 35000,
       oldPrice: 42000,
       stockQty: 42,
       inStock: true,
       categoryId: 'oils',
-      categoryName: 'Масла и жидкости',
+      categoryName: 'Масла и автохимия',
       status: 'enabled',
       description: '100% синтетическое моторное масло для бензиновых и дизельных двигателей.',
       image: 'https://images.unsplash.com/photo-1615900119313-0599c927f804?auto=format&fit=crop&w=600&q=80'
@@ -43,6 +47,8 @@ const INITIAL_DATA = {
       title: 'Комплект тормозных колодок Brembo Front',
       sku: 'BRM-P85020',
       brand: 'Brembo',
+      carMake: 'BMW',
+      carModel: 'X5 / X6 G05',
       price: 45000,
       oldPrice: 52000,
       stockQty: 12,
@@ -58,6 +64,8 @@ const INITIAL_DATA = {
       title: 'Аккумулятор VARTA Blue Dynamic 60Ah 540A',
       sku: 'VARTA-BD60',
       brand: 'VARTA',
+      carMake: 'Kia',
+      carModel: 'Rio / Sportage',
       price: 42500,
       oldPrice: 49000,
       stockQty: 9,
@@ -73,6 +81,8 @@ const INITIAL_DATA = {
       title: 'Масляный фильтр MANN-FILTER W 712/95',
       sku: 'MANN-W71295',
       brand: 'MANN-FILTER',
+      carMake: 'Volkswagen',
+      carModel: 'Polo / Golf VII',
       price: 6500,
       oldPrice: 8000,
       stockQty: 64,
@@ -88,6 +98,8 @@ const INITIAL_DATA = {
       title: 'Свечи зажигания NGK Laser Iridium (4 шт)',
       sku: 'NGK-SILZKFR8D7S',
       brand: 'NGK',
+      carMake: 'Nissan',
+      carModel: 'Qashqai / X-Trail',
       price: 28000,
       oldPrice: 34000,
       stockQty: 30,
@@ -108,6 +120,65 @@ const INITIAL_DATA = {
     { id: 'ignition', name: 'Зажигание и электрика', slug: 'ignition', count: 980, parentId: null, status: 'enabled' },
     { id: 'suspension', name: 'Подвеска и рулевое', slug: 'suspension', count: 750, parentId: null, status: 'enabled' }
   ],
+  warehouses: [
+    {
+      id: 1,
+      name: 'Центральный автосклад №1 (Астана)',
+      city: 'Астана',
+      address: 'ул. Автозаводская, 12',
+      phone: '+7 (777) 555-45-54',
+      stockCount: 8450,
+      isMain: true
+    },
+    {
+      id: 2,
+      name: 'Логистический хаб №2 (Алматы)',
+      city: 'Алматы',
+      address: 'пр. Райымбека, 212',
+      phone: '+7 (701) 333-22-11',
+      stockCount: 5120,
+      isMain: false
+    },
+    {
+      id: 3,
+      name: 'Региональный филиал (Шымкент)',
+      city: 'Шымкент',
+      address: 'ул. Жибек Жолы, 45',
+      phone: '+7 (705) 888-99-00',
+      stockCount: 2300,
+      isMain: false
+    }
+  ],
+  roles: [
+    {
+      id: 1,
+      title: 'Супер-администратор',
+      code: 'super_admin',
+      description: 'Полный доступ ко всем модулям, настройкам и загрузкам Excel',
+      usersCount: 2
+    },
+    {
+      id: 2,
+      title: 'Менеджер по продажам',
+      code: 'sales_manager',
+      description: 'Управление заказами, обработка звонков и базы покупателей',
+      usersCount: 5
+    },
+    {
+      id: 3,
+      title: 'Контент-менеджер',
+      code: 'content_manager',
+      description: 'Редактирование карточек товаров, загрузка фото и баннеров',
+      usersCount: 3
+    },
+    {
+      id: 4,
+      title: 'Кладовщик / Завскладом',
+      code: 'warehouse_manager',
+      description: 'Обновление остатков товаров через Excel и смену статусов склада',
+      usersCount: 4
+    }
+  ],
   orders: [
     {
       id: '582914',
@@ -118,7 +189,7 @@ const INITIAL_DATA = {
       status: 'shipping',
       statusText: 'В пути',
       totalPrice: 144000,
-      paymentMethod: 'Картой онлайн',
+      paymentMethod: 'Freedom Pay (Онлайн-карта)',
       itemsCount: 2,
       items: [
         { id: 101, title: 'Шина Michelin Pilot Sport 5 (225/45 R17)', price: 72000, quantity: 2 }
@@ -149,7 +220,7 @@ const INITIAL_DATA = {
       status: 'processing',
       statusText: 'В обработке',
       totalPrice: 42500,
-      paymentMethod: 'Kaspi Pay',
+      paymentMethod: 'Freedom Pay',
       itemsCount: 1,
       items: [
         { id: 104, title: 'Аккумулятор VARTA Blue Dynamic 60Ah', price: 42500, quantity: 1 }
@@ -215,7 +286,11 @@ const INITIAL_DATA = {
     workingHours: 'Пн-Вс 09:00 - 20:00',
     currency: '₸',
     freeDeliveryMin: 50000,
-    deliveryCost: 2500
+    deliveryCost: 2500,
+    paymentGateways: {
+      freedomPay: { enabled: true, merchantId: 'AUTOLIDER_PROD_9921', testMode: false },
+      kaspiPay: { enabled: true, merchantId: 'KASPI_AL_001' }
+    }
   }
 };
 

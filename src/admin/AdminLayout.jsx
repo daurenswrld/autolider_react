@@ -6,6 +6,8 @@ import {
   FolderTree,
   ShoppingCart,
   Users,
+  Building2,
+  ShieldCheck,
   Image as ImageIcon,
   Settings,
   ExternalLink,
@@ -61,6 +63,16 @@ export const AdminLayout = () => {
       title: 'Покупатели',
       path: '/admin/customers',
       icon: Users
+    },
+    {
+      title: 'Склады (БД)',
+      path: '/admin/warehouses',
+      icon: Building2
+    },
+    {
+      title: 'Права и Роли',
+      path: '/admin/roles',
+      icon: ShieldCheck
     },
     {
       title: 'Баннеры',

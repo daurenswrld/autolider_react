@@ -1,0 +1,89 @@
+/* Admin Warehouses Styling */
+.admin-warehouses-view {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.warehouses-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .warehouses-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.warehouse-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.warehouse-card.main-wh {
+  border-color: #ea2427;
+  background: linear-gradient(180deg, #ffffff 0%, #fff8f8 100%);
+}
+
+.wh-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.wh-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #ea2427;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.wh-title-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wh-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.wh-badge-main {
+  background: #ea2427;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  align-self: flex-start;
+}
+
+.wh-details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14px;
+  color: #334155;
+}
+
+.wh-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
