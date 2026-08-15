@@ -1,0 +1,25 @@
+/* Admin Categories Styling */
+.admin-categories-view {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.category-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cat-icon {
+  color: #ea2427;
+}
+
+.count-badge {
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+}

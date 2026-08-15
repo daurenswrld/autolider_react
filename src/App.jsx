@@ -25,14 +25,22 @@ import { ProductDetailsPage } from "./pages/ProductDetails/ProductDetailsPage";
 import { CheckoutPage } from "./pages/Checkout/CheckoutPage";
 import { ProfilePage } from "./pages/Profile/ProfilePage";
 import { PrivacyPage } from "./pages/Privacy/PrivacyPage";
+import { AdminLayout } from "./admin/AdminLayout";
+import { AdminDashboard } from "./admin/views/AdminDashboard";
+import { AdminProducts } from "./admin/views/AdminProducts";
+import { AdminCategories } from "./admin/views/AdminCategories";
+import { AdminOrders } from "./admin/views/AdminOrders";
+import { AdminCustomers } from "./admin/views/AdminCustomers";
+import { AdminBanners } from "./admin/views/AdminBanners";
+import { AdminSettings } from "./admin/views/AdminSettings";
+import { AdminLogin } from "./admin/views/AdminLogin";
 import "./styles/style.scss";
-
-
 
 function AppContent() {
   const location = useLocation();
+  const isAdminPage = location.pathname.startsWith("/admin");
   const isAuthPage =
-    location.pathname === "/auth" || location.pathname === "/login";
+    location.pathname === "/auth" || location.pathname === "/login" || isAdminPage;
 
   const knownRoutes = [
     '/',
@@ -50,16 +58,50 @@ function AppContent() {
     '/privacy',
     '/product'
   ];
-  const isNotFoundPage = !knownRoutes.includes(location.pathname) && !location.pathname.startsWith('/product/');
+  const isNotFoundPage =
+    !knownRoutes.includes(location.pathname) &&
+    !location.pathname.startsWith('/product/') &&
+    !location.pathname.startsWith('/admin');
+
   const hideAccessoriesPages = ['/profile', '/checkout', '/cart', '/auth', '/login', '/privacy'];
   const shouldHideAccessories = isNotFoundPage || hideAccessoriesPages.includes(location.pathname);
+
+  // If Admin Login Page
+  if (location.pathname === "/admin/login") {
+    return (
+      <>
+        <AdminLogin />
+        <Toast />
+      </>
+    );
+  }
+
+  // If Admin Dashboard Shell
+  if (isAdminPage) {
+    return (
+      <>
+        <Routes>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="categories" element={<AdminCategories />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="customers" element={<AdminCustomers />} />
+            <Route path="banners" element={<AdminBanners />} />
+            <Route path="settings" element={<AdminSettings />} />
+          </Route>
+        </Routes>
+        <Toast />
+      </>
+    );
+  }
 
   return (
     <div
       className="app-layout"
       style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
     >
-      {/* Header Navbar (hidden on auth page) */}
+      {/* Header Navbar (hidden on auth & admin pages) */}
       {!isAuthPage && <Navbar />}
 
       {/* Main View Container */}

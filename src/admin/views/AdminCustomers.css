@@ -1,0 +1,24 @@
+/* Admin Customers Styling */
+.admin-customers-view {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.customer-contact-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bonus-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fef3c7;
+  color: #b45309;
+  font-weight: 800;
+  font-size: 13px;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
