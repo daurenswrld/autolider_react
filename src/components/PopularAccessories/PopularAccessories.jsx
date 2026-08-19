@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { slugify } from "../../utils/slugify";
 import "./PopularAccessories.css";
 
 export const PopularAccessories = () => {
@@ -29,7 +30,7 @@ export const PopularAccessories = () => {
           {accessories.map((item) => (
             <Link
               key={item.id}
-              to={`/catalog?category=${encodeURIComponent(item.title)}`}
+              to={`/catalog/all/all/${slugify(item.title)}`}
               className="accessory-card"
             >
               <div className="accessory-image-wrapper">

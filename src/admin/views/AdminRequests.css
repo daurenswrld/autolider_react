@@ -1,0 +1,439 @@
+.admin-requests-view {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.requests-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.metric-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.metric-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.metric-card.total .metric-icon-box {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.metric-card.pending .metric-icon-box {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.metric-card.processing .metric-icon-box {
+  background: #fffbe6;
+  color: #d97706;
+}
+
+.metric-card.completed .metric-icon-box {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.metric-val {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+  text-align: left;
+}
+
+.metric-label {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Card & Toolbar Styles */
+.admin-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px 24px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.toolbar-card {
+  padding: 16px 20px;
+}
+
+.toolbar-flex {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+
+.search-box {
+  position: relative;
+  min-width: 280px;
+  flex: 1;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 14px 10px 38px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  outline: none;
+  background: #f8fafc;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  color: #000;
+}
+
+.search-input:focus {
+  border-color: #ea2427;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(234, 36, 39, 0.1);
+}
+
+.filter-select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.filter-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  pointer-events: none;
+}
+
+.filter-dropdown {
+  padding: 10px 16px 10px 38px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1e293b;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%64748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+  transition: all 0.2s ease;
+}
+
+.filter-dropdown:hover {
+  background-color: #ffffff;
+  border-color: #94a3b8;
+}
+
+.filter-dropdown:focus {
+  border-color: #ea2427;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(234, 36, 39, 0.1);
+}
+
+/* Table styling */
+.table-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+}
+
+.admin-table th {
+  background: #f8fafc;
+  padding: 14px 18px;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.admin-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: #334155;
+}
+
+.admin-table tr.row-pending {
+  background: #fefce8;
+}
+
+.admin-table tr:hover {
+  background: #f8fafc;
+}
+
+/* VIN Code Badge */
+.vin-badge-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 5px 10px;
+  border-radius: 6px;
+}
+
+.vin-code {
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 14px;
+  color: #0f172a;
+  letter-spacing: 0.5px;
+}
+
+.btn-copy-vin {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  padding: 2px;
+  border-radius: 4px;
+  transition: color 0.2s;
+}
+
+.btn-copy-vin:hover {
+  color: #2563eb;
+}
+
+/* Customer & Phone info */
+.customer-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.customer-name {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.customer-email {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.phone-actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.phone-text {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 13px;
+}
+
+.btn-wa {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #25d366;
+  color: #ffffff;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.btn-wa:hover {
+  background: #1ebc57;
+}
+
+/* Status Select */
+.status-select {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid #cbd5e1;
+  cursor: pointer;
+  outline: none;
+}
+
+.status-select.pending {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.status-select.processing {
+  background: #fffbe6;
+  color: #d97706;
+  border-color: #fde68a;
+}
+
+.status-select.completed {
+  background: #f0fdf4;
+  color: #16a34a;
+  border-color: #bbf7d0;
+}
+
+.status-select.canceled {
+  background: #f1f5f9;
+  color: #64748b;
+  border-color: #e2e8f0;
+}
+
+/* Manager Note */
+.note-view-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #64748b;
+  transition: background 0.2s;
+}
+
+.note-view-box:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.note-edit-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.note-input {
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid #2563eb;
+  font-size: 13px;
+  outline: none;
+  flex: 1;
+}
+
+.btn-save-note {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-delete-req {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.btn-delete-req:hover {
+  color: #dc2626;
+  background: #fef2f2;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 50px 20px;
+  text-align: center;
+  color: #64748b;
+}
+
+.empty-state h3 {
+  margin: 12px 0 6px;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.empty-state p {
+  font-size: 14px;
+  max-width: 400px;
+}
+
+.btn-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-refresh:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

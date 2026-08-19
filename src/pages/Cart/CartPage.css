@@ -128,6 +128,38 @@
   gap: 16px;
 }
 
+/* Select-all row */
+.cart-select-all-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 12px 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.cart-select-all-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  user-select: none;
+}
+
+.cart-select-all-label .cart-checkbox {
+  margin-top: 0;
+}
+
+.cart-selected-count {
+  font-size: 13px;
+  color: #888;
+  font-weight: 500;
+}
+
 .cart-item-card {
   background: #ffffff;
   border-radius: 16px;

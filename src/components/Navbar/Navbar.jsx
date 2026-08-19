@@ -1,15 +1,38 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Search, User, ShoppingCart, Heart, X, Menu } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Search, User, ShoppingCart, Heart, X, Menu, ArrowRight } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import './Navbar.css';
 
 export const Navbar = ({ onOpenSearch }) => {
   const location = useLocation();
-  const { cartCount, userRole, wishlist = [] } = useApp();
+  const navigate = useNavigate();
+  const { cartCount, userRole, wishlist = [], currentUser, products = [] } = useApp();
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const filteredProducts = searchQuery.trim()
+    ? products.filter((p) => {
+        if (p.status === 'disabled') return false;
+        const q = searchQuery.toLowerCase().trim();
+        const title = (p.title || '').toLowerCase();
+        const sku = (p.sku || '').toLowerCase();
+        const brand = (p.brand || '').toLowerCase();
+        const carMake = (p.carMake || '').toLowerCase();
+        const carModel = (p.carModel || '').toLowerCase();
+        const categoryName = (p.categoryName || '').toLowerCase();
+
+        return (
+          title.includes(q) ||
+          sku.includes(q) ||
+          brand.includes(q) ||
+          carMake.includes(q) ||
+          carModel.includes(q) ||
+          categoryName.includes(q)
+        );
+      })
+    : [];
 
   const navLinks = [
     { title: 'Каталог', path: '/catalog' },
@@ -18,6 +41,13 @@ export const Navbar = ({ onOpenSearch }) => {
     { title: 'Оплата', path: '/payment' },
     { title: 'Контакты', path: '/contacts' },
   ];
+
+  const isLinkActive = (linkPath) => {
+    if (linkPath === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname === linkPath || location.pathname.startsWith(`${linkPath}/`);
+  };
 
   return (
     <header className="autolider-navbar">
@@ -41,7 +71,7 @@ export const Navbar = ({ onOpenSearch }) => {
             <React.Fragment key={link.path}>
               <Link
                 to={link.path}
-                className={`navbar-link ${location.pathname === link.path ? 'active' : ''}`}
+                className={`navbar-link ${isLinkActive(link.path) ? 'active' : ''}`}
               >
                 {link.title}
               </Link>
@@ -78,15 +108,17 @@ export const Navbar = ({ onOpenSearch }) => {
 
           {/* Profile / Auth Button */}
           <Link
-            to="/auth"
+            to={currentUser ? "/profile" : "/auth"}
             className="navbar-action-btn"
-            title="Войти / Профиль"
+            title={currentUser ? `Профиль (${currentUser.name})` : "Войти / Регистрация"}
           >
             <div className="icon-wrapper">
               <User className="navbar-icon" size={22} strokeWidth={1.6} />
-              <span className="profile-notification-dot" />
+              {currentUser && <span className="profile-notification-dot" />}
             </div>
-            <span className="navbar-action-label">Профиль</span>
+            <span className="navbar-action-label">
+              {currentUser ? currentUser.name.split(' ')[0] : 'Войти'}
+            </span>
           </Link>
 
           {/* Cart Button */}
@@ -137,7 +169,7 @@ export const Navbar = ({ onOpenSearch }) => {
                   key={link.path}
                   to={link.path}
                   className={`mobile-drawer-link ${
-                    location.pathname === link.path ? 'active' : ''
+                    isLinkActive(link.path) ? 'active' : ''
                   }`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -164,18 +196,76 @@ export const Navbar = ({ onOpenSearch }) => {
             <Search size={18} className="search-input-icon" />
             <input
               type="text"
-              placeholder="Поиск по артикулу, VIN-коду или наименованию запчасти..."
+              placeholder="Поиск по артикулу, VIN-коду, марке или наименованию запчасти..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               autoFocus
             />
+            {searchQuery && (
+              <button
+                type="button"
+                className="search-clear-input-btn"
+                onClick={() => setSearchQuery('')}
+                title="Очистить"
+              >
+                <X size={14} />
+              </button>
+            )}
             <button
               className="search-close-btn"
               onClick={() => setIsSearchActive(false)}
+              title="Закрыть поиск"
             >
               <X size={18} />
             </button>
           </div>
+
+          {/* Live Search Suggestions Dropdown */}
+          {searchQuery.trim().length > 0 && (
+            <div className="live-search-dropdown">
+              {filteredProducts.length > 0 ? (
+                <>
+                  <div className="search-results-header">
+                    <span>Найдено товаров: <b>{filteredProducts.length}</b></span>
+                  </div>
+                  <div className="search-results-list">
+                    {filteredProducts.map((item) => (
+                      <div
+                        key={item.id}
+                        className="search-result-item"
+                        onClick={() => {
+                          navigate(`/product/${item.id}`);
+                          setIsSearchActive(false);
+                          setSearchQuery('');
+                        }}
+                      >
+                        <img
+                          src={item.image || item.photoUrl || '/assets/img/test_accessosry.png'}
+                          alt={item.title}
+                          className="search-result-thumb"
+                        />
+                        <div className="search-result-info">
+                          <div className="search-result-title">{item.title}</div>
+                          <div className="search-result-meta">
+                            <span className="search-meta-badge sku">{item.sku || 'SKU'}</span>
+                            <span className="search-meta-badge category">{item.categoryName || 'Автозапчасти'}</span>
+                            {item.brand && <span className="search-meta-badge brand">{item.brand}</span>}
+                          </div>
+                        </div>
+                        <div className="search-result-price">
+                          {typeof item.price === 'number' ? `${new Intl.NumberFormat('ru-RU').format(item.price)} ₸` : item.price}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="search-no-results">
+                  По запросу «<b>{searchQuery}</b>» ничего не найдено
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </header>

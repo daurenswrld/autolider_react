@@ -1,59 +1,114 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import {
-  INITIAL_PRODUCTS,
-  INITIAL_CATEGORIES,
-  INITIAL_GARAGE,
-  INITIAL_ORDERS,
-  INITIAL_SELLER_SALES
-} from '../data/mockData';
 
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
-  // Products state (can be edited/added by seller)
+  // Products state loaded from localStorage or API
   const [products, setProducts] = useState(() => {
     const saved = localStorage.getItem('autolider_products');
-    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+    return saved ? JSON.parse(saved) : [];
   });
+
+  // Categories state loaded from backend API
+  const [categories, setCategories] = useState([]);
+
+  // Refresh functions for synchronization
+  const refreshCategories = () => {
+    fetch('/api/categories')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setCategories(data);
+      })
+      .catch((err) => console.warn('Could not fetch categories from server:', err));
+  };
+
+  const refreshProducts = () => {
+    fetch('/api/products')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setProducts(data);
+      })
+      .catch((err) => console.warn('Could not fetch products from server:', err));
+  };
+
+  useEffect(() => {
+    refreshCategories();
+    refreshProducts();
+  }, []);
 
   // Cart state
   const [cart, setCart] = useState(() => {
     const saved = localStorage.getItem('autolider_cart');
-    return saved ? JSON.parse(saved) : [
-      { product: INITIAL_PRODUCTS[0], qty: 1 },
-      { product: INITIAL_PRODUCTS[1], qty: 1 }
-    ];
+    return saved ? JSON.parse(saved) : [];
   });
 
   // Wishlist state (Array of product IDs)
   const [wishlist, setWishlist] = useState(() => {
     const saved = localStorage.getItem('autolider_wishlist');
-    return saved ? JSON.parse(saved) : ['p1', 'p2', 101, 103];
+    return saved ? JSON.parse(saved) : [];
   });
 
-  // User state (Role switcher: 'buyer' | 'seller')
+  // User state
   const [userRole, setUserRole] = useState('buyer'); // default role
-  const [user, setUser] = useState({
-    name: 'Алексей Смирнов',
-    phone: '+7 (777) 456-78-90',
-    email: 'alex.smirnov@autolider.kz',
-    city: 'Алматы',
-    bonusCard: '7789 4512 9012 3456',
-    bonusBalance: 4250,
-    garage: INITIAL_GARAGE,
-    company: {
-      name: 'ТОО "Автолидер Директ"',
-      bin: '210940019283',
-      rating: 4.95,
-      salesTotal: 14850000,
-      banner: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=1200&auto=format&fit=crop&q=80',
-      logo: '/assets/img/logo.svg'
-    }
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('autolider_user');
+    return saved ? JSON.parse(saved) : null;
   });
+
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('autolider_user');
+    if (saved) return JSON.parse(saved);
+    return null;
+  });
+
+  const refreshUserData = () => {
+    const saved = localStorage.getItem('autolider_user');
+    if (!saved) return;
+    try {
+      const u = JSON.parse(saved);
+      if (u && (u.email || u.id)) {
+        fetch('/api/customers')
+          .then((res) => res.json())
+          .then((customers) => {
+            if (Array.isArray(customers)) {
+              const matched = customers.find(
+                (c) =>
+                  String(c.id) === String(u.id) ||
+                  (c.email && u.email && c.email.toLowerCase() === u.email.toLowerCase())
+              );
+              if (matched) {
+                const updated = { ...u, ...matched };
+                setCurrentUser(updated);
+                setUser(updated);
+                localStorage.setItem('autolider_user', JSON.stringify(updated));
+              } else {
+                // Customer profile was deleted from DB
+                setCurrentUser(null);
+                setUser(null);
+                localStorage.removeItem('autolider_user');
+                localStorage.removeItem('autolider_token');
+              }
+            }
+          })
+          .catch((err) => console.warn('User sync error:', err));
+      }
+    } catch (e) {}
+  };
+
+  useEffect(() => {
+    refreshUserData();
+  }, []);
+
+  const logout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('autolider_user');
+    localStorage.removeItem('autolider_token');
+    showToast('Вы вышли из системы', 'info');
+  };
 
   // Orders and Seller Sales state
-  const [orders, setOrders] = useState(INITIAL_ORDERS);
-  const [sellerSales, setSellerSales] = useState(INITIAL_SELLER_SALES);
+  const [orders, setOrders] = useState([]);
+  const [sellerSales, setSellerSales] = useState([]);
 
   // Toast notifications state
   const [toast, setToast] = useState(null);
@@ -80,6 +135,11 @@ export const AppProvider = ({ children }) => {
 
   // Cart actions
   const addToCart = (product, qty = 1) => {
+    const activeUser = currentUser || user;
+    if (!activeUser) {
+      showToast('Авторизуйтесь, чтобы добавить товар в корзину', 'error', 3000);
+      return false;
+    }
     setCart((prev) => {
       const existingIndex = prev.findIndex((item) => item.product.id === product.id);
       if (existingIndex > -1) {
@@ -90,6 +150,7 @@ export const AppProvider = ({ children }) => {
       return [...prev, { product, qty }];
     });
     showToast(`"${product.title.substring(0, 24)}..." добавлен в корзину`, 'success', 2000);
+    return true;
   };
 
   const removeFromCart = (productId) => {
@@ -201,17 +262,28 @@ export const AppProvider = ({ children }) => {
     showToast('Товар удален', 'warning');
   };
 
+  const categoriesWithCounts = categories.map((cat) => {
+    const count = products.filter(
+      (p) => p.status !== 'disabled' && (p.categoryId === cat.id || p.categoryName === cat.name)
+    ).length;
+    return { ...cat, count };
+  });
+
   return (
     <AppContext.Provider
       value={{
         products,
-        categories: INITIAL_CATEGORIES,
+        categories: categoriesWithCounts,
+        rawCategories: categories,
         cart,
         cartCount,
         cartTotal,
         wishlist,
         userRole,
-        user,
+        user: currentUser || user,
+        currentUser,
+        setCurrentUser,
+        logout,
         orders,
         sellerSales,
         toast,
@@ -225,6 +297,8 @@ export const AppProvider = ({ children }) => {
         setUserRole,
         addGarageVehicle,
         placeOrder,
+        refreshProducts,
+        refreshCategories,
         addProduct,
         updateProduct,
         deleteProduct,

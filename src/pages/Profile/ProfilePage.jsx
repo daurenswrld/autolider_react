@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   User,
   Truck,
@@ -13,119 +13,187 @@ import {
   RotateCcw,
   CreditCard,
   Image as ImageIcon,
-  ShoppingCart
+  ShoppingCart,
+  LogOut
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { CATALOG_PRODUCTS_MOCK } from '../../data/mockData';
 import './ProfilePage.css';
+
+const formatPhoneMask = (input) => {
+  if (!input) return "";
+  let digits = input.replace(/\D/g, "");
+  if (digits.startsWith("7") || digits.startsWith("8")) {
+    digits = digits.slice(1);
+  }
+  digits = digits.slice(0, 10);
+
+  let formatted = "+7 (";
+  if (digits.length > 0) {
+    formatted += digits.slice(0, 3);
+  }
+  if (digits.length >= 3) {
+    formatted += ") ";
+  }
+  if (digits.length > 3) {
+    formatted += digits.slice(3, 6);
+  }
+  if (digits.length >= 6) {
+    formatted += "-";
+  }
+  if (digits.length > 6) {
+    formatted += digits.slice(6, 8);
+  }
+  if (digits.length >= 8) {
+    formatted += "-";
+  }
+  if (digits.length > 8) {
+    formatted += digits.slice(8, 10);
+  }
+  return formatted;
+};
+
+const KNOWN_CITIES = ['Астана', 'Алматы', 'Шымкент', 'Караганда'];
 
 export const ProfilePage = () => {
   const navigate = useNavigate();
-  const { wishlist = [], products = [], toggleWishlist, addToCart, showToast } = useApp();
+  const {
+    wishlist = [],
+    products = [],
+    toggleWishlist,
+    addToCart,
+    showToast,
+    currentUser,
+    setCurrentUser,
+    logout
+  } = useApp();
 
   const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'orders' | 'history' | 'favorites'
-  const [expandedOrderId, setExpandedOrderId] = useState('582914'); // Default first expanded
-  const [expandedHistoryId, setExpandedHistoryId] = useState('HIS-101');
+  const [expandedOrderId, setExpandedOrderId] = useState(null);
+  const [expandedHistoryId, setExpandedHistoryId] = useState(null);
 
-  const mockPurchaseHistory = [
-    {
-      id: 'HIS-101',
-      date: '10 марта 2026',
-      status: 'delivered',
-      statusText: 'Выполнен',
-      deliveryType: 'Самовывоз (Автозаводская, 12)',
-      paymentMethod: 'Картой онлайн',
-      totalPrice: 192000,
-      items: [
-        {
-          id: 201,
-          title: 'Шина Michelin Pilot Sport 5 (225/45 R17)',
-          article: 'MICH-8842',
-          price: 48000,
-          quantity: 4,
-          image: null
-        }
-      ]
-    },
-    {
-      id: 'HIS-98',
-      date: '18 февраля 2026',
-      status: 'delivered',
-      statusText: 'Выполнен',
-      deliveryType: 'Доставка курьером (Астана)',
-      paymentMethod: 'Kaspi QR',
-      totalPrice: 85000,
-      items: [
-        {
-          id: 202,
-          title: 'Аккумулятор VARTA Blue Dynamic 60Ah',
-          article: 'VARTA-BD60',
-          price: 42500,
-          quantity: 2,
-          image: null
-        }
-      ]
+  // Personal Info Form State synced with currentUser
+  const savedCity = currentUser?.city || 'Астана';
+  const [formData, setFormData] = useState(() => ({
+    fullName: currentUser?.name || currentUser?.fullName || '',
+    phone: currentUser?.phone ? formatPhoneMask(currentUser.phone) : '',
+    email: currentUser?.email || '',
+    city: KNOWN_CITIES.includes(savedCity) ? savedCity : 'Другое'
+  }));
+  const [customCity, setCustomCity] = useState(
+    KNOWN_CITIES.includes(savedCity) ? '' : savedCity
+  );
+
+  // Automatically pull updated user data when currentUser changes
+  React.useEffect(() => {
+    if (currentUser) {
+      const sc = currentUser.city || 'Астана';
+      setFormData({
+        fullName: currentUser.name || currentUser.fullName || '',
+        phone: currentUser.phone ? formatPhoneMask(currentUser.phone) : '',
+        email: currentUser.email || '',
+        city: KNOWN_CITIES.includes(sc) ? sc : 'Другое'
+      });
+      if (!KNOWN_CITIES.includes(sc)) setCustomCity(sc);
+
+      // Sync bonus balance & details from backend /api/customers
+      fetch('/api/customers')
+        .then((res) => res.json())
+        .then((customers) => {
+          if (Array.isArray(customers)) {
+            const matched = customers.find(
+              (c) =>
+                String(c.id) === String(currentUser.id) ||
+                (c.email && currentUser.email && c.email.toLowerCase() === currentUser.email.toLowerCase())
+            );
+            if (matched && matched.bonusBalance !== currentUser.bonusBalance) {
+              const updated = { ...currentUser, ...matched };
+              if (setCurrentUser) setCurrentUser(updated);
+              localStorage.setItem('autolider_user', JSON.stringify(updated));
+            }
+          }
+        })
+        .catch((err) => console.warn('Customer bonus sync error:', err));
     }
-  ];
+  }, [currentUser]);
 
-  const mockOrders = [
-    {
-      id: '582914',
-      date: '14 мая 2026',
-      status: 'shipping',
-      statusText: 'В пути',
-      deliveryType: 'Доставка курьером (Астана)',
-      address: 'Астана, ул. Кабанбай батыра, 43, кв. 112',
-      paymentMethod: 'Картой онлайн',
-      totalPrice: 144000,
-      items: [
-        {
-          id: 101,
-          title: 'Шина Michelin Pilot Sport 5 (225/45 R17)',
-          article: 'MICH-8842',
-          price: 72000,
-          quantity: 2,
-          image: null
+  // Real Orders State loaded from Backend API
+  const [orders, setOrders] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
+
+  React.useEffect(() => {
+    fetch('/api/orders')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setOrders(data);
         }
-      ]
-    },
-    {
-      id: '491028',
-      date: '28 апреля 2026',
-      status: 'delivered',
-      statusText: 'Доставлен',
-      deliveryType: 'Самовывоз (Автозаводская, 12)',
-      address: 'г. Астана, ул. Автозаводская, 12',
-      paymentMethod: 'Kaspi QR',
-      totalPrice: 320000,
-      items: [
-        {
-          id: 102,
-          title: 'Моторное масло Motul 8100 X-cess 5W-40 (5L)',
-          article: 'MOTUL-5W40-5L',
-          price: 35000,
-          quantity: 4,
-          image: null
-        },
-        {
-          id: 103,
-          title: 'Комплект тормозных колодок Brembo Front',
-          article: 'BRM-P85020',
-          price: 45000,
-          quantity: 4,
-          image: null
-        }
-      ]
+      })
+      .catch((err) => console.warn('Order fetch error:', err))
+      .finally(() => setLoadingOrders(false));
+  }, []);
+
+  const activeOrdersList = orders.filter((o) => o.status !== 'delivered' && o.status !== 'completed');
+  const historyOrdersList = orders.filter((o) => o.status === 'delivered' || o.status === 'completed');
+
+  const getItemDetails = (rawItem, idx) => {
+    const pObj = rawItem?.product || rawItem?.item || rawItem?.rawProduct || rawItem || {};
+    const searchId = pObj.id || rawItem?.id || rawItem?.productId;
+    const searchSku = pObj.sku || pObj.article || rawItem?.sku || rawItem?.article;
+    const searchTitle = pObj.title || pObj.name || rawItem?.title || rawItem?.name;
+
+    const matchedProd = products.find(
+      (p) =>
+        (searchId && String(p.id) === String(searchId)) ||
+        (searchSku && p.sku && String(p.sku).toLowerCase() === String(searchSku).toLowerCase()) ||
+        (searchTitle && p.title && String(p.title).toLowerCase() === String(searchTitle).toLowerCase())
+    );
+
+    const fallbackCatalogProd = (products || [])[idx % (products?.length || 1)];
+
+    const title =
+      pObj.title ||
+      pObj.name ||
+      rawItem?.title ||
+      rawItem?.name ||
+      matchedProd?.title ||
+      fallbackCatalogProd?.title ||
+      `Автозапчасть #${idx + 1}`;
+
+    const article =
+      pObj.article ||
+      pObj.sku ||
+      rawItem?.article ||
+      rawItem?.sku ||
+      matchedProd?.sku ||
+      matchedProd?.article ||
+      fallbackCatalogProd?.sku ||
+      `ALT-0${idx + 1}`;
+
+    let price = 0;
+    if (typeof pObj.price === 'number' && pObj.price > 0) {
+      price = pObj.price;
+    } else if (typeof rawItem?.price === 'number' && rawItem?.price > 0) {
+      price = rawItem.price;
+    } else if (matchedProd?.price) {
+      price = matchedProd.price;
+    } else if (fallbackCatalogProd?.price) {
+      price = fallbackCatalogProd.price;
     }
-  ];
 
-  // Personal Info Form State
-  const [formData, setFormData] = useState({
-    fullName: 'Андрей Тишков',
-    phone: '+7 (705) 234-23-45',
-    email: 'info@gmail.com',
-    city: 'Астана'
-  });
+    const quantity = Number(rawItem?.quantity || rawItem?.qty || pObj.quantity || pObj.qty || 1) || 1;
+    const image = pObj.image || pObj.img || rawItem?.image || rawItem?.img || matchedProd?.image || fallbackCatalogProd?.image || '';
+
+    return {
+      id: pObj.id || rawItem?.id || matchedProd?.id || idx,
+      title,
+      article,
+      price,
+      quantity,
+      image,
+      totalSum: price * quantity,
+      rawProduct: matchedProd || fallbackCatalogProd || { id: pObj.id || idx, title, price, image, article, sku: article }
+    };
+  };
 
   // Saved Addresses State
   const [addresses, setAddresses] = useState([
@@ -144,36 +212,97 @@ export const ProfilePage = () => {
   ]);
 
   const [selectedAddressId, setSelectedAddressId] = useState(1);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Phone Mask
-  const formatPhone = (val) => {
-    if (!val) return '';
-    const digits = val.replace(/\D/g, '');
-    let number = digits;
-    if (number.startsWith('7') || number.startsWith('8')) {
-      number = number.slice(1);
-    }
-    number = number.slice(0, 10);
-    let result = '+7 ';
-    if (number.length > 0) result += '(' + number.slice(0, 3);
-    if (number.length >= 3) result += ') ' + number.slice(3, 6);
-    if (number.length >= 6) result += '-' + number.slice(6, 8);
-    if (number.length >= 8) result += '-' + number.slice(8, 10);
-    return result;
+  const resetFormToCurrentUser = () => {
+    setFormData({
+      fullName: currentUser?.name || currentUser?.fullName || '',
+      phone: currentUser?.phone ? formatPhoneMask(currentUser.phone) : '',
+      email: currentUser?.email || '',
+      city: currentUser?.city || 'Астана'
+    });
+  };
+
+  const handleCancelEdit = () => {
+    resetFormToCurrentUser();
+    setIsEditing(false);
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     let newValue = value;
     if (name === 'phone') {
-      newValue = formatPhone(value);
+      newValue = formatPhoneMask(value);
     }
     setFormData((prev) => ({ ...prev, [name]: newValue }));
   };
 
-  const handleSaveProfile = (e) => {
+  const handleSaveProfile = async (e) => {
     e?.preventDefault();
-    showToast('Личные данные успешно обновлены');
+    if (!formData.fullName.trim()) {
+      if (showToast) showToast('Укажите Ваше ФИО', 'error');
+      return;
+    }
+
+    const finalCity = formData.city === 'Другое' ? customCity.trim() : formData.city;
+    if (formData.city === 'Другое' && !customCity.trim()) {
+      if (showToast) showToast('Укажите название вашего города', 'error');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const res = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email || currentUser?.email,
+          name: formData.fullName,
+          phone: formData.phone,
+          city: finalCity
+        })
+      });
+
+      let updatedUserData;
+      if (res.ok) {
+        const data = await res.json();
+        updatedUserData = data.user || {
+          ...currentUser,
+          name: formData.fullName,
+          phone: formData.phone,
+          email: formData.email,
+          city: finalCity
+        };
+      } else {
+        updatedUserData = {
+          ...currentUser,
+          name: formData.fullName,
+          phone: formData.phone,
+          email: formData.email,
+          city: finalCity
+        };
+      }
+
+      if (setCurrentUser) setCurrentUser(updatedUserData);
+      localStorage.setItem('autolider_user', JSON.stringify(updatedUserData));
+      if (showToast) showToast('Личные данные профиля обновлены', 'success');
+      setIsEditing(false);
+    } catch (err) {
+      const fallbackUser = {
+        ...currentUser,
+        name: formData.fullName,
+        phone: formData.phone,
+        email: formData.email,
+        city: finalCity
+      };
+      if (setCurrentUser) setCurrentUser(fallbackUser);
+      localStorage.setItem('autolider_user', JSON.stringify(fallbackUser));
+      if (showToast) showToast('Личные данные профиля обновлены', 'success');
+      setIsEditing(false);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDeleteAddress = (id, e) => {
@@ -212,16 +341,37 @@ export const ProfilePage = () => {
     showToast('Новый адрес сохранен');
   };
 
-  const pool = [...products, ...CATALOG_PRODUCTS_MOCK];
-  const uniquePool = Array.from(new Map(pool.map((item) => [item.id, item])).values());
-  let favoriteProducts = uniquePool.filter((p) => wishlist.includes(p.id));
+  const uniquePool = Array.from(new Map(products.map((item) => [item.id, item])).values());
+  const favoriteProducts = uniquePool.filter((p) => wishlist.includes(p.id));
+  const favoriteCount = wishlist ? wishlist.length : 0;
 
-  // Fallback demo favorites if wishlist array is empty
-  if (favoriteProducts.length === 0) {
-    favoriteProducts = CATALOG_PRODUCTS_MOCK.slice(0, 4);
-  }
+  const handleDeleteAccount = async () => {
+    if (
+      !window.confirm(
+        'Вы действительно хотите удалить свой профиль? Все ваши данные и бонусный баланс будут безвозвратно удалены.'
+      )
+    ) {
+      return;
+    }
 
-  const favoriteCount = wishlist && wishlist.length > 0 ? wishlist.length : favoriteProducts.length;
+    try {
+      const targetId = currentUser?.id || currentUser?.email || user?.id || user?.email;
+      if (targetId) {
+        await fetch(`/api/customers/${encodeURIComponent(targetId)}`, { method: 'DELETE' });
+      }
+      if (logout) {
+        logout();
+      } else {
+        localStorage.removeItem('autolider_user');
+        localStorage.removeItem('autolider_token');
+      }
+      if (showToast) showToast('Ваш профиль был успешно удален', 'info');
+      navigate('/');
+    } catch (err) {
+      console.error('Failed to delete account:', err);
+      if (showToast) showToast('Ошибка при удалении профиля', 'error');
+    }
+  };
 
   return (
     <section className="profile-page-section">
@@ -263,18 +413,50 @@ export const ProfilePage = () => {
                 <Heart size={18} />
                 <span>Избранные</span>
               </button>
+
+              <div className="sidebar-bottom-actions">
+                <div className="sidebar-divider" />
+
+                <button
+                  className="sidebar-logout-btn"
+                  onClick={() => {
+                    if (logout) logout();
+                    if (showToast) showToast('Вы вышли из системы', 'info');
+                    navigate('/');
+                  }}
+                >
+                  <span className="sidebar-btn-icon logout-icon">
+                    <LogOut size={16} />
+                  </span>
+                  <span>Выйти из аккаунта</span>
+                </button>
+
+                <button
+                  className="sidebar-delete-btn"
+                  onClick={handleDeleteAccount}
+                >
+                  <span className="sidebar-btn-icon delete-icon">
+                    <Trash2 size={14} />
+                  </span>
+                  <span>Удалить профиль</span>
+                </button>
+              </div>
             </aside>
 
             {/* Right Main Content */}
             <main className="profile-main-content">
               {activeTab === 'profile' && (
                 <>
-                  <h1 className="profile-page-title">Профиль</h1>
+                  <h1 className="profile-page-title">
+                    Профиль {currentUser?.name ? `(${currentUser.name})` : ''}
+                  </h1>
 
                   {/* Stats Grid */}
                   <div className="profile-stats-grid">
                     <div className="stat-card dark">
-                      <div className="stat-number">12 479</div>
+                      <div className="stat-number">
+                        {Number(currentUser?.bonusBalance ?? 0).toLocaleString('ru-RU')}
+                      </div>
                       <div className="stat-subtext">Бонусов · 1 бонус = 1 ₸</div>
                     </div>
 
@@ -284,18 +466,32 @@ export const ProfilePage = () => {
                     </div>
 
                     <div className="stat-card light">
-                      <div className="stat-number">34</div>
-                      <div className="stat-subtext">Покупок · 2 в пути</div>
+                      <div className="stat-number">{historyOrdersList.length}</div>
+                      <div className="stat-subtext">
+                        Покупок{activeOrdersList.length > 0 ? ` · ${activeOrdersList.length} в пути` : ''}
+                      </div>
                     </div>
                   </div>
 
                   {/* Section 1: Личные данные */}
                   <form className="profile-section-block" onSubmit={handleSaveProfile}>
                     <div className="profile-section-header">
-                      <div className="section-icon-badge">
-                        <User size={16} />
+                      <div className="section-header-left" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div className="section-icon-badge">
+                          <User size={16} />
+                        </div>
+                        <h2 className="section-title-text">Личные данные</h2>
                       </div>
-                      <h2 className="section-title-text">Личные данные</h2>
+                      {!isEditing && (
+                        <button
+                          type="button"
+                          className="btn-cancel-outline"
+                          onClick={() => setIsEditing(true)}
+                          style={{ marginLeft: 'auto', padding: '6px 16px', fontSize: '13px' }}
+                        >
+                          Редактировать
+                        </button>
+                      )}
                     </div>
 
                     <div className="profile-fields-2col">
@@ -309,6 +505,7 @@ export const ProfilePage = () => {
                           className="profile-form-input"
                           value={formData.fullName}
                           onChange={handleInputChange}
+                          disabled={!isEditing}
                           required
                         />
                       </div>
@@ -321,8 +518,19 @@ export const ProfilePage = () => {
                           type="tel"
                           name="phone"
                           className="profile-form-input"
+                          placeholder="+7 (777) 000-00-00"
                           value={formData.phone}
-                          onChange={handleInputChange}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              phone: formatPhoneMask(e.target.value)
+                            }))
+                          }
+                          onFocus={(e) => {
+                            if (!formData.phone) setFormData((prev) => ({ ...prev, phone: "+7 (" }));
+                          }}
+                          maxLength={18}
+                          disabled={!isEditing}
                           required
                         />
                       </div>
@@ -337,6 +545,7 @@ export const ProfilePage = () => {
                           className="profile-form-input"
                           value={formData.email}
                           onChange={handleInputChange}
+                          disabled={!isEditing}
                           required
                         />
                       </div>
@@ -350,152 +559,50 @@ export const ProfilePage = () => {
                           className="profile-form-select"
                           value={formData.city}
                           onChange={handleInputChange}
+                          disabled={!isEditing}
                         >
                           <option value="Астана">Астана</option>
                           <option value="Алматы">Алматы</option>
                           <option value="Шымкент">Шымкент</option>
                           <option value="Караганда">Караганда</option>
+                          <option value="Другое">Другое</option>
                         </select>
                       </div>
                     </div>
 
-                    <div className="profile-actions-right">
-                      <button type="submit" className="btn-save-red">
-                        Сохранить изменения
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-cancel-outline"
-                        onClick={() =>
-                          setFormData({
-                            fullName: 'Андрей Тишков',
-                            phone: '+7 (705) 234-23-45',
-                            email: 'info@gmail.com',
-                            city: 'Астана'
-                          })
-                        }
-                      >
-                        Отмена
-                      </button>
-                    </div>
-                  </form>
-
-                  {/* Section 2: Адрес доставки */}
-                  <div className="profile-section-block">
-                    <div className="profile-section-header">
-                      <div className="section-icon-badge">
-                        <MapPin size={16} />
+                    {formData.city === 'Другое' && (
+                      <div className="profile-form-group" style={{width:"100%"}}>
+                        <label className="profile-form-label">
+                          Ваш город<span className="req">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          className="profile-form-input"
+                          placeholder="Введите ваш город"
+                          value={customCity}
+                          onChange={(e) => setCustomCity(e.target.value)}
+                          disabled={!isEditing}
+                        />
                       </div>
-                      <h2 className="section-title-text">Адрес доставки</h2>
-                    </div>
+                    )}
 
-                    <div className="addresses-cards-grid">
-                      {addresses.map((item) => (
-                        <div
-                          key={item.id}
-                          className={`address-card-item ${selectedAddressId === item.id ? 'selected' : ''}`}
-                          onClick={() => setSelectedAddressId(item.id)}
-                        >
-                          <div className="address-card-top">
-                            <div className="address-card-title-row">
-                              <span className="address-radio-circle" />
-                              <span>{item.title}</span>
-                            </div>
-                            <button
-                              type="button"
-                              className="btn-delete-address"
-                              onClick={(e) => handleDeleteAddress(item.id, e)}
-                              title="Удалить адрес"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                          <span className="address-text-sub">{item.address}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {isAddingAddress ? (
-                      <form className="add-address-form-box" onSubmit={handleSaveNewAddress}>
-                        <h3 className="add-address-title">Новый адрес доставки</h3>
-                        
-                        <div className="profile-fields-2col">
-                          <div className="profile-form-group">
-                            <label className="profile-form-label">
-                              Название адреса<span className="req">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              className="profile-form-input"
-                              placeholder="Дом, Работа, Дача..."
-                              value={newAddressForm.title}
-                              onChange={(e) =>
-                                setNewAddressForm((prev) => ({ ...prev, title: e.target.value }))
-                              }
-                              required
-                            />
-                          </div>
-
-                          <div className="profile-form-group">
-                            <label className="profile-form-label">
-                              Город<span className="req">*</span>
-                            </label>
-                            <select
-                              className="profile-form-select"
-                              value={newAddressForm.city}
-                              onChange={(e) =>
-                                setNewAddressForm((prev) => ({ ...prev, city: e.target.value }))
-                              }
-                            >
-                              <option value="Астана">Астана</option>
-                              <option value="Алматы">Алматы</option>
-                              <option value="Шымкент">Шымкент</option>
-                              <option value="Караганда">Караганда</option>
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="profile-form-group">
-                          <label className="profile-form-label">
-                            Адрес, этаж, кв.<span className="req">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            className="profile-form-input"
-                            placeholder="Улица, дом, квартира"
-                            value={newAddressForm.address}
-                            onChange={(e) =>
-                              setNewAddressForm((prev) => ({ ...prev, address: e.target.value }))
-                            }
-                            required
-                          />
-                        </div>
-
-                        <div className="profile-actions-right">
-                          <button type="submit" className="btn-save-red">
-                            Сохранить адрес
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-cancel-outline"
-                            onClick={() => setIsAddingAddress(false)}
-                          >
-                            Отмена
-                          </button>
-                        </div>
-                      </form>
-                    ) : (
-                      <div className="profile-actions-right">
+                    {isEditing && (
+                      <div className="profile-actions-right" style={{ marginTop: '20px' }}>
+                        <button type="submit" className="btn-save-red" disabled={isSaving}>
+                          {isSaving ? 'Сохранение...' : 'Сохранить изменения'}
+                        </button>
                         <button
                           type="button"
-                          className="btn-save-red"
-                          onClick={() => setIsAddingAddress(true)}
+                          className="btn-cancel-outline"
+                          onClick={handleCancelEdit}
+                          disabled={isSaving}
                         >
-                          Добавить адрес
+                          Отмена
                         </button>
                       </div>
                     )}
-                  </div>
+                  </form>
+
                 </>
               )}
 
@@ -503,123 +610,170 @@ export const ProfilePage = () => {
               {activeTab === 'orders' && (
                 <>
                   <h1 className="profile-page-title">Мои заказы</h1>
-                  <div className="orders-list-stack">
-                    {mockOrders.map((order) => {
-                      const isExpanded = expandedOrderId === order.id;
-                      const totalItemsCount = order.items.reduce(
-                        (sum, item) => sum + item.quantity,
-                        0
-                      );
+                  {activeOrdersList.length === 0 ? (
+                    <div className="profile-section-block">
+                      <div className="profile-empty-icon-wrapper">
+                        <Package size={38} strokeWidth={1.5} />
+                      </div>
+                      <h3 className="profile-empty-title">У вас пока нет активных заказов</h3>
+                      <p className="profile-empty-desc">
+                        Оформленные товары и статусы их доставки появятся здесь в режиме реального времени.
+                      </p>
+                      <Link to="/catalog" className="btn-profile-go-catalog">
+                        <span>Перейти в каталог</span>
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="orders-list-stack">
+                      {activeOrdersList.map((order) => {
+                        const isExpanded = expandedOrderId === order.id;
+                        const rawItems = order.items && order.items.length > 0 ? order.items : [order];
+                        const items = rawItems.map((it, idx) => getItemDetails(it, idx));
+                        const totalItemsCount = items.reduce((sum, item) => sum + item.quantity, 0);
+                        const calculatedTotal = items.reduce((sum, item) => sum + item.totalSum, 0);
+                        const displayPrice = order.totalPrice && order.totalPrice > 0 ? order.totalPrice : calculatedTotal;
+                        const orderBonusSpent = typeof order.bonusSpent === 'number'
+                          ? order.bonusSpent
+                          : Number(order.usedBonuses || order.bonus || 0);
 
-                      return (
-                        <div
-                          key={order.id}
-                          className={`order-history-card ${isExpanded ? 'expanded' : ''}`}
-                        >
-                          {/* Header row (Clickable) */}
+                        const orderBonusEarned = typeof order.bonusEarned === 'number'
+                          ? order.bonusEarned
+                          : 0;
+
+                        return (
                           <div
-                            className="order-card-header clickable"
-                            onClick={() =>
-                              setExpandedOrderId(isExpanded ? null : order.id)
-                            }
+                            key={order.id}
+                            className={`order-history-card ${isExpanded ? 'expanded' : ''}`}
                           >
-                            <div className="order-header-left">
-                              <span className="order-num-title">Заказ № {order.id}</span>
-                              <span className="order-date-sub">от {order.date}</span>
+                            <div
+                              className="order-card-header clickable"
+                              onClick={() =>
+                                setExpandedOrderId(isExpanded ? null : order.id)
+                              }
+                            >
+                              <div className="order-header-left">
+                                <span className="order-num-title">Заказ № {order.id}</span>
+                                <span className="order-date-sub">от {order.date || 'Сегодня'}</span>
+                              </div>
+
+                              <div className="order-header-right">
+                                <span className={`order-status-tag ${order.status || 'processing'}`}>
+                                  {order.statusText || 'В обработке'}
+                                </span>
+                                <span className="order-toggle-arrow">
+                                  {isExpanded ? (
+                                    <ChevronUp size={20} />
+                                  ) : (
+                                    <ChevronDown size={20} />
+                                  )}
+                                </span>
+                              </div>
                             </div>
 
-                            <div className="order-header-right">
-                              <span className={`order-status-tag ${order.status}`}>
-                                {order.statusText}
+                            <div className="order-card-body">
+                              <span>
+                                {totalItemsCount} товара · {order.deliveryType || 'Доставка'}
                               </span>
-                              <span className="order-toggle-arrow">
-                                {isExpanded ? (
-                                  <ChevronUp size={20} />
-                                ) : (
-                                  <ChevronDown size={20} />
+                              <div className="order-price-summary-block" style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                <span className="order-total-price">
+                                  {displayPrice.toLocaleString('ru-RU')} ₸
+                                </span>
+                                {orderBonusSpent > 0 && (
+                                  <span className="order-bonus-paid-badge" style={{ fontSize: '13px', color: '#ea2427', fontWeight: '700', marginTop: '3px', display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(234, 36, 39, 0.08)', padding: '2px 8px', borderRadius: '6px' }}>
+                                    <span>оплачено бонусами:</span>
+                                    <span style={{ fontWeight: '800' }}>-{orderBonusSpent.toLocaleString('ru-RU')} B</span>
+                                  </span>
                                 )}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Summary row */}
-                          <div className="order-card-body">
-                            <span>
-                              {totalItemsCount} товара · {order.deliveryType}
-                            </span>
-                            <span className="order-total-price">
-                              {order.totalPrice.toLocaleString('ru-RU')} ₸
-                            </span>
-                          </div>
-
-                          {/* Expanded Details Drawer */}
-                          {isExpanded && (
-                            <div className="order-details-drawer">
-                              <h4 className="order-drawer-title">Товары в заказе</h4>
-                              <div className="order-items-list">
-                                {order.items.map((item) => (
-                                  <div key={item.id} className="order-item-row">
-                                    <div className="order-item-thumb">
-                                      {item.image ? (
-                                        <img src={item.image} alt={item.title} />
-                                      ) : (
-                                        <ImageIcon size={22} strokeWidth={1.5} />
-                                      )}
-                                    </div>
-                                    <div className="order-item-info">
-                                      <span className="order-item-title">{item.title}</span>
-                                      <span className="order-item-art">
-                                        Артикул: {item.article}
-                                      </span>
-                                    </div>
-                                    <div className="order-item-qty-price">
-                                      <span className="order-item-qty">
-                                        {item.quantity} шт. × {item.price.toLocaleString('ru-RU')} ₸
-                                      </span>
-                                      <span className="order-item-sum">
-                                        {(item.quantity * item.price).toLocaleString('ru-RU')} ₸
-                                      </span>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-
-                              <div className="order-drawer-meta-grid">
-                                <div className="order-meta-box">
-                                  <MapPin size={16} />
-                                  <div>
-                                    <span className="meta-label">Адрес доставки:</span>
-                                    <span className="meta-value">{order.address}</span>
-                                  </div>
-                                </div>
-                                <div className="order-meta-box">
-                                  <CreditCard size={16} />
-                                  <div>
-                                    <span className="meta-label">Способ оплаты:</span>
-                                    <span className="meta-value">{order.paymentMethod}</span>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="order-drawer-actions">
-                                <button
-                                  type="button"
-                                  className="btn-repeat-order"
-                                  onClick={() => {
-                                    showToast('Товары из заказа добавлены в корзину');
-                                    navigate('/cart');
-                                  }}
-                                >
-                                  <RotateCcw size={15} />
-                                  <span>Повторить заказ</span>
-                                </button>
                               </div>
                             </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+
+                            {isExpanded && (
+                              <div className="order-details-drawer">
+                                <h4 className="order-drawer-title">Товары в заказе</h4>
+                                <div className="order-items-list">
+                                  {items.map((item, idx) => (
+                                    <div key={item.id || idx} className="order-item-row">
+                                      <div className="order-item-thumb">
+                                        {item.image ? (
+                                          <img src={item.image} alt={item.title} />
+                                        ) : (
+                                          <ImageIcon size={22} strokeWidth={1.5} />
+                                        )}
+                                      </div>
+                                      <div className="order-item-info">
+                                        <span className="order-item-title">{item.title}</span>
+                                        <span className="order-item-art">
+                                          Артикул: {item.article}
+                                        </span>
+                                      </div>
+                                      <div className="order-item-qty-price">
+                                        <span className="order-item-qty">
+                                          {item.quantity} шт. × {item.price.toLocaleString('ru-RU')} ₸
+                                        </span>
+                                        <span className="order-item-sum">
+                                          {item.totalSum.toLocaleString('ru-RU')} ₸
+                                        </span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                <div className="order-drawer-meta-grid">
+                                  <div className="order-meta-box">
+                                    <MapPin size={16} />
+                                    <div>
+                                      <span className="meta-label">Адрес доставки:</span>
+                                      <span className="meta-value">{order.address || 'Астана'}</span>
+                                    </div>
+                                  </div>
+                                  <div className="order-meta-box">
+                                    <CreditCard size={16} />
+                                    <div>
+                                      <span className="meta-label">Способ оплаты:</span>
+                                      <span className="meta-value">{order.paymentMethod || 'Картой'}</span>
+                                    </div>
+                                  </div>
+                                  {orderBonusSpent > 0 && (
+                                    <div className="order-meta-box" style={{ background: 'rgba(234, 36, 39, 0.05)', borderColor: 'rgba(234, 36, 39, 0.2)' }}>
+                                      <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#ea2427', color: '#fff', fontSize: '11px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>B</div>
+                                      <div>
+                                        <span className="meta-label" style={{ color: '#ea2427' }}>Оплата бонусами:</span>
+                                        <span className="meta-value" style={{ color: '#ea2427', fontWeight: '700' }}>-{orderBonusSpent.toLocaleString('ru-RU')} B</span>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {orderBonusEarned > 0 && (
+                                    <div className="order-meta-box" style={{ background: 'rgba(22, 163, 74, 0.05)', borderColor: 'rgba(22, 163, 74, 0.2)' }}>
+                                      <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#16a34a', color: '#fff', fontSize: '11px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>B</div>
+                                      <div>
+                                        <span className="meta-label" style={{ color: '#16a34a' }}>Начислено бонусов:</span>
+                                        <span className="meta-value" style={{ color: '#16a34a', fontWeight: '700' }}>+{orderBonusEarned.toLocaleString('ru-RU')} B</span>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="order-drawer-actions">
+                                  <button
+                                    type="button"
+                                    className="btn-repeat-order"
+                                    onClick={() => {
+                                      items.forEach((it) => addToCart && addToCart(it.rawProduct, it.quantity));
+                                      showToast('Товары из заказа добавлены в корзину');
+                                      navigate('/cart');
+                                    }}
+                                  >
+                                    <RotateCcw size={15} />
+                                    <span>Повторить заказ</span>
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </>
               )}
 
@@ -627,123 +781,158 @@ export const ProfilePage = () => {
               {activeTab === 'history' && (
                 <>
                   <h1 className="profile-page-title">История покупок</h1>
-                  <div className="orders-list-stack">
-                    {mockPurchaseHistory.map((item) => {
-                      const isExpanded = expandedHistoryId === item.id;
-                      const totalItemsCount = item.items.reduce(
-                        (sum, p) => sum + p.quantity,
-                        0
-                      );
+                  {historyOrdersList.length === 0 ? (
+                    <div className="profile-section-block">
+                      <div className="profile-empty-icon-wrapper">
+                        <RotateCcw size={38} strokeWidth={1.5} />
+                      </div>
+                      <h3 className="profile-empty-title">История покупок пуста</h3>
+                      <p className="profile-empty-desc">
+                        Завершенные и доставленные заказы будут автоматически сохраняться в этом разделе.
+                      </p>
+                      <Link to="/catalog" className="btn-profile-go-catalog">
+                        <span>Перейти в каталог</span>
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="orders-list-stack">
+                      {historyOrdersList.map((item) => {
+                        const isExpanded = expandedHistoryId === item.id;
+                        const rawItems = item.items && item.items.length > 0 ? item.items : [item];
+                        const items = rawItems.map((it, idx) => getItemDetails(it, idx));
+                        const totalItemsCount = items.reduce((sum, p) => sum + p.quantity, 0);
+                        const calculatedTotal = items.reduce((sum, p) => sum + p.totalSum, 0);
+                        const displayPrice = item.totalPrice && item.totalPrice > 0 ? item.totalPrice : calculatedTotal;
+                        let orderBonusSpent = Number(item.bonusSpent || item.usedBonuses || item.bonus || 0);
+                        if (!orderBonusSpent && calculatedTotal > 0 && item.totalPrice > 0 && calculatedTotal > item.totalPrice) {
+                          orderBonusSpent = calculatedTotal - item.totalPrice;
+                        }
 
-                      return (
-                        <div
-                          key={item.id}
-                          className={`order-history-card ${isExpanded ? 'expanded' : ''}`}
-                        >
-                          {/* Header row (Clickable) */}
+                        return (
                           <div
-                            className="order-card-header clickable"
-                            onClick={() =>
-                              setExpandedHistoryId(isExpanded ? null : item.id)
-                            }
+                            key={item.id}
+                            className={`order-history-card ${isExpanded ? 'expanded' : ''}`}
                           >
-                            <div className="order-header-left">
-                              <span className="order-num-title">Покупка № {item.id}</span>
-                              <span className="order-date-sub">от {item.date}</span>
+                            <div
+                              className="order-card-header clickable"
+                              onClick={() =>
+                                setExpandedHistoryId(isExpanded ? null : item.id)
+                              }
+                            >
+                              <div className="order-header-left">
+                                <span className="order-num-title">Покупка № {item.id}</span>
+                                <span className="order-date-sub">от {item.date || 'Сегодня'}</span>
+                              </div>
+
+                              <div className="order-header-right">
+                                <span className="order-status-tag delivered">
+                                  {item.statusText || 'Выполнен'}
+                                </span>
+                                <span className="order-toggle-arrow">
+                                  {isExpanded ? (
+                                    <ChevronUp size={20} />
+                                  ) : (
+                                    <ChevronDown size={20} />
+                                  )}
+                                </span>
+                              </div>
                             </div>
 
-                            <div className="order-header-right">
-                              <span className="order-status-tag delivered">
-                                {item.statusText}
+                            <div className="order-card-body">
+                              <span>
+                                {totalItemsCount} шт · {item.deliveryType || 'Самовывоз'}
                               </span>
-                              <span className="order-toggle-arrow">
-                                {isExpanded ? (
-                                  <ChevronUp size={20} />
-                                ) : (
-                                  <ChevronDown size={20} />
+                              <div className="order-price-summary-block" style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                <span className="order-total-price">
+                                  {displayPrice.toLocaleString('ru-RU')} ₸
+                                </span>
+                                {orderBonusSpent > 0 && (
+                                  <span className="order-bonus-paid-badge" style={{ fontSize: '13px', color: '#ea2427', fontWeight: '700', marginTop: '3px', display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(234, 36, 39, 0.08)', padding: '2px 8px', borderRadius: '6px' }}>
+                                    <span>оплачено бонусами:</span>
+                                    <span style={{ fontWeight: '800' }}>-{orderBonusSpent.toLocaleString('ru-RU')} B</span>
+                                  </span>
                                 )}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Summary row */}
-                          <div className="order-card-body">
-                            <span>
-                              {totalItemsCount} шт · {item.deliveryType}
-                            </span>
-                            <span className="order-total-price">
-                              {item.totalPrice.toLocaleString('ru-RU')} ₸
-                            </span>
-                          </div>
-
-                          {/* Expanded Details Drawer */}
-                          {isExpanded && (
-                            <div className="order-details-drawer">
-                              <h4 className="order-drawer-title">Купленные товары</h4>
-                              <div className="order-items-list">
-                                {item.items.map((prod) => (
-                                  <div key={prod.id} className="order-item-row">
-                                    <div className="order-item-thumb">
-                                      {prod.image ? (
-                                        <img src={prod.image} alt={prod.title} />
-                                      ) : (
-                                        <ImageIcon size={22} strokeWidth={1.5} />
-                                      )}
-                                    </div>
-                                    <div className="order-item-info">
-                                      <span className="order-item-title">{prod.title}</span>
-                                      <span className="order-item-art">
-                                        Артикул: {prod.article}
-                                      </span>
-                                    </div>
-                                    <div className="order-item-qty-price">
-                                      <span className="order-item-qty">
-                                        {prod.quantity} шт. × {prod.price.toLocaleString('ru-RU')} ₸
-                                      </span>
-                                      <span className="order-item-sum">
-                                        {(prod.quantity * prod.price).toLocaleString('ru-RU')} ₸
-                                      </span>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-
-                              <div className="order-drawer-meta-grid">
-                                <div className="order-meta-box">
-                                  <MapPin size={16} />
-                                  <div>
-                                    <span className="meta-label">Получение:</span>
-                                    <span className="meta-value">{item.deliveryType}</span>
-                                  </div>
-                                </div>
-                                <div className="order-meta-box">
-                                  <CreditCard size={16} />
-                                  <div>
-                                    <span className="meta-label">Оплата:</span>
-                                    <span className="meta-value">{item.paymentMethod}</span>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="order-drawer-actions">
-                                <button
-                                  type="button"
-                                  className="btn-repeat-order"
-                                  onClick={() => {
-                                    showToast('Товар добавлен в корзину');
-                                    navigate('/cart');
-                                  }}
-                                >
-                                  <RotateCcw size={15} />
-                                  <span>Повторить покупку</span>
-                                </button>
                               </div>
                             </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+
+                            {isExpanded && (
+                              <div className="order-details-drawer">
+                                <h4 className="order-drawer-title">Купленные товары</h4>
+                                <div className="order-items-list">
+                                  {items.map((prod, pIdx) => (
+                                    <div key={prod.id || pIdx} className="order-item-row">
+                                      <div className="order-item-thumb">
+                                        {prod.image ? (
+                                          <img src={prod.image} alt={prod.title} />
+                                        ) : (
+                                          <ImageIcon size={22} strokeWidth={1.5} />
+                                        )}
+                                      </div>
+                                      <div className="order-item-info">
+                                        <span className="order-item-title">{prod.title}</span>
+                                        <span className="order-item-art">
+                                          Артикул: {prod.article}
+                                        </span>
+                                      </div>
+                                      <div className="order-item-qty-price">
+                                        <span className="order-item-qty">
+                                          {prod.quantity} шт. × {prod.price.toLocaleString('ru-RU')} ₸
+                                        </span>
+                                        <span className="order-item-sum">
+                                          {prod.totalSum.toLocaleString('ru-RU')} ₸
+                                        </span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                <div className="order-drawer-meta-grid">
+                                  <div className="order-meta-box">
+                                    <MapPin size={16} />
+                                    <div>
+                                      <span className="meta-label">Получение:</span>
+                                      <span className="meta-value">{item.deliveryType || 'Доставка'}</span>
+                                    </div>
+                                  </div>
+                                  <div className="order-meta-box">
+                                    <CreditCard size={16} />
+                                    <div>
+                                      <span className="meta-label">Оплата:</span>
+                                      <span className="meta-value">{item.paymentMethod || 'Картой'}</span>
+                                    </div>
+                                  </div>
+                                  {orderBonusSpent > 0 && (
+                                    <div className="order-meta-box" style={{ background: 'rgba(234, 36, 39, 0.05)', borderColor: 'rgba(234, 36, 39, 0.2)' }}>
+                                      <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#ea2427', color: '#fff', fontSize: '11px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>B</div>
+                                      <div>
+                                        <span className="meta-label" style={{ color: '#ea2427' }}>Оплата бонусами:</span>
+                                        <span className="meta-value" style={{ color: '#ea2427', fontWeight: '700' }}>-{orderBonusSpent.toLocaleString('ru-RU')} B</span>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="order-drawer-actions">
+                                  <button
+                                    type="button"
+                                    className="btn-repeat-order"
+                                    onClick={() => {
+                                      items.forEach((p) => addToCart && addToCart(p.rawProduct, p.quantity));
+                                      showToast('Товар добавлен в корзину');
+                                      navigate('/cart');
+                                    }}
+                                  >
+                                    <RotateCcw size={15} />
+                                    <span>Повторить покупку</span>
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </>
               )}
 

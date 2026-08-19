@@ -265,35 +265,76 @@
 
 /* Mobile & Tablet Responsive Media Queries */
 @media (max-width: 900px) {
+  .privacy-page-section,
+  .privacy-container,
+  .privacy-header-card,
+  .privacy-layout-grid,
+  .privacy-toc-box,
+  .privacy-content-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+    min-width: 0 !important;
+  }
+
   .privacy-layout-grid {
-    grid-template-columns: 1fr;
+    display: flex !important;
+    flex-direction: column !important;
     gap: 20px;
+  }
+
+  .privacy-toc-box {
+    position: static;
+    padding: 16px;
+    border-radius: 14px;
+    width: 100%;
+  }
+
+  .toc-list {
+    display: flex !important;
+    flex-direction: column !important;
+    white-space: normal !important;
+    overflow-x: hidden !important;
+    gap: 8px;
+  }
+
+  .toc-link {
+    background: #f0f2f5;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
   }
 }
 
 @media (max-width: 768px) {
   .privacy-page-section {
-    padding: 24px 0 48px;
+    padding: 20px 0 40px;
   }
 
   .privacy-container {
-    padding: 0 16px;
+    padding: 0 12px;
   }
 
   .privacy-header-card {
-    padding: 24px 20px;
+    padding: 20px 16px;
     border-radius: 16px;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     gap: 12px;
   }
 
   .privacy-main-title {
-    font-size: 24px;
+    font-size: 22px;
     letter-spacing: normal;
+    word-break: break-word;
   }
 
   .privacy-subtitle {
-    font-size: 14px;
+    font-size: 13.5px;
+    word-break: break-word;
   }
 
   .privacy-meta-row {
@@ -302,51 +343,28 @@
     gap: 8px;
   }
 
-  .privacy-toc-box {
-    position: static;
-    padding: 16px;
-    border-radius: 14px;
-  }
-
-  .toc-list {
-    flex-direction: row;
-    overflow-x: auto;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding-bottom: 4px;
-  }
-
-  .toc-list::-webkit-scrollbar {
-    display: none;
-  }
-
-  .toc-link {
-    background: #f0f2f5;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-  }
-
   .privacy-content-card {
-    padding: 24px 18px;
+    padding: 20px 14px;
     border-radius: 16px;
-    gap: 28px;
+    gap: 24px;
   }
 
   .policy-sec-title {
-    font-size: 18px;
+    font-size: 17px;
     justify-content: flex-start;
     text-align: left;
+    word-break: break-word;
+    flex-wrap: wrap;
   }
 
   .policy-text,
   .policy-ul li {
     font-size: 13px;
+    word-break: break-word;
   }
 
   .privacy-contact-card {
-    padding: 20px 16px;
+    padding: 18px 14px;
     border-radius: 14px;
   }
 
@@ -358,5 +376,6 @@
   .contact-item-box {
     padding: 10px 14px;
     font-size: 13px;
+    word-break: break-word;
   }
 }

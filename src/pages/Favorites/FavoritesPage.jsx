@@ -1,27 +1,62 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ChevronRight, Search, ShoppingCart, Heart } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
-import { CATALOG_PRODUCTS_MOCK } from '../../data/mockData';
-import './FavoritesPage.css';
+import React, { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
+import { ChevronRight, Search, ShoppingCart, Heart, X } from "lucide-react";
+import { useApp } from "../../context/AppContext";
+import "./FavoritesPage.css";
 
 export const FavoritesPage = () => {
   const { wishlist = [], products = [], toggleWishlist, addToCart } = useApp();
-  const [vinQuery, setVinQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState(null);
 
-  const categories = [
-    'Масла и жидкости',
-    'Шины и диски',
-    'Автохимия',
-    'Аксессуары',
-    'Инструменты и техника'
-  ];
+  // Build the full favorites pool
+  const uniquePool = useMemo(
+    () => Array.from(new Map(products.map((item) => [item.id, item])).values()),
+    [products],
+  );
+  const favoriteProducts = useMemo(
+    () => uniquePool.filter((p) => wishlist.includes(p.id)),
+    [uniquePool, wishlist],
+  );
 
-  const pool = [...products, ...CATALOG_PRODUCTS_MOCK];
-  // Remove duplicates by id
-  const uniquePool = Array.from(new Map(pool.map(item => [item.id, item])).values());
-  const favoriteProducts = uniquePool.filter(p => wishlist.includes(p.id));
+  // Derive unique categories from actual favorites
+  const categories = useMemo(() => {
+    const cats = new Set();
+    favoriteProducts.forEach((p) => {
+      const cat = p.categoryName || p.category || p.subtitle;
+      if (cat) cats.add(cat);
+    });
+    return Array.from(cats);
+  }, [favoriteProducts]);
+
+  // Apply search + category filters
+  const filteredProducts = useMemo(() => {
+    let result = favoriteProducts;
+
+    if (activeCategory) {
+      result = result.filter((p) => {
+        const cat = p.categoryName || p.category || p.subtitle;
+        return cat === activeCategory;
+      });
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      result = result.filter(
+        (p) =>
+          (p.title || "").toLowerCase().includes(q) ||
+          (p.sku || "").toLowerCase().includes(q) ||
+          (p.categoryName || "").toLowerCase().includes(q) ||
+          (p.subtitle || "").toLowerCase().includes(q),
+      );
+    }
+
+    return result;
+  }, [favoriteProducts, activeCategory, searchQuery]);
+
+  const handleCategoryClick = (cat) => {
+    setActiveCategory((prev) => (prev === cat ? null : cat));
+  };
 
   return (
     <div className="favorites-page">
@@ -30,71 +65,162 @@ export const FavoritesPage = () => {
         <div className="favorites-layout">
           {/* Left Sidebar */}
           <aside className="favorites-sidebar">
+            <p className="sidebar-cat-title">Категории</p>
             <ul className="sidebar-cat-list">
-              {categories.map((cat) => (
-                <li
-                  key={cat}
-                  className={`sidebar-cat-item ${activeCategory === cat ? 'active' : ''}`}
-                  onClick={() => setActiveCategory(cat)}
-                >
-                  <span>{cat}</span>
-                  <ChevronRight size={18} className="cat-arrow" />
-                </li>
-              ))}
+              {categories.length === 0 ? (
+                <li className="sidebar-cat-empty">Нет категорий</li>
+              ) : (
+                categories.map((cat) => (
+                  <li
+                    key={cat}
+                    className={`sidebar-cat-item ${activeCategory === cat ? "active" : ""}`}
+                    onClick={() => handleCategoryClick(cat)}
+                  >
+                    <span>{cat}</span>
+                    <ChevronRight size={18} className="cat-arrow" />
+                  </li>
+                ))
+              )}
             </ul>
           </aside>
 
           {/* Main Content Area */}
           <main className="favorites-main-content">
-            {/* Header & VIN Search */}
+            {/* Header & Search */}
             <div className="favorites-header">
-              <h1 className="favorites-title">Избранные товары</h1>
+              <h1 className="favorites-title">
+                Избранные товары
+                {favoriteProducts.length > 0 && (
+                  <span className="favorites-count-badge">
+                    {favoriteProducts.length}
+                  </span>
+                )}
+              </h1>
               <div className="vin-search-box">
                 <div className="vin-input-wrapper">
                   <Search size={18} className="vin-icon" />
                   <input
                     type="text"
-                    placeholder="Поиск по VIN"
-                    value={vinQuery}
-                    onChange={(e) => setVinQuery(e.target.value)}
-                    className="vin-input"
+                    placeholder="Поиск по названию, артикулу..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="vin-input bg-transparent"
+                    style={{ background: "transparent" }}
                   />
+                  {searchQuery && (
+                    <button
+                      className="vin-clear-btn"
+                      onClick={() => setSearchQuery("")}
+                      type="button"
+                    >
+                      <X size={15} />
+                    </button>
+                  )}
                 </div>
-                <button className="btn-vin-search">Найти</button>
               </div>
             </div>
 
-            {/* Empty State View */}
+            {/* Active filters bar */}
+            {(activeCategory || searchQuery) && (
+              <div className="favorites-active-filters">
+                {activeCategory && (
+                  <span className="active-filter-tag">
+                    {activeCategory}
+                    <button
+                      onClick={() => setActiveCategory(null)}
+                      type="button"
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                )}
+                {searchQuery && (
+                  <span className="active-filter-tag">
+                    «{searchQuery}»
+                    <button onClick={() => setSearchQuery("")} type="button">
+                      <X size={12} />
+                    </button>
+                  </span>
+                )}
+                <button
+                  className="clear-all-filters"
+                  onClick={() => {
+                    setActiveCategory(null);
+                    setSearchQuery("");
+                  }}
+                  type="button"
+                >
+                  Сбросить всё
+                </button>
+              </div>
+            )}
+
+            {/* Empty State — no favorites at all */}
             {favoriteProducts.length === 0 ? (
               <div className="favorites-empty-state">
                 <div className="empty-img-wrapper">
-                  <svg width="84" height="84" viewBox="0 0 24 24" fill="none" stroke="#d0d4dc" strokeWidth="1.2">
-                    <rect x="3" y="3" width="18" height="18" rx="3" ry="3"></rect>
-                    <polygon points="12 8 8 13 11 13 10 17 16 11 13 11 14 8"></polygon>
-                  </svg>
+                  <Heart size={64} strokeWidth={1} color="#d0d4dc" />
                 </div>
                 <h2 className="empty-title">Избранное пока пусто</h2>
                 <p className="empty-description">
-                  Добавляйте товары в избранном, что бы не потерять их и купить позже
+                  Добавляйте товары в избранное, чтобы не потерять их и купить
+                  позже
                 </p>
                 <Link to="/catalog" className="btn-to-catalog">
                   <span>К покупкам</span>
                   <ShoppingCart size={18} />
                 </Link>
               </div>
+            ) : filteredProducts.length === 0 ? (
+              /* No results after filtering */
+              <div className="favorites-empty-state">
+                <div className="empty-img-wrapper">
+                  <Search size={64} strokeWidth={1} color="#d0d4dc" />
+                </div>
+                <h2 className="empty-title">Ничего не найдено</h2>
+                <p className="empty-description">
+                  Попробуйте изменить запрос или сбросить фильтры
+                </p>
+                <button
+                  className="btn-to-catalog"
+                  onClick={() => {
+                    setActiveCategory(null);
+                    setSearchQuery("");
+                  }}
+                  type="button"
+                >
+                  <span>Сбросить фильтры</span>
+                  <X size={18} />
+                </button>
+              </div>
             ) : (
               /* Populated Favorites Grid */
               <div className="favorites-products-grid">
-                {favoriteProducts.map((p) => {
-                  const displayPrice = typeof p.price === 'number' ? `${p.price.toLocaleString('ru-RU')} ₸` : p.price;
-                  const displayOldPrice = p.oldPrice ? (typeof p.oldPrice === 'number' ? `${p.oldPrice.toLocaleString('ru-RU')} ₸` : p.oldPrice) : null;
-                  const displayImg = p.image || p.img || '/assets/img/test_accessosry.png';
+                {filteredProducts.map((p) => {
+                  const displayPrice =
+                    typeof p.price === "number"
+                      ? `${p.price.toLocaleString("ru-RU")} ₸`
+                      : p.price;
+                  const displayOldPrice = p.oldPrice
+                    ? typeof p.oldPrice === "number"
+                      ? `${p.oldPrice.toLocaleString("ru-RU")} ₸`
+                      : p.oldPrice
+                    : null;
+                  const displayImg =
+                    p.image || p.img || "/assets/img/test_accessosry.png";
 
                   return (
                     <div key={p.id} className="product-card">
                       <div className="product-card-header">
                         <div className="badges-group">
-                          <span className="badge-hit">ХИТ</span>
+                          {p.badgeFastDelivery && (
+                            <span className="badge-hit">БЫСТРО</span>
+                          )}
+                          {p.discountPercent && (
+                            <span className="badge-hit">
+                              -{p.discountPercent}%
+                            </span>
+                          )}
                         </div>
                         <button
                           className="btn-fav active"
@@ -119,16 +245,25 @@ export const FavoritesPage = () => {
 
                       <div className="product-info-box">
                         <h3 className="product-title" title={p.title}>
-                          <Link to={`/product/${p.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                          <Link
+                            to={`/product/${p.id}`}
+                            style={{ textDecoration: "none", color: "inherit" }}
+                          >
                             {p.title}
                           </Link>
                         </h3>
-                        <p className="product-subtitle">{p.subtitle || p.categoryName || 'Автозапчасти'}</p>
+                        <p className="product-subtitle">
+                          {p.subtitle || p.categoryName || "Автозапчасти"}
+                        </p>
 
                         <div className="product-price-row">
                           <div className="price-wrapper">
                             <span className="price-main">{displayPrice}</span>
-                            {displayOldPrice && <span className="price-old">{displayOldPrice}</span>}
+                            {displayOldPrice && (
+                              <span className="price-old">
+                                {displayOldPrice}
+                              </span>
+                            )}
                           </div>
                         </div>
 

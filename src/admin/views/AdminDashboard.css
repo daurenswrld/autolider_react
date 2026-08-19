@@ -11,6 +11,7 @@
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+  margin-bottom: 10px;
 }
 
 .admin-page-title {
@@ -18,12 +19,14 @@
   font-weight: 800;
   color: #0f172a;
   margin: 0 0 4px 0;
+  text-align: left;
 }
 
 .admin-page-subtitle {
   font-size: 14px;
   color: #64748b;
   margin: 0;
+  text-align: left;
 }
 
 .admin-header-actions {
@@ -78,7 +81,9 @@
 }
 
 @keyframes spin {
-  100% { transform: rotate(360deg); }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Metric Cards Grid */

@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from "react";
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
   FolderTree,
+  Car,
   ShoppingCart,
+  FileText,
   Users,
   Building2,
   ShieldCheck,
@@ -17,78 +19,190 @@ import {
   ChevronRight,
   Bell,
   ShieldAlert,
-  Search
-} from 'lucide-react';
-import './AdminLayout.css';
+  Search,
+} from "lucide-react";
+import "./AdminLayout.css";
 
 export const AdminLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [adminUser, setAdminUser] = useState(() => {
-    return localStorage.getItem('autolider_admin_token')
-      ? { name: 'Администратор Autolider', role: 'Главный менеджер' }
+    const saved = localStorage.getItem("autolider_admin_user");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return localStorage.getItem("autolider_admin_token")
+      ? {
+          name: "Администратор Autolider",
+          role: "Главный Администратор",
+          roleKey: "admin",
+        }
       : null;
   });
 
-  const handleLogout = () => {
-    localStorage.removeItem('autolider_admin_token');
-    navigate('/admin/login');
+  // Badges: compare live counts with last-seen counts
+  const [newOrdersCount, setNewOrdersCount] = useState(0);
+  const [newRequestsCount, setNewRequestsCount] = useState(0);
+  const pollRef = useRef(null);
+
+  const fetchCounts = async () => {
+    try {
+      const [ordersRes, requestsRes] = await Promise.all([
+        fetch("/api/orders/count"),
+        fetch("/api/vin-requests/count"),
+      ]);
+      if (ordersRes.ok) {
+        const { count } = await ordersRes.json();
+        const seen = Number(
+          localStorage.getItem("autolider_orders_seen_count") || 0,
+        );
+        setNewOrdersCount(Math.max(0, count - seen));
+      }
+      if (requestsRes.ok) {
+        const { count } = await requestsRes.json();
+        const seen = Number(
+          localStorage.getItem("autolider_requests_seen_count") || 0,
+        );
+        setNewRequestsCount(Math.max(0, count - seen));
+      }
+    } catch (e) {}
   };
 
-  const navItems = [
-    {
-      title: 'Дашборд',
-      path: '/admin',
-      icon: LayoutDashboard,
-      exact: true
-    },
-    {
-      title: 'Товары',
-      path: '/admin/products',
-      icon: Package
-    },
-    {
-      title: 'Категории',
-      path: '/admin/categories',
-      icon: FolderTree
-    },
-    {
-      title: 'Заказы',
-      path: '/admin/orders',
-      icon: ShoppingCart,
-      badge: 'Новые'
-    },
-    {
-      title: 'Покупатели',
-      path: '/admin/customers',
-      icon: Users
-    },
-    {
-      title: 'Склады (БД)',
-      path: '/admin/warehouses',
-      icon: Building2
-    },
-    {
-      title: 'Права и Роли',
-      path: '/admin/roles',
-      icon: ShieldCheck
-    },
-    {
-      title: 'Баннеры',
-      path: '/admin/banners',
-      icon: ImageIcon
-    },
-    {
-      title: 'Настройки',
-      path: '/admin/settings',
-      icon: Settings
+  useEffect(() => {
+    fetchCounts();
+    pollRef.current = setInterval(fetchCounts, 30000);
+    return () => clearInterval(pollRef.current);
+  }, []);
+
+  React.useEffect(() => {
+    const token = localStorage.getItem("autolider_admin_token");
+    if (!token) {
+      navigate("/admin/login", { replace: true });
+    } else {
+      const saved = localStorage.getItem("autolider_admin_user");
+      if (saved) {
+        try {
+          setAdminUser(JSON.parse(saved));
+        } catch (e) {}
+      }
     }
+  }, [navigate, location.pathname]);
+
+  // Mark as seen when visiting orders or requests pages
+  useEffect(() => {
+    if (location.pathname === "/admin/orders") {
+      fetch("/api/orders/count")
+        .then((r) => r.json())
+        .then(({ count }) => {
+          localStorage.setItem("autolider_orders_seen_count", String(count));
+          setNewOrdersCount(0);
+        })
+        .catch(() => {});
+    }
+    if (location.pathname === "/admin/requests") {
+      fetch("/api/vin-requests/count")
+        .then((r) => r.json())
+        .then(({ count }) => {
+          localStorage.setItem("autolider_requests_seen_count", String(count));
+          setNewRequestsCount(0);
+        })
+        .catch(() => {});
+    }
+  }, [location.pathname]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("autolider_admin_token");
+    localStorage.removeItem("autolider_admin_user");
+    navigate("/admin/login");
+  };
+
+  const allNavItems = [
+    {
+      title: "Дашборд",
+      path: "/admin",
+      icon: LayoutDashboard,
+      exact: true,
+      roles: ["admin", "manager"],
+    },
+    {
+      title: "Товары",
+      path: "/admin/products",
+      icon: Package,
+      roles: ["admin", "manager"],
+    },
+    {
+      title: "Категории",
+      path: "/admin/categories",
+      icon: FolderTree,
+      roles: ["admin", "manager"],
+    },
+    {
+      title: "Марки и модели",
+      path: "/admin/brands",
+      icon: Car,
+      roles: ["admin", "manager"],
+    },
+    {
+      title: "Заказы",
+      path: "/admin/orders",
+      icon: ShoppingCart,
+      badge: newOrdersCount > 0 ? String(newOrdersCount) : null,
+      roles: ["admin", "manager"],
+    },
+    {
+      title: "Заявки (VIN)",
+      path: "/admin/requests",
+      icon: FileText,
+      badge: newRequestsCount > 0 ? String(newRequestsCount) : null,
+      roles: ["admin", "manager"],
+    },
+    {
+      title: "Покупатели",
+      path: "/admin/customers",
+      icon: Users,
+      roles: ["admin", "manager"],
+    },
+    {
+      title: "Баннеры",
+      path: "/admin/banners",
+      icon: ImageIcon,
+      roles: ["admin", "manager"],
+    },
+    {
+      title: "Склады (БД)",
+      path: "/admin/warehouses",
+      icon: Building2,
+      roles: ["admin"],
+    },
+    {
+      title: "Сотрудники и Доступ",
+      path: "/admin/roles",
+      icon: Users,
+      roles: ["admin"],
+    },
+    {
+      title: "Настройки",
+      path: "/admin/settings",
+      icon: Settings,
+      roles: ["admin"],
+    },
   ];
+
+  const currentRole = adminUser?.roleKey || "admin";
+  const navItems = allNavItems.filter((item) =>
+    item.roles.includes(currentRole),
+  );
+
+  if (!localStorage.getItem("autolider_admin_token")) {
+    return null;
+  }
 
   return (
     <div className="admin-app-wrapper">
-      {/* OpenCart Inspired Header Navbar */}
+      {/* Header Navbar */}
       <header className="admin-top-header">
         <div className="admin-header-left">
           <button
@@ -99,12 +213,12 @@ export const AdminLayout = () => {
             {isMobileSidebarOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
 
-          <div className="admin-brand-box" onClick={() => navigate('/admin')}>
-            <div className="admin-logo-badge">OC</div>
-            <div className="admin-brand-info">
-              <span className="admin-brand-title">Autolider Admin</span>
-              <span className="admin-opencart-tag">OpenCart Engine v3.0</span>
-            </div>
+          <div className="admin-brand-box" onClick={() => navigate("/admin")}>
+            <img
+              src="/assets/img/logo.svg"
+              alt="AUTOLIDER"
+              className="admin-brand-logo-img"
+            />
           </div>
         </div>
 
@@ -120,10 +234,13 @@ export const AdminLayout = () => {
           </a>
 
           <div className="admin-user-profile">
-            <div className="admin-avatar-circle">A</div>
             <div className="admin-user-meta">
-              <span className="admin-username">Администратор</span>
-              <span className="admin-role">Super Admin</span>
+              <span className="admin-username">
+                {adminUser?.name || "Сотрудник"}
+              </span>
+              <span className="admin-role">
+                {adminUser?.role || "Администратор"}
+              </span>
             </div>
           </div>
 
@@ -147,24 +264,20 @@ export const AdminLayout = () => {
           />
         )}
 
-        {/* Left OpenCart Sidebar Navigation */}
-        <aside className={`admin-sidebar ${isMobileSidebarOpen ? 'open' : ''}`}>
-          <div className="admin-sidebar-header">
-            <span className="sidebar-section-title">НАВИГАЦИЯ OPENCART</span>
-          </div>
-
+        {/* Left Sidebar Navigation */}
+        <aside className={`admin-sidebar ${isMobileSidebarOpen ? "open" : ""}`}>
           <nav className="admin-nav-menu">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = item.exact
-                ? location.pathname === item.path
-                : location.pathname.startsWith(item.path);
 
               return (
                 <NavLink
                   key={item.path}
                   to={item.path}
-                  className={`admin-nav-link ${isActive ? 'active' : ''}`}
+                  end={item.exact}
+                  className={({ isActive }) =>
+                    `admin-nav-link ${isActive ? "active" : ""}`
+                  }
                   onClick={() => setIsMobileSidebarOpen(false)}
                 >
                   <div className="admin-nav-link-left">
@@ -180,13 +293,6 @@ export const AdminLayout = () => {
               );
             })}
           </nav>
-
-          <div className="admin-sidebar-footer">
-            <div className="admin-system-info">
-              <span className="sys-label">Статус сервера:</span>
-              <span className="sys-value-online">Node.js Express 🟢</span>
-            </div>
-          </div>
         </aside>
 
         {/* Main Content Area */}

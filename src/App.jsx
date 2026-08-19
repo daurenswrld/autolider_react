@@ -4,8 +4,9 @@ import {
   Routes,
   Route,
   useLocation,
+  Navigate,
 } from "react-router-dom";
-import { AppProvider } from "./context/AppContext";
+import { AppProvider, useApp } from "./context/AppContext";
 import { Navbar } from "./components/Navbar/Navbar";
 import { HeroSection } from "./components/HeroSection/HeroSection";
 import { Footer } from "./components/Footer/Footer";
@@ -29,7 +30,9 @@ import { AdminLayout } from "./admin/AdminLayout";
 import { AdminDashboard } from "./admin/views/AdminDashboard";
 import { AdminProducts } from "./admin/views/AdminProducts";
 import { AdminCategories } from "./admin/views/AdminCategories";
+import { AdminBrands } from "./admin/views/AdminBrands";
 import { AdminOrders } from "./admin/views/AdminOrders";
+import { AdminRequests } from "./admin/views/AdminRequests";
 import { AdminCustomers } from "./admin/views/AdminCustomers";
 import { AdminWarehouses } from "./admin/views/AdminWarehouses";
 import { AdminRoles } from "./admin/views/AdminRoles";
@@ -37,6 +40,18 @@ import { AdminBanners } from "./admin/views/AdminBanners";
 import { AdminSettings } from "./admin/views/AdminSettings";
 import { AdminLogin } from "./admin/views/AdminLogin";
 import "./styles/style.scss";
+
+const ProtectedRoute = ({ children }) => {
+  const { currentUser, user, showToast } = useApp();
+  const activeUser = currentUser || user;
+
+  if (!activeUser) {
+    showToast("Для доступа к этой странице войдите в систему", "error", 3000);
+    return <Navigate to="/auth" replace />;
+  }
+
+  return children;
+};
 
 function AppContent() {
   const location = useLocation();
@@ -62,6 +77,7 @@ function AppContent() {
   ];
   const isNotFoundPage =
     !knownRoutes.includes(location.pathname) &&
+    !location.pathname.startsWith('/catalog') &&
     !location.pathname.startsWith('/product/') &&
     !location.pathname.startsWith('/admin');
 
@@ -87,7 +103,9 @@ function AppContent() {
             <Route index element={<AdminDashboard />} />
             <Route path="products" element={<AdminProducts />} />
             <Route path="categories" element={<AdminCategories />} />
+            <Route path="brands" element={<AdminBrands />} />
             <Route path="orders" element={<AdminOrders />} />
+            <Route path="requests" element={<AdminRequests />} />
             <Route path="customers" element={<AdminCustomers />} />
             <Route path="warehouses" element={<AdminWarehouses />} />
             <Route path="roles" element={<AdminRoles />} />
@@ -113,6 +131,9 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<HeroSection />} />
           <Route path="/catalog" element={<CatalogPage />} />
+          <Route path="/catalog/:brandParam" element={<CatalogPage />} />
+          <Route path="/catalog/:brandParam/:modelParam" element={<CatalogPage />} />
+          <Route path="/catalog/:brandParam/:modelParam/:categoryParam" element={<CatalogPage />} />
           <Route path="/favorites" element={<FavoritesPage />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/login" element={<AuthPage />} />
@@ -122,9 +143,9 @@ function AppContent() {
           <Route path="/contacts" element={<ContactsPage />} />
           <Route path="/product" element={<ProductDetailsPage />} />
           <Route path="/product/:id" element={<ProductDetailsPage />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
+          <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

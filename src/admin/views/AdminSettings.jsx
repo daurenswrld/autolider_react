@@ -50,7 +50,7 @@ export const AdminSettings = () => {
     <div className="admin-settings-view">
       <div className="admin-page-header">
         <div>
-          <h1 className="admin-page-title">Настройки магазина (OpenCart Settings)</h1>
+          <h1 className="admin-page-title">Настройки магазина</h1>
           <p className="admin-page-subtitle">Общие параметры маркетплейса, контакты и стоимости доставки</p>
         </div>
       </div>
@@ -66,7 +66,7 @@ export const AdminSettings = () => {
         <form onSubmit={handleSaveSettings} className="admin-modal-form">
           <div className="form-grid-2col">
             <div className="form-group">
-              <label>Название магазина OpenCart</label>
+              <label>Название магазина</label>
               <input
                 type="text"
                 value={settings.storeName}

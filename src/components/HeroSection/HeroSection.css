@@ -725,8 +725,6 @@
   pointer-events: none;
 }
 
-
-
 /* Modal Styling */
 .vin-modal-overlay {
   position: fixed;
@@ -770,6 +768,7 @@
   font-family: inherit;
   margin-bottom: 20px;
   box-sizing: border-box;
+  background: #e0e0e0 !important;
 }
 
 .vin-modal-actions {

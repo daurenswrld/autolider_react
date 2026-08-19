@@ -5,11 +5,115 @@ import { Autoplay, Pagination, EffectFade } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/effect-fade";
+import { slugify } from "../../utils/slugify";
+import { useApp } from "../../context/AppContext";
 import "./HeroSection.css";
 
 export const HeroSection = () => {
+  const { showToast, currentUser, user } = useApp();
+  const activeUser = currentUser || user;
+
   const [vinQuery, setVinQuery] = useState("");
+  const [vinPhone, setVinPhone] = useState("");
+  const [vinError, setVinError] = useState("");
+  const [vinLoading, setVinLoading] = useState(false);
   const [showVinModal, setShowVinModal] = useState(false);
+
+  const formatPhoneMask = (input) => {
+    if (!input) return "";
+    let digits = input.replace(/\D/g, "");
+    if (digits.startsWith("7") || digits.startsWith("8")) {
+      digits = digits.slice(1);
+    }
+    digits = digits.slice(0, 10);
+
+    let formatted = "+7 (";
+    if (digits.length > 0) {
+      formatted += digits.slice(0, 3);
+    }
+    if (digits.length >= 3) {
+      formatted += ") ";
+    }
+    if (digits.length > 3) {
+      formatted += digits.slice(3, 6);
+    }
+    if (digits.length >= 6) {
+      formatted += "-";
+    }
+    if (digits.length > 6) {
+      formatted += digits.slice(6, 8);
+    }
+    if (digits.length >= 8) {
+      formatted += "-";
+    }
+    if (digits.length > 8) {
+      formatted += digits.slice(8, 10);
+    }
+    return formatted;
+  };
+
+  const handleVinSubmit = async (e) => {
+    e?.preventDefault();
+    setVinError("");
+
+    const cleanVin = vinQuery.trim();
+    const cleanPhone = vinPhone.trim();
+
+    if (!cleanVin) {
+      setVinError("Пожалуйста, введите VIN-код вашего автомобиля");
+      if (showToast) showToast("Укажите VIN-код автомобиля", "error");
+      return;
+    }
+
+    if (cleanVin.length < 5) {
+      setVinError("VIN-код должен содержать минимум 5 символов");
+      if (showToast) showToast("VIN-код слишком короткий", "error");
+      return;
+    }
+
+    if (!cleanPhone || cleanPhone.length < 18) {
+      setVinError(
+        "Пожалуйста, введите полный номер телефона: +7 (XXX) XXX-XX-XX",
+      );
+      if (showToast) showToast("Укажите верный номер телефона", "error");
+      return;
+    }
+
+    setVinLoading(true);
+    try {
+      const res = await fetch("/api/vin-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vin: cleanVin,
+          phone: cleanPhone,
+          name: activeUser?.name || "Заявка по VIN",
+          email: activeUser?.email || "",
+        }),
+      });
+
+      if (res.ok) {
+        if (showToast) {
+          showToast(
+            `Заявка по VIN ${cleanVin.toUpperCase()} принята! Наш специалист свяжется с вами.`,
+            "success",
+            4000,
+          );
+        }
+        setVinQuery("");
+        setVinPhone("");
+        setShowVinModal(false);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setVinError(data.message || "Ошибка отправки заявки");
+      }
+    } catch (err) {
+      console.error("VIN submit error:", err);
+      setVinError("Ошибка сети. Попробуйте еще раз.");
+    } finally {
+      setVinLoading(false);
+    }
+  };
 
   const adSlides = [
     {
@@ -32,38 +136,61 @@ export const HeroSection = () => {
       btnText: "СМОТРЕТЬ КАТАЛОГ",
       image: "/assets/img/hero-img.webp",
     },
-    {
-      title: (
-        <>
-          Компоненты <br /> ходовой части
-        </>
-      ),
-      subtitle: "Гарантия качества 100%",
-      btnText: "ПОДОБРАТЬ ДЕТАЛИ",
-      image: "/assets/img/hero_img.webp",
-    },
-    {
-      title: (
-        <>
-          Быстрый подбор <br /> по VIN-коду
-        </>
-      ),
-      subtitle: "Консультация за 5 минут",
-      btnText: "ОТПРАВИТЬ VIN",
-      image: "/assets/img/hero-img.webp",
-    },
   ];
 
-  // Left sidebar brands
-  const sidebarBrands = Array(7)
-    .fill(null)
-    .map((_, i) => ({
-      name: "MERCEDES",
-      id: `mercedes-${i}`,
-      logo: "/assets/img/mercedes.png",
-    }));
+  const [dbBrands, setDbBrands] = useState([]);
+  const [dbBanners, setDbBanners] = useState([]);
 
-  // Hero strip brand logos
+  React.useEffect(() => {
+    fetch("/api/brands")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setDbBrands(data);
+        }
+      })
+      .catch((err) =>
+        console.error("Error fetching brands in HeroSection:", err),
+      );
+
+    fetch("/api/banners")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setDbBanners(data);
+        }
+      })
+      .catch((err) =>
+        console.error("Error fetching banners in HeroSection:", err),
+      );
+  }, []);
+
+  const activeSlides =
+    dbBanners.length > 0
+      ? dbBanners.map((b) => ({
+          title: b.title,
+          subtitle: b.subtitle,
+          btnText: (b.btnText || "ПОДРОБНЕЕ").toUpperCase(),
+          btnLink: b.btnLink || "/catalog",
+          image: b.image || "/assets/img/hero_img.webp",
+        }))
+      : adSlides;
+
+  // Left sidebar brands from DB or fallback
+  const sidebarBrands =
+    dbBrands.length > 0
+      ? dbBrands.map((b) => ({
+          name: b.name,
+          logo: b.logoUrl || "/assets/img/mercedes.png",
+        }))
+      : Array(5)
+          .fill(null)
+          .map((_, i) => ({
+            name: "MERCEDES",
+            logo: "/assets/img/mercedes.png",
+          }));
+
+  // Hero strip brand logos (static)
   const heroStripBrands = [
     { name: "HAVAL", logo: "/assets/img/haval.png" },
     { name: "CHERY", logo: "/assets/img/chery.png" },
@@ -73,22 +200,19 @@ export const HeroSection = () => {
   ];
 
   // Main catalog brands grid matching reference design
-  const catalogBrands = [
-    { name: "HAVAL", logo: "/assets/img/haval.png" },
-    { name: "CHERY", logo: "/assets/img/chery.png" },
-    { name: "JAC", logo: "/assets/img/jac.png" },
-    { name: "CHANGAN", logo: "/assets/img/changan.png" },
-    { name: "BYD", logo: "/assets/img/byd.png" },
-    { name: "LI", logo: "/assets/img/mercedes.png" },
-    { name: "JAECOO", logo: "/assets/img/mercedes.png" },
-    { name: "TANK", logo: "/assets/img/mercedes.png" },
-    { name: "EXEED", logo: "/assets/img/mercedes.png" },
-    { name: "DONGFENG", logo: "/assets/img/mercedes.png" },
-    { name: "KAIYI", logo: "/assets/img/mercedes.png" },
-    { name: "OMODA", logo: "/assets/img/mercedes.png" },
-    { name: "GAC", logo: "/assets/img/mercedes.png" },
-    { name: "GEELY", logo: "/assets/img/mercedes.png" },
-  ];
+  const catalogBrands =
+    dbBrands.length > 0
+      ? dbBrands.map((b) => ({
+          name: b.name,
+          logo: b.logoUrl || "/assets/img/mercedes.png",
+        }))
+      : [
+          { name: "HAVAL", logo: "/assets/img/haval.png" },
+          { name: "CHERY", logo: "/assets/img/chery.png" },
+          { name: "JAC", logo: "/assets/img/jac.png" },
+          { name: "CHANGAN", logo: "/assets/img/changan.png" },
+          { name: "BYD", logo: "/assets/img/byd.png" },
+        ];
 
   // 4 Info Benefits items
   const benefits = [
@@ -128,7 +252,7 @@ export const HeroSection = () => {
               {sidebarBrands.map((brand, idx) => (
                 <li key={idx}>
                   <Link
-                    to={`/catalog?brand=${brand.name.toLowerCase()}`}
+                    to={`/catalog/${brand.slug || slugify(brand.name)}`}
                     className="sidebar-brand-item"
                   >
                     <img
@@ -314,7 +438,7 @@ export const HeroSection = () => {
                   className="btn-secondary-white"
                   onClick={() => setShowVinModal(true)}
                 >
-                  ПОДОБОР ПО VIN
+                  ПОДБОР ПО VIN
                 </button>
               </div>
             </div>
@@ -341,7 +465,7 @@ export const HeroSection = () => {
               {catalogBrands.map((b, idx) => (
                 <Link
                   key={idx}
-                  to={`/catalog?brand=${b.name.toLowerCase()}`}
+                  to={`/catalog/${b.slug || slugify(b.name)}`}
                   className="brand-grid-card"
                 >
                   <img src={b.logo} alt={b.name} className="brand-logo-img" />
@@ -403,13 +527,16 @@ export const HeroSection = () => {
                 pagination={{ clickable: true }}
                 className="ad-swiper"
               >
-                {adSlides.map((slide, idx) => (
+                {activeSlides.map((slide, idx) => (
                   <SwiperSlide key={idx}>
                     <div className="ad-slide-inner">
                       <div className="ad-content">
                         <h3 className="ad-title">{slide.title}</h3>
                         <p className="ad-subtitle">{slide.subtitle}</p>
-                        <Link to="/catalog" className="btn-ad-red">
+                        <Link
+                          to={slide.btnLink || "/catalog"}
+                          className="btn-ad-red"
+                        >
                           {slide.btnText}
                         </Link>
                       </div>
@@ -432,8 +559,6 @@ export const HeroSection = () => {
         </div>
       </section>
 
-
-
       {/* VIN Request Modal */}
       {showVinModal && (
         <div
@@ -445,29 +570,108 @@ export const HeroSection = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <h3>Подбор запчастей по VIN-коду</h3>
-            <p>Введите VIN-код вашего автомобиля и список нужных деталей</p>
-            <input
-              type="text"
-              placeholder="Например: LHG39182390192831"
-              value={vinQuery}
-              onChange={(e) => setVinQuery(e.target.value)}
-              className="vin-input"
-            />
-            <div className="vin-modal-actions">
-              <button
-                className="btn-primary-red"
-                onClick={() => {
-                  alert(
-                    `Заявка по VIN ${vinQuery} принята! Наш специалист свяжется с вами.`,
-                  );
-                  setShowVinModal(false);
+            <p style={{ marginBottom: "16px" }}>
+              Введите VIN-код автомобиля и телефон для связи с менеджером
+            </p>
+
+            {vinError && (
+              <div
+                style={{
+                  color: "#dc2626",
+                  background: "#fef2f2",
+                  border: "1px solid #fecaca",
+                  padding: "8px 12px",
+                  borderRadius: "8px",
+                  fontSize: "13px",
+                  marginBottom: "14px",
+                  fontWeight: "600",
                 }}
               >
-                Отправить заявку
+                {vinError}
+              </div>
+            )}
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px",
+                marginBottom: "20px",
+              }}
+            >
+              <div>
+                <label
+                  style={{
+                    fontSize: "12px",
+                    color: "#64748b",
+                    fontWeight: "600",
+                    display: "block",
+                    marginBottom: "4px",
+                  }}
+                >
+                  VIN-код автомобиля<span style={{ color: "#dc2626" }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Например: LHG39182390192831"
+                  value={vinQuery}
+                  onChange={(e) => {
+                    setVinQuery(e.target.value);
+                    if (vinError) setVinError("");
+                  }}
+                  className="vin-input"
+                  style={{ marginBottom: 0 }}
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    fontSize: "12px",
+                    color: "#64748b",
+                    fontWeight: "600",
+                    display: "block",
+                    marginBottom: "4px",
+                  }}
+                >
+                  Номер телефона для связи
+                  <span style={{ color: "#dc2626" }}>*</span>
+                </label>
+                <input
+                  type="tel"
+                  placeholder="+7 (777) 000-00-00"
+                  value={vinPhone}
+                  onFocus={() => {
+                    if (!vinPhone) setVinPhone("+7 (");
+                  }}
+                  onChange={(e) => {
+                    setVinPhone(formatPhoneMask(e.target.value));
+                    if (vinError) setVinError("");
+                  }}
+                  className="vin-input"
+                  style={{ marginBottom: 0 }}
+                />
+              </div>
+            </div>
+
+            <div className="vin-modal-actions">
+              <button
+                type="button"
+                className="btn-primary-red"
+                onClick={handleVinSubmit}
+                disabled={vinLoading}
+              >
+                {vinLoading ? "Отправка..." : "Отправить заявку"}
               </button>
               <button
+                type="button"
                 className="btn-secondary-white"
-                onClick={() => setShowVinModal(false)}
+                onClick={() => {
+                  setShowVinModal(false);
+                  setVinError("");
+                }}
+                disabled={vinLoading}
               >
                 Отмена
               </button>

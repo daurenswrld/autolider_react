@@ -67,7 +67,9 @@
 
 @media (max-width: 900px) {
   .profile-sidebar {
-    width: 100%;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
     border-radius: 16px 16px 0 0;
     border-right: none;
     border-bottom: 1px solid rgba(0, 0, 0, 0.06);
@@ -76,36 +78,42 @@
 
 @media (max-width: 768px) {
   .profile-sidebar {
-    flex-direction: column;
-    width: 100%;
-    border-radius: 16px;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    border-radius: 16px 16px 0 0;
   }
 
   .profile-tab-item {
-    height: 52px;
-    padding: 0 20px;
-    font-size: 14px;
+    height: 54px !important;
+    padding: 0 16px !important;
+    font-size: 14px !important;
     gap: 12px;
-    width: 100%;
-    box-sizing: border-box;
-    border-right: none;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    justify-content: flex-start;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    border-right: none !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+    justify-content: flex-start !important;
+    border-radius: 0 !important;
   }
 
   .profile-tab-item:last-child {
-    border-bottom: none;
+    border-bottom: none !important;
   }
 
   .profile-tab-item.active {
-    background: #ffffff;
-    color: #ea2427;
+    background: #000000 !important;
+    color: #ffffff !important;
     font-weight: 700;
   }
 
   .profile-main-content {
-    padding: 20px 16px;
-    gap: 24px;
+    padding: 20px 14px !important;
+    gap: 20px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
   }
 }
 
@@ -223,6 +231,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  width: 100%;
 }
 
 .section-icon-badge {
@@ -250,6 +259,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
+  width: 100%;
 }
 
 @media (max-width: 640px) {
@@ -293,6 +303,15 @@
 .profile-form-input:focus,
 .profile-form-select:focus {
   border-color: #ea2427;
+}
+
+.profile-form-input:disabled,
+.profile-form-select:disabled {
+  background-color: #f8fafc;
+  color: #475569;
+  border-color: #e2e8f0;
+  cursor: not-allowed;
+  opacity: 0.9;
 }
 
 /* Action Buttons Row */
@@ -344,6 +363,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
+  width: 100%;
 }
 
 @media (max-width: 640px) {
@@ -439,6 +459,7 @@
 
 /* Add Address Inline Form */
 .add-address-form-box {
+  width: 100%;
   background: #ffffff;
   border: 1px solid #e0e2e8;
   border-radius: 14px;
@@ -960,4 +981,194 @@
   .order-history-card {
     padding: 16px 14px;
   }
+
+  /* Hide image in order items on small mobile screens per user request */
+  .order-item-img,
+  .cart-item-img,
+  .table-img-thumb {
+    display: none !important;
+  }
 }
+
+/* Profile Section Block Empty State */
+.profile-section-block {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+  padding: 56px 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-top: 12px;
+}
+
+.profile-empty-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  color: #64748b;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.profile-empty-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 8px 0;
+}
+
+.profile-empty-desc {
+  font-size: 14px;
+  color: #64748b;
+  max-width: 440px;
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+.btn-profile-go-catalog {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 26px;
+  background: #ea2427;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(234, 36, 39, 0.25);
+}
+
+.btn-profile-go-catalog:hover {
+  background: #d01e21;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(234, 36, 39, 0.35);
+}
+
+/* ── Sidebar Bottom Actions ─────────────────────────────── */
+.sidebar-bottom-actions {
+  margin-top: auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 16px 20px;
+  box-sizing: border-box;
+}
+
+.sidebar-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,0,0,0.08), transparent);
+  margin-bottom: 10px;
+}
+
+.sidebar-logout-btn,
+.sidebar-delete-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 16px;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  text-align: left;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+}
+
+/* Logout button — red toned */
+.sidebar-logout-btn {
+  background: #fff5f5;
+  color: #c0392b;
+  border-color: #fecdca;
+}
+
+.sidebar-logout-btn:hover {
+  background: #ea2427;
+  color: #ffffff;
+  border-color: #ea2427;
+  box-shadow: 0 4px 14px rgba(234, 36, 39, 0.25);
+  transform: translateY(-1px);
+}
+
+/* Delete button — muted gray */
+.sidebar-delete-btn {
+  background: transparent;
+  color: #a0aec0;
+  border-color: transparent;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.sidebar-delete-btn:hover {
+  background: #fff5f5;
+  color: #e53e3e;
+  border-color: #fecdd3;
+}
+
+/* Icon badges inside sidebar buttons */
+.sidebar-btn-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.22s ease;
+}
+
+.logout-icon {
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
+}
+
+.sidebar-logout-btn:hover .logout-icon {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.delete-icon {
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+}
+
+.sidebar-delete-btn:hover .delete-icon {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+@media (max-width: 768px) {
+  .sidebar-bottom-actions {
+    padding: 12px 16px 16px;
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .sidebar-logout-btn,
+  .sidebar-delete-btn {
+    flex: 1;
+    justify-content: center;
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+}
+

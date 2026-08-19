@@ -7,118 +7,15 @@ const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'db.json');
 
 const INITIAL_DATA = {
-  products: [
-    {
-      id: 101,
-      title: 'Шина Michelin Pilot Sport 5 (225/45 R17)',
-      sku: 'MICH-8842',
-      brand: 'Michelin',
-      carMake: 'Toyota',
-      carModel: 'Camry 70',
-      price: 72000,
-      oldPrice: 85000,
-      stockQty: 18,
-      inStock: true,
-      categoryId: 'tires',
-      categoryName: 'Шины и диски',
-      status: 'enabled',
-      description: 'Премиальная летняя шина с улучшенным сцеплением на мокром и сухом асфальте.',
-      image: 'https://images.unsplash.com/photo-1578844251758-2f71da64c96f?auto=format&fit=crop&w=600&q=80'
-    },
-    {
-      id: 102,
-      title: 'Моторное масло Motul 8100 X-cess 5W-40 (5L)',
-      sku: 'MOTUL-5W40-5L',
-      brand: 'Motul',
-      carMake: 'Hyundai',
-      carModel: 'Accent / Tucson',
-      price: 35000,
-      oldPrice: 42000,
-      stockQty: 42,
-      inStock: true,
-      categoryId: 'oils',
-      categoryName: 'Масла и автохимия',
-      status: 'enabled',
-      description: '100% синтетическое моторное масло для бензиновых и дизельных двигателей.',
-      image: 'https://images.unsplash.com/photo-1615900119313-0599c927f804?auto=format&fit=crop&w=600&q=80'
-    },
-    {
-      id: 103,
-      title: 'Комплект тормозных колодок Brembo Front',
-      sku: 'BRM-P85020',
-      brand: 'Brembo',
-      carMake: 'BMW',
-      carModel: 'X5 / X6 G05',
-      price: 45000,
-      oldPrice: 52000,
-      stockQty: 12,
-      inStock: true,
-      categoryId: 'brakes',
-      categoryName: 'Тормозная система',
-      status: 'enabled',
-      description: 'Высокоэффективные передние тормозные колодки с повышенным ресурсом.',
-      image: 'https://images.unsplash.com/photo-1600706432520-5c0745eab7e6?auto=format&fit=crop&w=600&q=80'
-    },
-    {
-      id: 104,
-      title: 'Аккумулятор VARTA Blue Dynamic 60Ah 540A',
-      sku: 'VARTA-BD60',
-      brand: 'VARTA',
-      carMake: 'Kia',
-      carModel: 'Rio / Sportage',
-      price: 42500,
-      oldPrice: 49000,
-      stockQty: 9,
-      inStock: true,
-      categoryId: 'batteries',
-      categoryName: 'Аккумуляторы',
-      status: 'enabled',
-      description: 'Надежный стартерный аккумулятор с высокой мощностью холодной прокрутки.',
-      image: 'https://images.unsplash.com/photo-1597762470488-3877b1f538c6?auto=format&fit=crop&w=600&q=80'
-    },
-    {
-      id: 105,
-      title: 'Масляный фильтр MANN-FILTER W 712/95',
-      sku: 'MANN-W71295',
-      brand: 'MANN-FILTER',
-      carMake: 'Volkswagen',
-      carModel: 'Polo / Golf VII',
-      price: 6500,
-      oldPrice: 8000,
-      stockQty: 64,
-      inStock: true,
-      categoryId: 'filters',
-      categoryName: 'Фильтры',
-      status: 'enabled',
-      description: 'Оригинальный масляный фильтр европейского качества.',
-      image: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=600&q=80'
-    },
-    {
-      id: 106,
-      title: 'Свечи зажигания NGK Laser Iridium (4 шт)',
-      sku: 'NGK-SILZKFR8D7S',
-      brand: 'NGK',
-      carMake: 'Nissan',
-      carModel: 'Qashqai / X-Trail',
-      price: 28000,
-      oldPrice: 34000,
-      stockQty: 30,
-      inStock: true,
-      categoryId: 'ignition',
-      categoryName: 'Зажигание и электрика',
-      status: 'enabled',
-      description: 'Иридиевые свечи зажигания для стабильного пуска и экономии топлива.',
-      image: 'https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=600&q=80'
-    }
-  ],
+  products: [],
   categories: [
-    { id: 'tires', name: 'Шины и диски', slug: 'tires', count: 1240, parentId: null, status: 'enabled' },
-    { id: 'oils', name: 'Масла и автохимия', slug: 'oils', count: 850, parentId: null, status: 'enabled' },
-    { id: 'brakes', name: 'Тормозная система', slug: 'brakes', count: 620, parentId: null, status: 'enabled' },
-    { id: 'batteries', name: 'Аккумуляторы', slug: 'batteries', count: 310, parentId: null, status: 'enabled' },
-    { id: 'filters', name: 'Фильтры', slug: 'filters', count: 1420, parentId: null, status: 'enabled' },
-    { id: 'ignition', name: 'Зажигание и электрика', slug: 'ignition', count: 980, parentId: null, status: 'enabled' },
-    { id: 'suspension', name: 'Подвеска и рулевое', slug: 'suspension', count: 750, parentId: null, status: 'enabled' }
+    { id: 'tires', name: 'Шины и диски', slug: 'tires', count: 0, parentId: null, status: 'enabled' },
+    { id: 'oils', name: 'Масла и автохимия', slug: 'oils', count: 0, parentId: null, status: 'enabled' },
+    { id: 'brakes', name: 'Тормозная система', slug: 'brakes', count: 0, parentId: null, status: 'enabled' },
+    { id: 'batteries', name: 'Аккумуляторы', slug: 'batteries', count: 0, parentId: null, status: 'enabled' },
+    { id: 'filters', name: 'Фильтры', slug: 'filters', count: 0, parentId: null, status: 'enabled' },
+    { id: 'ignition', name: 'Зажигание и электрика', slug: 'ignition', count: 0, parentId: null, status: 'enabled' },
+    { id: 'suspension', name: 'Подвеска и рулевое', slug: 'suspension', count: 0, parentId: null, status: 'enabled' }
   ],
   warehouses: [
     {
@@ -127,26 +24,8 @@ const INITIAL_DATA = {
       city: 'Астана',
       address: 'ул. Автозаводская, 12',
       phone: '+7 (777) 555-45-54',
-      stockCount: 8450,
+      stockCount: 0,
       isMain: true
-    },
-    {
-      id: 2,
-      name: 'Логистический хаб №2 (Алматы)',
-      city: 'Алматы',
-      address: 'пр. Райымбека, 212',
-      phone: '+7 (701) 333-22-11',
-      stockCount: 5120,
-      isMain: false
-    },
-    {
-      id: 3,
-      name: 'Региональный филиал (Шымкент)',
-      city: 'Шымкент',
-      address: 'ул. Жибек Жолы, 45',
-      phone: '+7 (705) 888-99-00',
-      stockCount: 2300,
-      isMain: false
     }
   ],
   roles: [
@@ -155,129 +34,13 @@ const INITIAL_DATA = {
       title: 'Супер-администратор',
       code: 'super_admin',
       description: 'Полный доступ ко всем модулям, настройкам и загрузкам Excel',
-      usersCount: 2
-    },
-    {
-      id: 2,
-      title: 'Менеджер по продажам',
-      code: 'sales_manager',
-      description: 'Управление заказами, обработка звонков и базы покупателей',
-      usersCount: 5
-    },
-    {
-      id: 3,
-      title: 'Контент-менеджер',
-      code: 'content_manager',
-      description: 'Редактирование карточек товаров, загрузка фото и баннеров',
-      usersCount: 3
-    },
-    {
-      id: 4,
-      title: 'Кладовщик / Завскладом',
-      code: 'warehouse_manager',
-      description: 'Обновление остатков товаров через Excel и смену статусов склада',
-      usersCount: 4
+      usersCount: 1
     }
   ],
-  orders: [
-    {
-      id: '582914',
-      date: '2026-08-14 18:30',
-      customerName: 'Андрей Тишков',
-      customerPhone: '+7 (705) 234-23-45',
-      address: 'Астана, ул. Кабанбай батыра, 43, кв. 112',
-      status: 'shipping',
-      statusText: 'В пути',
-      totalPrice: 144000,
-      paymentMethod: 'Freedom Pay (Онлайн-карта)',
-      itemsCount: 2,
-      items: [
-        { id: 101, title: 'Шина Michelin Pilot Sport 5 (225/45 R17)', price: 72000, quantity: 2 }
-      ]
-    },
-    {
-      id: '491028',
-      date: '2026-08-13 14:15',
-      customerName: 'Канат Оспанов',
-      customerPhone: '+7 (777) 987-65-43',
-      address: 'Астана, ул. Автозаводская, 12',
-      status: 'delivered',
-      statusText: 'Доставлен',
-      totalPrice: 320000,
-      paymentMethod: 'Kaspi QR',
-      itemsCount: 8,
-      items: [
-        { id: 102, title: 'Моторное масло Motul 8100 X-cess 5W-40', price: 35000, quantity: 4 },
-        { id: 103, title: 'Комплект тормозных колодок Brembo', price: 45000, quantity: 4 }
-      ]
-    },
-    {
-      id: '381920',
-      date: '2026-08-12 11:00',
-      customerName: 'Ерлан Сатов',
-      customerPhone: '+7 (701) 555-12-34',
-      address: 'Алматы, пр. Абая, 150',
-      status: 'processing',
-      statusText: 'В обработке',
-      totalPrice: 42500,
-      paymentMethod: 'Freedom Pay',
-      itemsCount: 1,
-      items: [
-        { id: 104, title: 'Аккумулятор VARTA Blue Dynamic 60Ah', price: 42500, quantity: 1 }
-      ]
-    }
-  ],
-  customers: [
-    {
-      id: 1,
-      name: 'Андрей Тишков',
-      phone: '+7 (705) 234-23-45',
-      email: 'info@gmail.com',
-      city: 'Астана',
-      totalOrders: 4,
-      totalSpent: 464000,
-      bonusBalance: 12500,
-      registeredDate: '2026-01-15'
-    },
-    {
-      id: 2,
-      name: 'Канат Оспанов',
-      phone: '+7 (777) 987-65-43',
-      email: 'kanat.o@mail.ru',
-      city: 'Астана',
-      totalOrders: 6,
-      totalSpent: 890000,
-      bonusBalance: 24000,
-      registeredDate: '2025-11-20'
-    },
-    {
-      id: 3,
-      name: 'Ерлан Сатов',
-      phone: '+7 (701) 555-12-34',
-      email: 'erlan_satov@gmail.com',
-      city: 'Алматы',
-      totalOrders: 2,
-      totalSpent: 127500,
-      bonusBalance: 3800,
-      registeredDate: '2026-03-04'
-    }
-  ],
-  banners: [
-    {
-      id: 1,
-      title: 'Оригинальные автозапчасти',
-      subtitle: 'Гарантия лучшей цены и экспресс-доставка по Казахстану',
-      status: 'active',
-      image: '/assets/img/hero_bg.webp'
-    },
-    {
-      id: 2,
-      title: 'Скидка 15% на шины Michelin',
-      subtitle: 'При покупке комплекта из 4 шин — бесплатный шиномонтаж',
-      status: 'active',
-      image: '/assets/img/hero_bg.webp'
-    }
-  ],
+  orders: [],
+  customers: [],
+  banners: [],
+  brands: [],
   settings: {
     storeName: 'Autolider Marketplace',
     phone: '+7 (777) 555-45-54',
@@ -286,11 +49,7 @@ const INITIAL_DATA = {
     workingHours: 'Пн-Вс 09:00 - 20:00',
     currency: '₸',
     freeDeliveryMin: 50000,
-    deliveryCost: 2500,
-    paymentGateways: {
-      freedomPay: { enabled: true, merchantId: 'AUTOLIDER_PROD_9921', testMode: false },
-      kaspiPay: { enabled: true, merchantId: 'KASPI_AL_001' }
-    }
+    deliveryCost: 2500
   }
 };
 
@@ -301,7 +60,30 @@ export function readDB() {
       return INITIAL_DATA;
     }
     const content = fs.readFileSync(DB_FILE, 'utf8');
-    return JSON.parse(content);
+    const data = JSON.parse(content);
+
+    if (Array.isArray(data.products)) {
+      data.products = data.products.map((p) => ({
+        ...p,
+        specs: Array.isArray(p.specs) ? p.specs : typeof p.specs === 'string' ? p.specs : []
+      }));
+    }
+
+    // Compute dynamic product count for each category
+    if (Array.isArray(data.categories) && Array.isArray(data.products)) {
+      data.categories = data.categories.map((cat) => {
+        const count = data.products.filter(
+          (p) => p.status !== 'disabled' && (p.categoryId === cat.id || p.categoryName === cat.name)
+        ).length;
+        return { ...cat, count };
+      });
+    }
+
+    if (!data.vinRequests) {
+      data.vinRequests = [];
+    }
+
+    return data;
   } catch (err) {
     console.error('Error reading DB file, using initial data:', err);
     return INITIAL_DATA;
