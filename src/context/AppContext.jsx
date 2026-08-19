@@ -12,6 +12,28 @@ export const AppProvider = ({ children }) => {
   // Categories state loaded from backend API
   const [categories, setCategories] = useState([]);
 
+  // Settings state loaded from backend API
+  const [settings, setSettings] = useState({
+    storeName: 'Autolider Marketplace',
+    phone: '+7 (777) 555-45-54',
+    email: 'support@autolider.kz',
+    address: 'г. Астана, ул. Автозаводская, 12',
+    workingHours: 'Пн-Вс 09:00 - 20:00',
+    currency: '₸',
+    freeDeliveryMin: 50000,
+    deliveryCost: 2500,
+    welcomeBonus: 5000
+  });
+
+  const refreshSettings = () => {
+    fetch('/api/settings')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && typeof data === 'object') setSettings((prev) => ({ ...prev, ...data }));
+      })
+      .catch((err) => console.warn('Could not fetch settings from server:', err));
+  };
+
   // Refresh functions for synchronization
   const refreshCategories = () => {
     fetch('/api/categories')
@@ -34,6 +56,7 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     refreshCategories();
     refreshProducts();
+    refreshSettings();
   }, []);
 
   // Cart state
@@ -299,6 +322,8 @@ export const AppProvider = ({ children }) => {
         placeOrder,
         refreshProducts,
         refreshCategories,
+        refreshSettings,
+        settings,
         addProduct,
         updateProduct,
         deleteProduct,

@@ -211,6 +211,10 @@ app.post('/api/auth/register', (req, res) => {
     });
   }
 
+  const welcomeBonus = db.settings && typeof db.settings.welcomeBonus === 'number'
+    ? db.settings.welcomeBonus
+    : 5000;
+
   const newCustomer = {
     id: Date.now(),
     name: name.trim(),
@@ -219,7 +223,7 @@ app.post('/api/auth/register', (req, res) => {
     city: city || 'Астана',
     totalOrders: 0,
     totalSpent: 0,
-    bonusBalance: 500,
+    bonusBalance: welcomeBonus,
     registeredDate: new Date().toISOString().slice(0, 10)
   };
 
@@ -230,7 +234,7 @@ app.post('/api/auth/register', (req, res) => {
     success: true,
     token: `autolider-jwt-customer-${newCustomer.id}`,
     user: newCustomer,
-    message: 'Регистрация завершена! Вам начислено 500 бонусов 🎁'
+    message: `Регистрация завершена! Вам начислено ${welcomeBonus.toLocaleString('ru-RU')} бонусов 🎁`
   });
 });
 
@@ -1169,6 +1173,16 @@ app.delete('/api/banners/:id', (req, res) => {
 // Settings
 app.get('/api/settings', (req, res) => {
   const db = readDB();
+  res.json(db.settings);
+});
+
+app.put('/api/settings', (req, res) => {
+  const db = readDB();
+  db.settings = {
+    ...db.settings,
+    ...req.body
+  };
+  writeDB(db);
   res.json(db.settings);
 });
 

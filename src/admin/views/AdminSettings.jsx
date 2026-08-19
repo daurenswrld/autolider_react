@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, Save, CheckCircle2 } from 'lucide-react';
+import { useApp } from '../../context/AppContext';
 import './AdminSettings.css';
 
 export const AdminSettings = () => {
+  const { refreshSettings } = useApp();
   const [settings, setSettings] = useState({
     storeName: 'Autolider Marketplace',
     phone: '+7 (777) 555-45-54',
@@ -11,7 +13,8 @@ export const AdminSettings = () => {
     workingHours: 'Пн-Вс 09:00 - 20:00',
     currency: '₸',
     freeDeliveryMin: 50000,
-    deliveryCost: 2500
+    deliveryCost: 2500,
+    welcomeBonus: 5000
   });
 
   const [saved, setSaved] = useState(false);
@@ -38,6 +41,7 @@ export const AdminSettings = () => {
         body: JSON.stringify(settings)
       });
       if (res.ok) {
+        if (refreshSettings) refreshSettings();
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
       }
@@ -125,6 +129,15 @@ export const AdminSettings = () => {
                 type="number"
                 value={settings.deliveryCost}
                 onChange={(e) => setSettings({ ...settings, deliveryCost: Number(e.target.value) })}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Приветственный бонус новым клиентам (₸)</label>
+              <input
+                type="number"
+                value={settings.welcomeBonus !== undefined ? settings.welcomeBonus : 5000}
+                onChange={(e) => setSettings({ ...settings, welcomeBonus: Number(e.target.value) })}
               />
             </div>
           </div>

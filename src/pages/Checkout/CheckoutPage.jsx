@@ -78,6 +78,7 @@ export const CheckoutPage = () => {
     clearCart,
     currentUser,
     setCurrentUser,
+    settings,
   } = useApp();
 
   const [isSubmitted, setIsSubmitted] = useState(false);

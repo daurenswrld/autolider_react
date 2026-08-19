@@ -48,7 +48,7 @@ const formatPhoneMask = (input) => {
 
 export const AuthPage = () => {
   const navigate = useNavigate();
-  const { setCurrentUser, showToast } = useApp();
+  const { setCurrentUser, showToast, settings } = useApp();
 
   // Steps: 'email' | 'otp' | 'register'
   const [step, setStep] = useState("email");
@@ -392,7 +392,11 @@ export const AuthPage = () => {
           <form className="auth-page__form" onSubmit={handleRegisterSubmit}>
             <h1 className="auth-page__title">Создание профиля</h1>
             <p className="auth-page__subtitle">
-              Укажите ваши данные для завершения регистрации
+              Укажите ваши данные для завершения регистрации. Вам начислится{" "}
+              <b style={{ color: "#16a34a" }}>
+                +{(settings?.welcomeBonus || 5000).toLocaleString("ru-RU")} ₸
+              </b>{" "}
+              приветственных бонусов 🎁
             </p>
 
             <div className="auth-page__input-group">
