@@ -40,7 +40,7 @@ export const PopularAccessories = () => {
                   className="accessory-img"
                   onError={(e) => {
                     e.target.onerror = null;
-                    e.target.src = "/assets/img/hero-img.webp";
+                    e.target.src = "/assets/img/hero-img.png";
                   }}
                 />
               </div>

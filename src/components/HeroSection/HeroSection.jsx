@@ -124,7 +124,7 @@ export const HeroSection = () => {
       ),
       subtitle: "Доставка 7 - 10 дней",
       btnText: "НАЙТИ ЗАПЧАСТЬ",
-      image: "/assets/img/hero_img.webp",
+      image: "/assets/img/hero-img.png",
     },
     {
       title: (
@@ -134,7 +134,7 @@ export const HeroSection = () => {
       ),
       subtitle: "В наличии и под заказ",
       btnText: "СМОТРЕТЬ КАТАЛОГ",
-      image: "/assets/img/hero-img.webp",
+      image: "/assets/img/hero-img.png",
     },
   ];
 
@@ -172,7 +172,7 @@ export const HeroSection = () => {
           subtitle: b.subtitle,
           btnText: (b.btnText || "ПОДРОБНЕЕ").toUpperCase(),
           btnLink: b.btnLink || "/catalog",
-          image: b.image || "/assets/img/hero_img.webp",
+          image: b.image || "/assets/img/hero-img.png",
         }))
       : adSlides;
 
@@ -446,12 +446,12 @@ export const HeroSection = () => {
             {/* Right SUV Car Image */}
             <div className="banner-car-wrapper">
               <img
-                src="/assets/img/hero_img.webp"
+                src="/assets/img/hero-img.png"
                 alt="Autolider SUV Car"
                 className="banner-car-image"
                 onError={(e) => {
                   e.target.onerror = null;
-                  e.target.src = "/assets/img/hero-img.webp";
+                  e.target.src = "/assets/img/hero-img.png";
                 }}
               />
             </div>
@@ -547,7 +547,7 @@ export const HeroSection = () => {
                         draggable="false"
                         onError={(e) => {
                           e.target.onerror = null;
-                          e.target.src = "/assets/img/hero-img.webp";
+                          e.target.src = "/assets/img/hero-img.png";
                         }}
                       />
                     </div>

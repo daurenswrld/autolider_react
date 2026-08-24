@@ -82,7 +82,7 @@
     },
     {
       "id": "brand-1786809968116",
-      "name": "Mercedes-Benz",
+      "name": "Mercedes",
       "country": "Германия",
       "logoUrl": "/uploads/logo-1786809957196-3824.webp",
       "models": [
@@ -92,7 +92,8 @@
           "years": "1990-2000",
           "photoUrl": "/uploads/model-1786810001972-5990.webp"
         }
-      ]
+      ],
+      "status": "enabled"
     }
   ],
   "settings": {
