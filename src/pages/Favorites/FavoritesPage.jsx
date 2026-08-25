@@ -1,10 +1,17 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { updateSEO } from "../../utils/seo";
 import { ChevronRight, Search, ShoppingCart, Heart, X } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import "./FavoritesPage.css";
 
 export const FavoritesPage = () => {
+  useEffect(() => {
+    updateSEO({
+      title: "Избранные товары — AUTOLIDER",
+      description: "Ваш список отложенных автозапчастей и аксессуаров в маркетплейсе AUTOLIDER.",
+    });
+  }, []);
   const { wishlist = [], products = [], toggleWishlist, addToCart } = useApp();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState(null);

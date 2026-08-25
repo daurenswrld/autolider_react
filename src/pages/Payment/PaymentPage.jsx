@@ -1,9 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { updateSEO } from '../../utils/seo';
 import { CreditCard, QrCode, Building, Receipt, ShieldCheck, CheckCircle2, ChevronRight, FileText, Lock, RefreshCw, ArrowRight } from 'lucide-react';
 import './PaymentPage.css';
 
 export const PaymentPage = () => {
+  useEffect(() => {
+    updateSEO({
+      title: "Способы оплаты и гарантии — AUTOLIDER",
+      description: "Варианты оплаты автозапчастей в AUTOLIDER: Kaspi QR, Kaspi Red, банковские карты, безналичный расчет для ТОО/ИП с ЭСФ, наложенный платеж.",
+    });
+  }, []);
   const paymentMethods = [
     {
       icon: QrCode,

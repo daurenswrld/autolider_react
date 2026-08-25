@@ -17,6 +17,7 @@ import {
   LogOut
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { updateSEO } from '../../utils/seo';
 import './ProfilePage.css';
 
 const formatPhoneMask = (input) => {
@@ -55,6 +56,13 @@ const formatPhoneMask = (input) => {
 const KNOWN_CITIES = ['Астана', 'Алматы', 'Шымкент', 'Караганда'];
 
 export const ProfilePage = () => {
+  React.useEffect(() => {
+    updateSEO({
+      title: "Личный кабинет — AUTOLIDER",
+      description: "Личный кабинет пользователя AUTOLIDER: личные данные, бонусы, история заказов и отслеживание доставки.",
+    });
+  }, []);
+
   const navigate = useNavigate();
   const {
     wishlist = [],

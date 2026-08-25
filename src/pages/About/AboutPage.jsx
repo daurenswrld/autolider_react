@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
+import { updateSEO } from "../../utils/seo";
 import {
   ShieldCheck,
   Truck,
@@ -15,6 +16,12 @@ import {
 import "./AboutPage.css";
 
 export const AboutPage = () => {
+  useEffect(() => {
+    updateSEO({
+      title: "О компании — AUTOLIDER | Крупнейший поставщик автозапчастей",
+      description: "История и преимущества интернет-магазина AUTOLIDER. Прямые поставки автозапчастей из Китая за 7-10 дней, 30+ филиалов по Казахстану.",
+    });
+  }, []);
   const stats = [
     { value: "2022", label: "Год основания в Астане", icon: Building2 },
     { value: "30-40+", label: "Китайских поставщиков", icon: Globe },

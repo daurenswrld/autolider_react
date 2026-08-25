@@ -1,9 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { updateSEO } from '../../utils/seo';
 import { Truck, MapPin, PackageCheck, Clock, ShieldCheck, FileText, ChevronRight, CheckCircle2, ArrowRight } from 'lucide-react';
 import './DeliveryPage.css';
 
 export const DeliveryPage = () => {
+  useEffect(() => {
+    updateSEO({
+      title: "Доставка автозапчастей по Казахстану — AUTOLIDER",
+      description: "Условия и способы доставки автозапчастей по Астане, Алматы и всему Казахстану. Экспресс-доставка из Китая за 7-10 дней, 30+ пунктов самовывоза.",
+    });
+  }, []);
   const deliveryMethods = [
     {
       icon: Truck,

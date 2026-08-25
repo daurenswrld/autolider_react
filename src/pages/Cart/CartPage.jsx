@@ -9,6 +9,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
+import { updateSEO } from "../../utils/seo";
 import "./CartPage.css";
 
 const getDeliveryDates = () => {
@@ -37,6 +38,13 @@ const getDeliveryDates = () => {
 };
 
 export const CartPage = () => {
+  React.useEffect(() => {
+    updateSEO({
+      title: "Корзина покупок — AUTOLIDER",
+      description: "Оформление заказа автозапчастей в интернет-магазине AUTOLIDER.",
+    });
+  }, []);
+
   const navigate = useNavigate();
   const {
     cart,

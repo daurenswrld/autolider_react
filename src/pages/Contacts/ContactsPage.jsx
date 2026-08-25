@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { updateSEO } from "../../utils/seo";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import {
@@ -21,6 +22,12 @@ import "swiper/css/navigation";
 import "./ContactsPage.css";
 
 export const ContactsPage = () => {
+  useEffect(() => {
+    updateSEO({
+      title: "Контакты — AUTOLIDER | Адреса, телефоны и реквизиты",
+      description: "Контакты отдела продаж AUTOLIDER в Астане. Телефоны: +7 (747) 420-58-98, +7 (776) 437-94-11, адрес, реквизиты ТОО AUTOLIDER TRADE.",
+    });
+  }, []);
   const [copiedField, setCopiedField] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
