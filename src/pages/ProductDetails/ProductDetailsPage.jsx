@@ -17,6 +17,7 @@ import Lightbox from "yet-another-react-lightbox";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/styles.css";
 import { useApp } from "../../context/AppContext";
+import { updateSEO } from "../../utils/seo";
 import "./ProductDetailsPage.css";
 
 const getDeliveryDates = () => {
@@ -222,6 +223,14 @@ export const ProductDetailsPage = () => {
         .catch((err) => console.error("Failed fetching live product:", err));
     }
   }, [id, products]);
+
+  useEffect(() => {
+    if (product && product.title) {
+      const title = `${product.title} — Купить за ${product.price?.toLocaleString("ru-RU")} ₸ | Autolider`;
+      const description = `Купить ${product.title} по цене ${product.price?.toLocaleString("ru-RU")} ₸ в маркетплейсе Autolider. Артикул: ${product.sku || 'Н/Д'}. Быстрая доставка по Казахстану.`;
+      updateSEO({ title, description });
+    }
+  }, [product]);
 
   const [activeTab, setActiveTab] = useState("specs"); // 'specs' | 'desc'
   const [selectedDiameter, setSelectedDiameter] = useState("15");

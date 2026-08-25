@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import { slugify, getUniqueModelSlug } from "../../utils/slugify";
+import { updateSEO } from "../../utils/seo";
 import "./CatalogPage.css";
 
 export const CatalogPage = () => {
@@ -151,6 +152,31 @@ export const CatalogPage = () => {
       setSelectedCategory(null);
     }
   }, [brandParam, modelParam, categoryParam, searchParams, apiBrands, rawCategories]);
+
+  // SEO Title & Description Sync based on Brand, Model, Category
+  useEffect(() => {
+    let title = "Каталог автозапчастей — Купить запчасти для всех марок авто | Autolider";
+    let description = "Каталог оригинальных и аналоговых автозапчастей для китайских и иномарок с доставкой по Казахстану. Низкие цены, подбор по VIN.";
+
+    if (selectedBrand && selectedModel && selectedCategory) {
+      title = `${selectedCategory} на ${selectedModel} (${selectedBrand}) — Купить автозапчасти | Autolider`;
+      description = `Купить ${selectedCategory.toLowerCase()} на ${selectedModel} (${selectedBrand}) в интернет-магазине Autolider. Официальные детали, быстрая доставка по Казахстану.`;
+    } else if (selectedBrand && selectedModel) {
+      title = `Запчасти на ${selectedModel} (${selectedBrand}) — Купить автозапчасти | Autolider`;
+      description = `Купить автозапчасти для ${selectedModel} (${selectedBrand}). Широкий ассортимент качественных запчастей, фильтров и расходников в наличии и под заказ.`;
+    } else if (selectedBrand && selectedCategory) {
+      title = `${selectedCategory} на ${selectedBrand} — Купить автозапчасти | Autolider`;
+      description = `Купить ${selectedCategory.toLowerCase()} на ${selectedBrand} с гарантией и доставкой. Выгодные цены, подбор автозапчастей по VIN.`;
+    } else if (selectedBrand) {
+      title = `Запчасти ${selectedBrand} — Купить автозапчасти на ${selectedBrand} в Казахстане | Autolider`;
+      description = `Каталог автозапчастей для автомобилей ${selectedBrand}. Оригинальные детали и качественные аналоги. Доставка по Астане, Алматы и всему Казахстану.`;
+    } else if (selectedCategory) {
+      title = `Автозапчасти в категории "${selectedCategory}" — Купить в Autolider`;
+      description = `Купить автозапчасти из категории "${selectedCategory}". Большой ассортимент деталей с быстрой доставкой по всему Казахстану.`;
+    }
+
+    updateSEO({ title, description });
+  }, [selectedBrand, selectedModel, selectedCategory]);
 
   // Products List (Stage 3)
   const productsList = products;
