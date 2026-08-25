@@ -371,7 +371,7 @@ export const CatalogPage = () => {
             {/* Left Sidebar: Brands List */}
             <aside className="catalog-sidebar">
               <ul className="sidebar-brands-list">
-                {brandsList.map((b) => (
+                {[...brandsList].reverse().map((b) => (
                   <li
                     key={b.name}
                     className={`sidebar-brand-item ${selectedBrand === b.name ? "active" : ""}`}
