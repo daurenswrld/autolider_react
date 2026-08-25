@@ -463,7 +463,7 @@ export const HeroSection = () => {
             <h2 className="catalog-section-title">Каталог</h2>
 
             <div className="catalog-brands-grid">
-              {catalogBrands.map((b, idx) => (
+              {[...catalogBrands].reverse().map((b, idx) => (
                 <Link
                   key={idx}
                   to={`/catalog/${b.slug || slugify(b.name)}`}
