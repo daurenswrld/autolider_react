@@ -312,7 +312,7 @@ export const CatalogPage = () => {
             </div>
 
             <div className="all-brands-grid">
-              {brandsList.map((b) => {
+              {[...brandsList].reverse().map((b) => {
                 const modelCount = b.models ? b.models.length : 0;
                 return (
                   <div
@@ -436,9 +436,6 @@ export const CatalogPage = () => {
                         </div>
                         <div className="model-card-text">
                           <span className="model-name">{m.name}</span>
-                          {m.years && (
-                            <span className="model-years-sub">{m.years}</span>
-                          )}
                         </div>
                       </div>
                     ))}

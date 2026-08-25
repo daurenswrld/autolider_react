@@ -678,7 +678,7 @@ app.post('/api/brands/:brandId/models', (req, res) => {
   const brand = db.brands.find((b) => b.id === req.params.brandId);
   if (!brand) return res.status(404).json({ message: 'Марка не найдена' });
 
-  const { name, years, photoUrl, status } = req.body;
+  const { name, photoUrl, status } = req.body;
   if (!name) return res.status(400).json({ message: 'Укажите название модели' });
 
   if (!brand.models) brand.models = [];
@@ -688,7 +688,6 @@ app.post('/api/brands/:brandId/models', (req, res) => {
     id: `m-${Date.now()}`,
     name,
     slug: modelSlug,
-    years: years || '2020-2024',
     photoUrl: photoUrl || brand.heroUrl || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=400&q=80',
     status: status || 'enabled'
   };
@@ -710,12 +709,11 @@ app.put('/api/brands/:brandId/models/:modelId', (req, res) => {
   const model = (brand.models || []).find((m) => m.id === req.params.modelId);
   if (!model) return res.status(404).json({ message: 'Модель не найдена' });
 
-  const { name, years, photoUrl, status } = req.body;
+  const { name, photoUrl, status } = req.body;
   if (name !== undefined) {
     model.name = name;
     model.slug = generateModelSlug(brand, name, model.id);
   }
-  if (years !== undefined) model.years = years;
   if (photoUrl !== undefined) model.photoUrl = photoUrl;
   if (status !== undefined) model.status = status;
 
@@ -758,13 +756,16 @@ app.post('/api/categories', (req, res) => {
   const db = readDB();
   const catName = req.body.name || 'Новая категория';
   const autoSlug = req.body.slug || slugify(catName) || `cat-${Date.now()}`;
+  const imgUrl = req.body.img || req.body.photoUrl || '';
   const newCat = {
     id: autoSlug,
     name: catName,
     slug: autoSlug,
+    img: imgUrl,
+    photoUrl: imgUrl,
     count: 0,
     parentId: req.body.parentId || null,
-    status: 'enabled'
+    status: req.body.status || 'enabled'
   };
   db.categories.push(newCat);
   writeDB(db);
@@ -776,7 +777,14 @@ app.put('/api/categories/:id', (req, res) => {
   const index = db.categories.findIndex((c) => c.id === req.params.id);
   if (index === -1) return res.status(404).json({ message: 'Категория не найдена' });
 
-  db.categories[index] = { ...db.categories[index], ...req.body };
+  const updatedCat = {
+    ...db.categories[index],
+    ...req.body
+  };
+  if (req.body.img) updatedCat.photoUrl = req.body.img;
+  if (req.body.photoUrl) updatedCat.img = req.body.photoUrl;
+
+  db.categories[index] = updatedCat;
   writeDB(db);
   res.json(db.categories[index]);
 });

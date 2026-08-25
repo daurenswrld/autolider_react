@@ -16,7 +16,7 @@
   /* left: calc(50% - 1440px / 2 + 2px); */
   top: -297px;
   background-image: url("/assets/img/flufy.jpg");
-  background-size: 100%;
+  background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
   /* filter: blur(50px); */

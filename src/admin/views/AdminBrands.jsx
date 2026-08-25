@@ -44,7 +44,6 @@ export const AdminBrands = () => {
 
   const [modelForm, setModelForm] = useState({
     name: "",
-    years: "2020-2024",
     photoUrl: "",
     status: "enabled",
   });
@@ -178,14 +177,12 @@ export const AdminBrands = () => {
     if (model) {
       setModelForm({
         name: model.name,
-        years: model.years || "2020-2024",
         photoUrl: model.photoUrl || "",
         status: model.status || "enabled",
       });
     } else {
       setModelForm({
         name: "",
-        years: "2020-2024",
         photoUrl: brand.heroUrl || "",
         status: "enabled",
       });
@@ -487,7 +484,6 @@ export const AdminBrands = () => {
                                   />
                                 )}
                               </span>
-                              <span className="model-years">{model.years}</span>
                             </div>
                             <button
                               className="edit-model-btn"
@@ -662,18 +658,6 @@ export const AdminBrands = () => {
                   value={modelForm.name}
                   onChange={(e) =>
                     setModelForm({ ...modelForm, name: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Годы выпуска</label>
-                <input
-                  type="text"
-                  placeholder="например: 2018-2024"
-                  value={modelForm.years}
-                  onChange={(e) =>
-                    setModelForm({ ...modelForm, years: e.target.value })
                   }
                 />
               </div>

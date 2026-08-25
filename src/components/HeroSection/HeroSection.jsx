@@ -179,9 +179,10 @@ export const HeroSection = () => {
   // Left sidebar brands from DB or fallback
   const sidebarBrands =
     dbBrands.length > 0
-      ? dbBrands.map((b) => ({
+      ? dbBrands.slice(0, 5).map((b) => ({
           name: b.name,
           logo: b.logoUrl || "/assets/img/mercedes.png",
+          slug: b.slug,
         }))
       : Array(5)
           .fill(null)

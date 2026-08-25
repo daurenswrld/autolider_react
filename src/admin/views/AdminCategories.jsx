@@ -78,7 +78,7 @@ const slugify = (text) => {
 };
 
 export const AdminCategories = () => {
-  const { showToast, products = [] } = useApp();
+  const { showToast, products = [], refreshCategories } = useApp();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -196,6 +196,7 @@ export const AdminCategories = () => {
       const res = await fetch(`/api/categories/${id}`, { method: "DELETE" });
       if (res.ok) {
         setCategories((prev) => prev.filter((c) => c.id !== id));
+        if (refreshCategories) refreshCategories();
         showToast(`Категория "${name}" удалена`);
       }
     } catch (err) {
@@ -216,6 +217,7 @@ export const AdminCategories = () => {
         setCategories((prev) =>
           prev.map((c) => (c.id === cat.id ? updated : c)),
         );
+        if (refreshCategories) refreshCategories();
         showToast(
           newStatus === "disabled"
             ? `Категория "${cat.name}" скрыта`
@@ -244,6 +246,7 @@ export const AdminCategories = () => {
           setCategories((prev) =>
             prev.map((c) => (c.id === editingId ? updated : c)),
           );
+          if (refreshCategories) refreshCategories();
           showToast(`Категория "${updated.name}" обновлена!`);
         }
       } else {
@@ -255,6 +258,7 @@ export const AdminCategories = () => {
         if (res.ok) {
           const created = await res.json();
           setCategories((prev) => [...prev, created]);
+          if (refreshCategories) refreshCategories();
           showToast(`Новая категория "${created.name}" добавлена!`);
         }
       }

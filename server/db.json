@@ -2,98 +2,801 @@
   "products": [],
   "categories": [
     {
-      "id": "tires",
-      "name": "Шины и диски",
-      "slug": "tires",
+      "id": "detali-dlya-to",
+      "name": "Детали для ТО",
+      "slug": "detali-dlya-to",
       "count": 0,
       "parentId": null,
       "status": "enabled",
-      "img": "/uploads/category-1786961278208-1801.webp"
+      "img": "/uploads/category-1787676781987-9796.webp"
     },
     {
-      "id": "oils",
-      "name": "Масла и автохимия",
-      "slug": "oils",
+      "id": "dvigatel",
+      "name": "Двигатель",
+      "slug": "dvigatel",
+      "count": 0,
+      "parentId": null,
+      "status": "enabled",
+      "img": "/uploads/category-1787676807165-7141.webp"
+    },
+    {
+      "id": "toplivnaya-sistema",
+      "name": "Топливная система",
+      "slug": "toplivnaya-sistema",
+      "img": "/uploads/category-1787677150599-1607.webp",
+      "photoUrl": "/uploads/category-1787677150599-1607.webp",
       "count": 0,
       "parentId": null,
       "status": "enabled"
     },
     {
-      "id": "brakes",
+      "id": "sistema-okhlazhdeniya",
+      "name": "Система охлаждения",
+      "slug": "sistema-okhlazhdeniya",
+      "img": "/uploads/category-1787677165696-5859.webp",
+      "photoUrl": "/uploads/category-1787677165696-5859.webp",
+      "count": 0,
+      "parentId": null,
+      "status": "enabled"
+    },
+    {
+      "id": "sistema-vypuska",
+      "name": "Система выпуска",
+      "slug": "sistema-vypuska",
+      "img": "/uploads/category-1787677202403-4931.webp",
+      "photoUrl": "/uploads/category-1787677202403-4931.webp",
+      "count": 0,
+      "parentId": null,
+      "status": "enabled"
+    },
+    {
+      "id": "transmissiya",
+      "name": "Трансмиссия",
+      "slug": "transmissiya",
+      "img": "/uploads/category-1787677219733-4911.webp",
+      "photoUrl": "/uploads/category-1787677219733-4911.webp",
+      "count": 0,
+      "parentId": null,
+      "status": "enabled"
+    },
+    {
+      "id": "khodovaya-chast",
+      "name": "Ходовая часть",
+      "slug": "khodovaya-chast",
+      "img": "/uploads/category-1787677280173-4107.webp",
+      "photoUrl": "/uploads/category-1787677280173-4107.webp",
+      "count": 0,
+      "parentId": null,
+      "status": "enabled"
+    },
+    {
+      "id": "rulevoe-upravlenie",
+      "name": "Рулевое управление",
+      "slug": "rulevoe-upravlenie",
+      "img": "/uploads/category-1787677299009-6000.webp",
+      "photoUrl": "/uploads/category-1787677299009-6000.webp",
+      "count": 0,
+      "parentId": null,
+      "status": "enabled"
+    },
+    {
+      "id": "tormoznaya-sistema",
       "name": "Тормозная система",
-      "slug": "brakes",
+      "slug": "tormoznaya-sistema",
+      "img": "/uploads/category-1787677314386-7535.webp",
+      "photoUrl": "/uploads/category-1787677314386-7535.webp",
       "count": 0,
       "parentId": null,
       "status": "enabled"
     },
     {
-      "id": "batteries",
-      "name": "Аккумуляторы",
-      "slug": "batteries",
+      "id": "elektrooborudovanie",
+      "name": "Электрооборудование",
+      "slug": "elektrooborudovanie",
+      "img": "/uploads/category-1787677323809-1880.webp",
+      "photoUrl": "/uploads/category-1787677323809-1880.webp",
       "count": 0,
       "parentId": null,
       "status": "enabled"
     },
     {
-      "id": "filters",
-      "name": "Фильтры",
-      "slug": "filters",
+      "id": "otopleniekonditsionirovanie",
+      "name": "Отопление/кондиционирование",
+      "slug": "otopleniekonditsionirovanie",
+      "img": "/uploads/category-1787677345009-2031.webp",
+      "photoUrl": "/uploads/category-1787677345009-2031.webp",
       "count": 0,
       "parentId": null,
       "status": "enabled"
     },
     {
-      "id": "ignition",
-      "name": "Зажигание и электрика",
-      "slug": "ignition",
+      "id": "detali-salona",
+      "name": "Детали салона",
+      "slug": "detali-salona",
+      "img": "/uploads/category-1787677361807-3251.webp",
+      "photoUrl": "/uploads/category-1787677361807-3251.webp",
       "count": 0,
       "parentId": null,
       "status": "enabled"
     },
     {
-      "id": "suspension",
-      "name": "Подвеска и рулевое",
-      "slug": "suspension",
+      "id": "detali-kuzova",
+      "name": "Детали кузова",
+      "slug": "detali-kuzova",
+      "img": "/uploads/category-1787677375609-9177.webp",
+      "photoUrl": "/uploads/category-1787677375609-9177.webp",
+      "count": 0,
+      "parentId": null,
+      "status": "enabled"
+    },
+    {
+      "id": "dopolnitelnoe-oborudovanie",
+      "name": "Дополнительное оборудование",
+      "slug": "dopolnitelnoe-oborudovanie",
+      "img": "/uploads/category-1787677396195-7599.webp",
+      "photoUrl": "/uploads/category-1787677396195-7599.webp",
       "count": 0,
       "parentId": null,
       "status": "enabled"
     }
   ],
   "orders": [],
-  "customers": [],
+  "customers": [
+    {
+      "id": 1787576746039,
+      "name": "Test name",
+      "phone": "+7 (777) 777-77-78",
+      "email": "bekuzakovd@gmail.com",
+      "city": "Алматы",
+      "totalOrders": 0,
+      "totalSpent": 0,
+      "bonusBalance": 5000,
+      "registeredDate": "2026-08-24"
+    }
+  ],
   "banners": [],
   "brands": [
     {
-      "id": "brand-1786811722320",
-      "name": "CHANGAN",
-      "country": "Китай",
-      "logoUrl": "/uploads/logo-1786811716508-2265.webp",
+      "id": "brand-1787679425633",
+      "name": "GAC",
+      "country": "Не указано",
+      "logoUrl": "/uploads/logo-1787679424795-3847.webp",
+      "heroUrl": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
+      "status": "enabled",
       "models": [
         {
-          "id": "m-1786965667877",
-          "name": "UNI-V",
-          "years": "2020-2024",
-          "photoUrl": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
-          "slug": "uni-v",
+          "id": "m-1787679445477",
+          "name": "GAC M8",
+          "slug": "gac-m8",
+          "photoUrl": "/uploads/model-1787679442815-2309.webp",
           "status": "enabled"
         }
-      ],
-      "status": "enabled"
+      ]
     },
     {
-      "id": "brand-1786809968116",
-      "name": "Mercedes",
-      "country": "Германия",
-      "logoUrl": "/uploads/logo-1786809957196-3824.webp",
+      "id": "brand-1787679370008",
+      "name": "KAIYI",
+      "country": "Не указано",
+      "logoUrl": "/uploads/logo-1787679368673-3205.webp",
+      "heroUrl": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
+      "status": "enabled",
       "models": [
         {
-          "id": "m-1786810038655",
-          "name": "E-Class W124",
-          "years": "1990-2000",
-          "photoUrl": "/uploads/model-1786810001972-5990.webp"
+          "id": "m-1787679384521",
+          "name": "KAIYI E5",
+          "slug": "kaiyi-e5",
+          "photoUrl": "/uploads/model-1787679380185-5233.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787679397567",
+          "name": "KAIYI X3",
+          "slug": "kaiyi-x3",
+          "photoUrl": "/uploads/model-1787679394600-2416.webp",
+          "status": "enabled"
         }
-      ],
-      "status": "enabled"
+      ]
+    },
+    {
+      "id": "brand-1787679322398",
+      "name": "OMODA",
+      "country": "Не указано",
+      "logoUrl": "/uploads/logo-1787679321782-9314.webp",
+      "heroUrl": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
+      "status": "enabled",
+      "models": [
+        {
+          "id": "m-1787679337760",
+          "name": "Omoda C5",
+          "slug": "omoda-c5",
+          "photoUrl": "/uploads/model-1787679335263-5630.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787679349476",
+          "name": "Omoda S5",
+          "slug": "omoda-s5",
+          "photoUrl": "/uploads/model-1787679346917-8963.webp",
+          "status": "enabled"
+        }
+      ]
+    },
+    {
+      "id": "brand-1787679211218",
+      "name": "DongFeng",
+      "country": "Не указано",
+      "logoUrl": "/uploads/logo-1787679209791-8143.webp",
+      "heroUrl": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
+      "status": "enabled",
+      "models": [
+        {
+          "id": "m-1787679234607",
+          "name": "DongFeng Shine/shine Max",
+          "slug": "dongfeng-shineshine-max",
+          "photoUrl": "/uploads/model-1787679232204-9264.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787679248419",
+          "name": "DongFeng fengon E5",
+          "slug": "dongfeng-fengon-e5",
+          "photoUrl": "/uploads/model-1787679247722-2750.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787679262248",
+          "name": "DongFeng Aeolus Haohan",
+          "slug": "dongfeng-aeolus-haohan",
+          "photoUrl": "/uploads/model-1787679261078-9002.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787679273679",
+          "name": "DongFeng Eq6380",
+          "slug": "dongfeng-eq6380",
+          "photoUrl": "/uploads/model-1787679272979-8765.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787679286617",
+          "name": "DongFeng Nano EX1",
+          "slug": "dongfeng-nano-ex1",
+          "photoUrl": "/uploads/model-1787679285871-9824.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787679297474",
+          "name": "DongFeng Rich",
+          "slug": "dongfeng-rich",
+          "photoUrl": "/uploads/model-1787679296776-5189.webp",
+          "status": "enabled"
+        }
+      ]
+    },
+    {
+      "id": "brand-1787679157872",
+      "name": "Jaecoo",
+      "country": "Не указано",
+      "logoUrl": "/uploads/logo-1787679157104-5093.webp",
+      "heroUrl": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
+      "status": "enabled",
+      "models": [
+        {
+          "id": "m-1787679173942",
+          "name": "Jaecoo J7 2wd",
+          "slug": "jaecoo-j7-2wd",
+          "photoUrl": "/uploads/model-1787679173053-9206.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787679181293",
+          "name": "Jaecoo J7 4wd",
+          "slug": "jaecoo-j7-4wd",
+          "photoUrl": "/uploads/model-1787679180395-9478.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787679194596",
+          "name": "Jaecoo J8",
+          "slug": "jaecoo-j8",
+          "photoUrl": "/uploads/model-1787679193558-5017.webp",
+          "status": "enabled"
+        }
+      ]
+    },
+    {
+      "id": "brand-1787679134541",
+      "name": "FAW",
+      "country": "Не указано",
+      "logoUrl": "/uploads/logo-1787679133834-4988.webp",
+      "heroUrl": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
+      "status": "enabled",
+      "models": []
+    },
+    {
+      "id": "brand-1787679046911",
+      "name": "EXEED",
+      "country": "Не указано",
+      "logoUrl": "/uploads/logo-1787679045533-4911.webp",
+      "heroUrl": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
+      "status": "enabled",
+      "models": [
+        {
+          "id": "m-1787679066373",
+          "name": "Exeed VX",
+          "slug": "exeed-vx",
+          "photoUrl": "/uploads/model-1787679064621-1870.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787679078114",
+          "name": "Exeed LX",
+          "slug": "exeed-lx",
+          "photoUrl": "/uploads/model-1787679077057-5353.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787679091880",
+          "name": "Exeed RX",
+          "slug": "exeed-rx",
+          "photoUrl": "/uploads/model-1787679089020-4424.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787679104039",
+          "name": "Exeed TXL",
+          "slug": "exeed-txl",
+          "photoUrl": "/uploads/model-1787679102668-4377.webp",
+          "status": "enabled"
+        }
+      ]
+    },
+    {
+      "id": "brand-1787678942166",
+      "name": "LI",
+      "country": "Не указано",
+      "logoUrl": "/uploads/logo-1787678941391-3889.webp",
+      "heroUrl": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
+      "status": "enabled",
+      "models": [
+        {
+          "id": "m-1787678961038",
+          "name": "LI L6",
+          "slug": "li-l6",
+          "photoUrl": "/uploads/model-1787678958482-3359.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678971064",
+          "name": "LI L7",
+          "slug": "li-l7",
+          "photoUrl": "/uploads/model-1787678970348-7146.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678981280",
+          "name": "LI L8",
+          "slug": "li-l8",
+          "photoUrl": "/uploads/model-1787678980547-9003.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787679011291",
+          "name": "LI L9",
+          "slug": "li-l9",
+          "photoUrl": "/uploads/model-1787678998305-8277.webp",
+          "status": "enabled"
+        }
+      ]
+    },
+    {
+      "id": "brand-1787678838781",
+      "name": "TANK",
+      "country": "Не указано",
+      "logoUrl": "/uploads/logo-1787678838168-3973.webp",
+      "heroUrl": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
+      "status": "enabled",
+      "models": [
+        {
+          "id": "m-1787678857809",
+          "name": "Tank 300",
+          "slug": "tank-300",
+          "photoUrl": "/uploads/model-1787678855334-3392.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678879196",
+          "name": "Tank 500 5мест.",
+          "slug": "tank-500-5mest",
+          "photoUrl": "/uploads/model-1787678878247-7340.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678892741",
+          "name": "Tank 500 7мест.",
+          "slug": "tank-500-7mest",
+          "photoUrl": "/uploads/model-1787678889792-5582.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678906694",
+          "name": "Tank 700",
+          "slug": "tank-700",
+          "photoUrl": "/uploads/model-1787678904756-6794.webp",
+          "status": "enabled"
+        }
+      ]
+    },
+    {
+      "id": "brand-1787678724601",
+      "name": "JETOUR",
+      "country": "Не указано",
+      "logoUrl": "/uploads/logo-1787678723720-5510.webp",
+      "heroUrl": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
+      "status": "enabled",
+      "models": [
+        {
+          "id": "m-1787678741011",
+          "name": "Jetour X70",
+          "slug": "jetour-x70",
+          "photoUrl": "/uploads/model-1787678740416-7219.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678752415",
+          "name": "Jetour X70 plus",
+          "slug": "jetour-x70-plus",
+          "photoUrl": "/uploads/model-1787678751747-3015.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678766334",
+          "name": "Jetour X90",
+          "slug": "jetour-x90",
+          "photoUrl": "/uploads/model-1787678765645-9938.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678783936",
+          "name": "Jetour X90 plus",
+          "slug": "jetour-x90-plus",
+          "photoUrl": "/uploads/model-1787678781021-4915.webp",
+          "status": "enabled"
+        }
+      ]
+    },
+    {
+      "id": "brand-1787678577779",
+      "name": "BYD",
+      "country": "Не указано",
+      "logoUrl": "/uploads/logo-1787678576429-6005.webp",
+      "heroUrl": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
+      "status": "enabled",
+      "models": [
+        {
+          "id": "m-1787678597776",
+          "name": "Byd Yuan Up",
+          "slug": "byd-yuan-up",
+          "photoUrl": "/uploads/model-1787678596793-8458.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678613724",
+          "name": "Byd Song Plus",
+          "slug": "byd-song-plus",
+          "photoUrl": "/uploads/model-1787678610509-8531.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678627804",
+          "name": "Byd  leopard 5",
+          "slug": "byd-leopard-5",
+          "photoUrl": "/uploads/model-1787678626838-5148.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678663637",
+          "name": "Byd  E2",
+          "slug": "byd-e2",
+          "photoUrl": "/uploads/model-1787678661440-4026.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678680024",
+          "name": "Byd  Qin Plus",
+          "slug": "byd-qin-plus",
+          "photoUrl": "/uploads/model-1787678679393-2930.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678695739",
+          "name": "Byd Lion 07",
+          "slug": "byd-lion-07",
+          "photoUrl": "/uploads/model-1787678694984-5409.webp",
+          "status": "enabled"
+        }
+      ]
+    },
+    {
+      "id": "brand-1787678443432",
+      "name": "GEELY",
+      "country": "Не указано",
+      "logoUrl": "/uploads/logo-1787678442742-5743.webp",
+      "heroUrl": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
+      "status": "enabled",
+      "models": [
+        {
+          "id": "m-1787678461128",
+          "name": "Geely Emgrand",
+          "slug": "geely-emgrand",
+          "photoUrl": "/uploads/model-1787678458586-9209.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678475431",
+          "name": "Geely Coolray",
+          "slug": "geely-coolray",
+          "photoUrl": "/uploads/model-1787678472879-8202.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678495698",
+          "name": "Geely Monjaro",
+          "slug": "geely-monjaro",
+          "photoUrl": "/uploads/model-1787678492958-6003.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678513033",
+          "name": "Geely Tugella",
+          "slug": "geely-tugella",
+          "photoUrl": "/uploads/model-1787678510384-9109.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678534111",
+          "name": "Geely Atlas",
+          "slug": "geely-atlas",
+          "photoUrl": "/uploads/model-1787678533462-8356.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678546423",
+          "name": "Geely Okavango",
+          "slug": "geely-okavango",
+          "photoUrl": "/uploads/model-1787678545590-3199.webp",
+          "status": "enabled"
+        }
+      ]
+    },
+    {
+      "id": "brand-1787678247108",
+      "name": "CHANGAN",
+      "country": "Не указано",
+      "logoUrl": "/uploads/logo-1787678245945-7702.webp",
+      "heroUrl": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
+      "status": "enabled",
+      "models": [
+        {
+          "id": "m-1787678300407",
+          "name": "Changan CS35 plus",
+          "slug": "changan-cs35-plus",
+          "photoUrl": "/uploads/model-1787678299607-6183.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678311238",
+          "name": "Changan CS55 plus",
+          "slug": "changan-cs55-plus",
+          "photoUrl": "/uploads/model-1787678310348-9224.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678326042",
+          "name": "Changan CS75 plus",
+          "slug": "changan-cs75-plus",
+          "photoUrl": "/uploads/model-1787678323379-7970.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678344488",
+          "name": "Changan CS95 plus",
+          "slug": "changan-cs95-plus",
+          "photoUrl": "/uploads/model-1787678343823-8669.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678358851",
+          "name": "Changan UNI-K",
+          "slug": "changan-uni-k",
+          "photoUrl": "/uploads/model-1787678358076-5956.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678372818",
+          "name": "Changan UNI-T",
+          "slug": "changan-uni-t",
+          "photoUrl": "/uploads/model-1787678372048-9196.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678385862",
+          "name": "Changan UNI-V",
+          "slug": "changan-uni-v",
+          "photoUrl": "/uploads/model-1787678382999-3227.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678401875",
+          "name": "Changan ALSVIN",
+          "slug": "changan-alsvin",
+          "photoUrl": "/uploads/model-1787678399121-5976.webp",
+          "status": "enabled"
+        }
+      ]
+    },
+    {
+      "id": "brand-1787677908563",
+      "name": "JAC",
+      "country": "Не указано",
+      "logoUrl": "/uploads/logo-1787677907876-8437.webp",
+      "heroUrl": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
+      "status": "enabled",
+      "models": [
+        {
+          "id": "m-1787677968358",
+          "name": "Jac S3",
+          "slug": "jac-s3",
+          "photoUrl": "/uploads/model-1787677955864-6943.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787677980982",
+          "name": "Jac S5",
+          "slug": "jac-s5",
+          "photoUrl": "/uploads/model-1787677979966-8800.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787677995837",
+          "name": " Jac T6",
+          "slug": "jac-t6",
+          "photoUrl": "/uploads/model-1787677992790-7814.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678117887",
+          "name": "Jac J7",
+          "slug": "jac-j7",
+          "photoUrl": "/uploads/model-1787678112779-7290.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678128420",
+          "name": "Jac  JS6",
+          "slug": "jac-js6",
+          "photoUrl": "/uploads/model-1787678127718-2761.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787678144714",
+          "name": "Jac Sunray",
+          "slug": "jac-sunray",
+          "photoUrl": "/uploads/model-1787678137371-9911.webp",
+          "status": "enabled"
+        }
+      ]
+    },
+    {
+      "id": "brand-1787677753917",
+      "name": "CHERY",
+      "country": "Не указано",
+      "logoUrl": "/uploads/logo-1787677752705-5317.webp",
+      "heroUrl": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
+      "status": "enabled",
+      "models": [
+        {
+          "id": "m-1787677772544",
+          "name": "Chery Tiggo 2pro",
+          "slug": "chery-tiggo-2pro",
+          "photoUrl": "/uploads/model-1787677771755-3727.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787677807150",
+          "name": "Chery Tiggo 4pro",
+          "slug": "chery-tiggo-4pro",
+          "photoUrl": "/uploads/model-1787677806372-6343.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787677821157",
+          "name": "Chery Tiggo 7pro/7pro max",
+          "slug": "chery-tiggo-7pro7pro-max",
+          "photoUrl": "/uploads/model-1787677820453-1006.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787677834901",
+          "name": "Chery Tiggo 8pro/8pro max",
+          "slug": "chery-tiggo-8pro8pro-max",
+          "photoUrl": "/uploads/model-1787677834022-2600.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787677852425",
+          "name": "Chery Arizo 8",
+          "slug": "chery-arizo-8",
+          "photoUrl": "/uploads/model-1787677851251-8716.webp",
+          "status": "enabled"
+        }
+      ]
+    },
+    {
+      "id": "brand-1787677474131",
+      "name": "HAVAL",
+      "country": "Не указано",
+      "logoUrl": "/uploads/logo-1787677473376-4055.webp",
+      "heroUrl": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
+      "status": "enabled",
+      "models": [
+        {
+          "id": "m-1787677516439",
+          "name": "HAVAL F7",
+          "slug": "haval-f7",
+          "photoUrl": "/uploads/model-1787677513367-8109.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787677585027",
+          "name": "HAVAL F7X",
+          "slug": "haval-f7x",
+          "photoUrl": "/uploads/model-1787677582133-3469.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787677607813",
+          "name": "HAVAL H6",
+          "slug": "haval-h6",
+          "photoUrl": "/uploads/model-1787677606844-1358.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787677626114",
+          "name": "HAVAL H6 gt",
+          "slug": "haval-h6-gt",
+          "photoUrl": "/uploads/model-1787677625555-6096.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787677645853",
+          "name": "HAVAL DARGO",
+          "slug": "haval-dargo",
+          "photoUrl": "/uploads/model-1787677644644-5874.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787677674552",
+          "name": "HAVAL DARGO X",
+          "slug": "haval-dargo-x",
+          "photoUrl": "/uploads/model-1787677669679-9884.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787677692379",
+          "name": "HAVAL JOLION",
+          "slug": "haval-jolion",
+          "photoUrl": "/uploads/model-1787677691444-5898.webp",
+          "status": "enabled"
+        },
+        {
+          "id": "m-1787677704832",
+          "name": "HAVAL M6",
+          "slug": "haval-m6",
+          "photoUrl": "/uploads/model-1787677704039-9088.webp",
+          "status": "enabled"
+        }
+      ]
     }
   ],
   "settings": {
