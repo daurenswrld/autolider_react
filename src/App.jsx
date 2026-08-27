@@ -26,6 +26,7 @@ import { ProductDetailsPage } from "./pages/ProductDetails/ProductDetailsPage";
 import { CheckoutPage } from "./pages/Checkout/CheckoutPage";
 import { ProfilePage } from "./pages/Profile/ProfilePage";
 import { PrivacyPage } from "./pages/Privacy/PrivacyPage";
+import { OfferPage } from "./pages/Offer/OfferPage";
 import { AdminLayout } from "./admin/AdminLayout";
 import { AdminDashboard } from "./admin/views/AdminDashboard";
 import { AdminProducts } from "./admin/views/AdminProducts";
@@ -73,6 +74,7 @@ function AppContent() {
     '/cart',
     '/checkout',
     '/privacy',
+    '/offer',
     '/product'
   ];
   const isNotFoundPage =
@@ -80,9 +82,6 @@ function AppContent() {
     !location.pathname.startsWith('/catalog') &&
     !location.pathname.startsWith('/product/') &&
     !location.pathname.startsWith('/admin');
-
-  const hideAccessoriesPages = ['/profile', '/checkout', '/cart', '/auth', '/login', '/privacy'];
-  const shouldHideAccessories = isNotFoundPage || hideAccessoriesPages.includes(location.pathname);
 
   // If Admin Login Page
   if (location.pathname === "/admin/login") {
@@ -147,12 +146,13 @@ function AppContent() {
           <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/offer" element={<OfferPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
 
       {/* Footer exact to design (hidden on auth page) */}
-      {!isAuthPage && <Footer hideAccessories={shouldHideAccessories} />}
+      {!isAuthPage && <Footer />}
 
       {/* Toast Notification system */}
       <Toast />

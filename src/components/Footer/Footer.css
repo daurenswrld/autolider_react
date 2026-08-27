@@ -141,6 +141,12 @@
   color: #8e8e99;
 }
 
+.footer-bottom-links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
 .privacy-link {
   color: #8e8e99;
   text-decoration: none;
@@ -178,5 +184,11 @@
     flex-direction: column;
     gap: 12px;
     align-items: flex-start;
+  }
+
+  .footer-bottom-links {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
 }

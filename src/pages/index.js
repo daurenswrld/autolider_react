@@ -11,3 +11,4 @@ export { ProductDetailsPage } from './ProductDetails';
 export { CheckoutPage } from './Checkout';
 export { ProfilePage } from './Profile';
 export { PrivacyPage } from './Privacy/PrivacyPage';
+export { OfferPage } from './Offer/OfferPage';

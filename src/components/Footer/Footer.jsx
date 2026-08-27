@@ -1,14 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Phone, Mail, MapPin } from 'lucide-react';
-import { PopularAccessories } from '../PopularAccessories/PopularAccessories';
 import './Footer.css';
 
-export const Footer = ({ hideAccessories = false }) => {
+export const Footer = () => {
   return (
-    <>
-      {!hideAccessories && <PopularAccessories />}
-      <footer className="autolider-footer">
+    <footer className="autolider-footer">
       <div className="footer-container">
         {/* Main 4 Columns Section */}
         <div className="footer-top-grid">
@@ -100,17 +97,21 @@ export const Footer = ({ hideAccessories = false }) => {
         {/* Divider Line */}
         <div className="footer-divider" />
 
-        {/* Bottom Bar: Privacy Policy & Copyright */}
+        {/* Bottom Bar: Privacy Policy, Offer & Copyright */}
         <div className="footer-bottom-bar">
-          <Link to="/privacy" className="privacy-link">
-            Политика конфидициальности
-          </Link>
+          <div className="footer-bottom-links">
+            <Link to="/privacy" className="privacy-link">
+              Политика конфиденциальности
+            </Link>
+            <Link to="/offer" className="privacy-link">
+              Договор оферты
+            </Link>
+          </div>
           <span className="copyright-text">
             © 2026 AUTOLIDER Trade
           </span>
         </div>
       </div>
     </footer>
-    </>
   );
 };
