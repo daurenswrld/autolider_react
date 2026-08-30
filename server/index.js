@@ -1707,38 +1707,64 @@ app.delete('/api/admin-users/:id', (req, res) => {
 app.post('/api/admin/login', loginRateLimiter, (req, res) => {
   const reqUsername = (req.body.username || '').trim().toLowerCase();
   const reqPassword = (req.body.password || '').trim();
+  const portalType = req.body.portalType || 'admin';
   const dbData = readDB();
 
-  // 0. Seller (Supplier) Authentication Check
-  const seller = (dbData.sellers || []).find(
+  const isSellerUser = (dbData.sellers || []).some(
     (s) => (s.username || '').toLowerCase() === reqUsername || (s.email || '').toLowerCase() === reqUsername
   );
-  if (seller) {
-    if (seller.status === 'disabled') {
-      return res.status(403).json({ success: false, message: 'Аккаунт поставщика заблокирован' });
-    }
-    const isPassValid = seller.password === reqPassword ||
-      (seller.password_hash && bcrypt.compareSync(reqPassword, seller.password_hash)) ||
-      reqPassword === 'supplier123';
 
-    if (isPassValid) {
-      const payload = { sellerId: seller.id, roleKey: 'seller', name: seller.name, code: seller.code };
-      const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
-      return res.json({
-        success: true,
-        token,
-        user: {
-          name: seller.name,
-          role: 'Поставщик',
-          roleKey: 'seller',
-          sellerId: seller.id,
-          sellerCode: seller.code
-        }
-      });
+  const isAdminUser = reqUsername === 'admin' || reqUsername === 'autolider' || reqUsername === 'manager' ||
+    (dbData.adminUsers || []).some((u) => (u.username || '').toLowerCase() === reqUsername);
+
+  // Enforce Strict Role Tab Matching
+  if (portalType === 'admin' && isSellerUser && !isAdminUser) {
+    return res.status(400).json({
+      success: false,
+      message: 'Указанная учетная запись принадлежит поставщику. Пожалуйста, переключитесь на вкладку «Поставщик».'
+    });
+  }
+
+  if (portalType === 'supplier' && isAdminUser && !isSellerUser) {
+    return res.status(400).json({
+      success: false,
+      message: 'Указанная учетная запись принадлежит администратору. Пожалуйста, переключитесь на вкладку «Администратор».'
+    });
+  }
+
+  // 1. Supplier Authentication Flow
+  if (portalType === 'supplier' || (isSellerUser && !isAdminUser)) {
+    const seller = (dbData.sellers || []).find(
+      (s) => (s.username || '').toLowerCase() === reqUsername || (s.email || '').toLowerCase() === reqUsername
+    );
+    if (seller) {
+      if (seller.status === 'disabled') {
+        return res.status(403).json({ success: false, message: 'Аккаунт поставщика заблокирован' });
+      }
+      const isPassValid = seller.password === reqPassword ||
+        (seller.password_hash && bcrypt.compareSync(reqPassword, seller.password_hash)) ||
+        reqPassword === 'supplier123';
+
+      if (isPassValid) {
+        const payload = { sellerId: seller.id, roleKey: 'seller', name: seller.name, code: seller.code };
+        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+        return res.json({
+          success: true,
+          token,
+          user: {
+            name: seller.name,
+            role: 'Поставщик',
+            roleKey: 'seller',
+            sellerId: seller.id,
+            sellerCode: seller.code
+          }
+        });
+      }
+      return res.status(401).json({ success: false, message: 'Неверный логин или пароль поставщика' });
     }
   }
 
-  // 1. Master Admin Bypass
+  // 2. Admin / Staff Authentication Flow
   if (
     (reqUsername === 'admin' || reqUsername === 'autolider') &&
     (reqPassword === 'admin' || reqPassword === 'admin123' || reqPassword === 'password123' || reqPassword === '1234')
@@ -1752,7 +1778,6 @@ app.post('/api/admin/login', loginRateLimiter, (req, res) => {
     });
   }
 
-  // 2. Staff User Authentication Check
   const staff = (dbData.adminUsers || []).find((u) => (u.username || '').toLowerCase() === reqUsername);
 
   if (staff) {
@@ -1784,7 +1809,7 @@ app.post('/api/admin/login', loginRateLimiter, (req, res) => {
 
   return res.status(401).json({
     success: false,
-    message: 'Неверный логин или пароль сотрудника'
+    message: portalType === 'supplier' ? 'Неверный логин или пароль поставщика' : 'Неверный логин или пароль администратора'
   });
 });
 

@@ -45,25 +45,29 @@ export const AdminLogin = () => {
     } catch (err) {
       console.error("Login error:", err);
       // Fallback offline login for testing
-      if (username === "manager") {
-        localStorage.setItem("autolider_admin_token", "autolider-manager-token");
-        localStorage.setItem(
-          "autolider_admin_user",
-          JSON.stringify({ name: "Менеджер Продаж", role: "Менеджер", roleKey: "manager" })
-        );
-        navigate("/admin");
-      } else if (
-        username === "admin" &&
-        (password === "admin" || password === "password123")
-      ) {
-        localStorage.setItem("autolider_admin_token", "autolider-admin-token-2026");
-        localStorage.setItem(
-          "autolider_admin_user",
-          JSON.stringify({ name: "Главный Администратор", role: "Главный Администратор", roleKey: "admin" })
-        );
-        navigate("/admin");
+      if (activeTab === 'admin') {
+        if (username === "manager") {
+          localStorage.setItem("autolider_admin_token", "autolider-manager-token");
+          localStorage.setItem(
+            "autolider_admin_user",
+            JSON.stringify({ name: "Менеджер Продаж", role: "Менеджер", roleKey: "manager" })
+          );
+          navigate("/admin");
+        } else if (
+          username === "admin" &&
+          (password === "admin" || password === "password123")
+        ) {
+          localStorage.setItem("autolider_admin_token", "autolider-admin-token-2026");
+          localStorage.setItem(
+            "autolider_admin_user",
+            JSON.stringify({ name: "Главный Администратор", role: "Главный Администратор", roleKey: "admin" })
+          );
+          navigate("/admin");
+        } else {
+          setError("Неверный логин или пароль администратора");
+        }
       } else {
-        setError("Неверный логин или пароль");
+        setError("Неверный логин или пароль поставщика");
       }
     } finally {
       setLoading(false);
