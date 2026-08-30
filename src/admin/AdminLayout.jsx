@@ -91,10 +91,14 @@ export const AdminLayout = () => {
           setAdminUser(u);
 
           // Security Guard: Prevent suppliers from accessing admin-only pages
-          if (u?.roleKey === 'seller') {
-            const allowedSellerPaths = ['/admin', '/admin/products', '/admin/orders'];
+          if (u?.roleKey === "seller") {
+            const allowedSellerPaths = [
+              "/admin",
+              "/admin/products",
+              "/admin/orders",
+            ];
             if (!allowedSellerPaths.includes(location.pathname)) {
-              navigate('/admin', { replace: true });
+              navigate("/admin", { replace: true });
             }
           }
         } catch (e) {}
@@ -232,7 +236,7 @@ export const AdminLayout = () => {
 
   const currentRole = adminUser?.roleKey || "admin";
   const navItems = allNavItems.filter((item) =>
-    item.roles.includes(currentRole)
+    item.roles.includes(currentRole),
   );
 
   if (!localStorage.getItem("autolider_admin_token")) {

@@ -1,7 +1,7 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Phone, Mail, MapPin } from 'lucide-react';
-import './Footer.css';
+import React from "react";
+import { Link } from "react-router-dom";
+import { Phone, Mail, MapPin } from "lucide-react";
+import "./Footer.css";
 
 export const Footer = () => {
   return (
@@ -58,22 +58,38 @@ export const Footer = () => {
             <h4 className="footer-col-title">Социальные Сети</h4>
             <ul className="footer-links-list">
               <li>
-                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">
+                <a
+                  href="https://linkedin.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   Linkedin
                 </a>
               </li>
               <li>
-                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
+                <a
+                  href="https://twitter.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   Twitter
                 </a>
               </li>
               <li>
-                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">
+                <a
+                  href="https://facebook.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   Facebook
                 </a>
               </li>
               <li>
-                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
+                <a
+                  href="https://instagram.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   Instagram
                 </a>
               </li>
@@ -88,7 +104,7 @@ export const Footer = () => {
               className="footer-logo"
               onError={(e) => {
                 e.target.onerror = null;
-                e.target.src = '/assets/img/logo.svg';
+                e.target.src = "/assets/img/logo.svg";
               }}
             />
           </div>
@@ -107,9 +123,7 @@ export const Footer = () => {
               Договор оферты
             </Link>
           </div>
-          <span className="copyright-text">
-            © 2026 AUTOLIDER Trade
-          </span>
+          <span className="copyright-text">© 2026 AUTOLIDER Trade</span>
         </div>
       </div>
     </footer>
