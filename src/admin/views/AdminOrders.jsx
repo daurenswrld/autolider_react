@@ -13,7 +13,8 @@ import {
   Filter,
   Calendar,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Store
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import './AdminOrders.css';
@@ -54,6 +55,7 @@ function getOrderMonthKey(dateStr) {
 export const AdminOrders = () => {
   const { showToast, products = [] } = useApp();
   const [orders, setOrders] = useState([]);
+  const [sellersList, setSellersList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
@@ -63,6 +65,13 @@ export const AdminOrders = () => {
   })();
   const isSeller = sellerInfo?.roleKey === 'seller';
   const sellerId = sellerInfo?.sellerId || null;
+
+  useEffect(() => {
+    fetch('/api/sellers')
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setSellersList(data || []))
+      .catch(() => {});
+  }, []);
 
   const getItemDetails = (rawItem, idx, fallbackOrderTotal = 0, totalItems = 1) => {
     const pObj = rawItem?.product || rawItem?.item || rawItem?.rawProduct || rawItem || {};
@@ -137,6 +146,35 @@ export const AdminOrders = () => {
       fallbackCatalogProd?.image ||
       '';
 
+    let sellerName =
+      rawItem?.seller_name ||
+      rawItem?.sellerName ||
+      pObj.seller_name ||
+      pObj.sellerName ||
+      matchedProduct?.seller_name ||
+      matchedProduct?.sellerName ||
+      matchedProduct?.seller_title ||
+      '';
+
+    const sId =
+      rawItem?.seller_id ||
+      rawItem?.sellerId ||
+      pObj.seller_id ||
+      pObj.sellerId ||
+      matchedProduct?.seller_id ||
+      matchedProduct?.sellerId;
+
+    if (!sellerName && sId) {
+      const foundSeller = (sellersList || []).find((s) => String(s.id) === String(sId));
+      if (foundSeller) {
+        sellerName = foundSeller.name;
+      }
+    }
+
+    if (!sellerName || sellerName.toLowerCase() === 'autolider') {
+      sellerName = 'AutoLider';
+    }
+
     return {
       title,
       price,
@@ -144,8 +182,24 @@ export const AdminOrders = () => {
       totalSum,
       article,
       image,
-      matchedProduct
+      matchedProduct,
+      sellerName
     };
+  };
+
+  const getOrderSellers = (order) => {
+    const rawItems = order.items && order.items.length > 0 ? order.items : [order];
+    const sellerNames = new Set();
+
+    rawItems.forEach((it, idx) => {
+      const details = getItemDetails(it, idx);
+      if (details.sellerName) {
+        sellerNames.add(details.sellerName);
+      }
+    });
+
+    if (sellerNames.size === 0) return 'AutoLider';
+    return Array.from(sellerNames).join(', ');
   };
 
   // Filters & collapse states
@@ -430,7 +484,7 @@ export const AdminOrders = () => {
                         <th>№ Заказа</th>
                         <th>Дата / Время</th>
                         <th>Покупатель</th>
-                        <th>Телефон</th>
+                        <th>Поставщик</th>
                         <th>Сумма</th>
                         <th>Оплата</th>
                         <th>Статус заказа</th>
@@ -438,49 +492,75 @@ export const AdminOrders = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {group.orders.map((o) => (
-                        <tr key={o.id}>
-                          <td className="font-bold">#{o.id}</td>
-                          <td className="text-sub">{o.date}</td>
-                          <td className="font-medium">{o.customerName}</td>
-                          <td className="text-sub">{o.customerPhone}</td>
-                          <td className="font-bold text-price">{formatPrice(o.totalPrice)}</td>
-                          <td className="text-sub">{o.paymentMethod}</td>
-                          <td>
-                            <select
-                              className="status-select-inline"
-                              value={o.status}
-                              onChange={(e) => handleStatusChange(o.id, e.target.value)}
-                            >
-                              <option value="pending">Ожидает оплаты</option>
-                              <option value="processing">В обработке</option>
-                              <option value="paid">Оплачен ✔</option>
-                              <option value="shipping">В пути</option>
-                              <option value="delivered">Доставлен</option>
-                              <option value="canceled">Отменен</option>
-                            </select>
-                          </td>
-                          <td>
-                            <div className="order-actions-cell" style={{ display: 'flex', gap: '6px' }}>
-                              <button
-                                className="btn-table-action"
-                                onClick={() => setSelectedOrder(o)}
-                                title="Детали заказа"
+                      {group.orders.map((o) => {
+                        const sNames = getOrderSellers(o);
+                        const isAutoLider = sNames === 'AutoLider';
+                        return (
+                          <tr key={o.id}>
+                            <td className="font-bold">#{o.id}</td>
+                            <td className="text-sub">{o.date}</td>
+                            <td className="font-medium">
+                              <div>{o.customerName}</div>
+                              <div style={{ fontSize: '12px', color: '#94a3b8' }}>{o.customerPhone}</div>
+                            </td>
+                            <td>
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '5px',
+                                  background: isAutoLider ? '#f1f5f9' : 'rgba(234, 36, 39, 0.08)',
+                                  color: isAutoLider ? '#475569' : '#ea2427',
+                                  padding: '4px 10px',
+                                  borderRadius: '6px',
+                                  fontSize: '12px',
+                                  fontWeight: '700',
+                                  border: '1px solid',
+                                  borderColor: isAutoLider ? '#cbd5e1' : 'rgba(234, 36, 39, 0.2)'
+                                }}
                               >
-                                <Eye size={15} />
-                              </button>
-                              <button
-                                className="btn-table-action btn-delete-action"
-                                onClick={() => handleDeleteOrder(o.id)}
-                                title="Удалить заказ"
-                                style={{ color: '#ef4444' }}
+                                <Store size={13} />
+                                {sNames}
+                              </span>
+                            </td>
+                            <td className="font-bold text-price">{formatPrice(o.totalPrice)}</td>
+                            <td className="text-sub">{o.paymentMethod}</td>
+                            <td>
+                              <select
+                                className="status-select-inline"
+                                value={o.status}
+                                onChange={(e) => handleStatusChange(o.id, e.target.value)}
                               >
-                                <Trash2 size={15} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                                <option value="pending">Ожидает оплаты</option>
+                                <option value="processing">В обработке</option>
+                                <option value="paid">Оплачен ✔</option>
+                                <option value="shipping">В пути</option>
+                                <option value="delivered">Доставлен</option>
+                                <option value="canceled">Отменен</option>
+                              </select>
+                            </td>
+                            <td>
+                              <div className="order-actions-cell" style={{ display: 'flex', gap: '6px' }}>
+                                <button
+                                  className="btn-table-action"
+                                  onClick={() => setSelectedOrder(o)}
+                                  title="Детали заказа"
+                                >
+                                  <Eye size={15} />
+                                </button>
+                                <button
+                                  className="btn-table-action btn-delete-action"
+                                  onClick={() => handleDeleteOrder(o.id)}
+                                  title="Удалить заказ"
+                                  style={{ color: '#ef4444' }}
+                                >
+                                  <Trash2 size={15} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -504,6 +584,8 @@ export const AdminOrders = () => {
           ? selectedOrder.bonusEarned
           : 0;
 
+        const mainSellerName = getOrderSellers(selectedOrder);
+
         return (
           <div className="admin-modal-overlay" onClick={() => setSelectedOrder(null)}>
             <div className="admin-modal-box" onClick={(e) => e.stopPropagation()}>
@@ -520,6 +602,15 @@ export const AdminOrders = () => {
                     <span className="meta-card-label">ПОКУПАТЕЛЬ</span>
                     <span className="meta-card-value">{selectedOrder.customerName || 'Покупатель'}</span>
                     <span className="meta-card-sub">{selectedOrder.customerPhone || 'Не указан'}</span>
+                  </div>
+
+                  <div className="meta-card">
+                    <span className="meta-card-label">ПОСТАВЩИК / МАГАЗИН</span>
+                    <span className="meta-card-value" style={{ color: '#ea2427', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Store size={16} />
+                      {mainSellerName}
+                    </span>
+                    <span className="meta-card-sub">Филиал / Поставщик</span>
                   </div>
 
                   <div className="meta-card">
@@ -542,13 +633,6 @@ export const AdminOrders = () => {
                       </span>
                     )}
                   </div>
-
-                  <div className="meta-card">
-                    <span className="meta-card-label">КОММЕНТАРИЙ</span>
-                    <span className="meta-card-value" style={{ fontSize: '13px', fontWeight: '500', color: selectedOrder.comment ? '#1e293b' : '#94a3b8' }}>
-                      {selectedOrder.comment || 'Нет комментария'}
-                    </span>
-                  </div>
                 </div>
 
                 <div className="order-items-table-box">
@@ -557,6 +641,7 @@ export const AdminOrders = () => {
                     <thead>
                       <tr>
                         <th>Товар</th>
+                        <th>Поставщик</th>
                         <th>Артикул</th>
                         <th>Цена</th>
                         <th>Кол-во</th>
@@ -577,6 +662,24 @@ export const AdminOrders = () => {
                               )}
                               <span>{item.title}</span>
                             </div>
+                          </td>
+                          <td>
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                background: item.sellerName === 'AutoLider' ? '#f1f5f9' : 'rgba(234, 36, 39, 0.08)',
+                                color: item.sellerName === 'AutoLider' ? '#475569' : '#ea2427',
+                                padding: '2px 8px',
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                fontWeight: '700'
+                              }}
+                            >
+                              <Store size={12} />
+                              {item.sellerName}
+                            </span>
                           </td>
                           <td style={{ color: '#666', fontSize: '13px' }}>{item.article}</td>
                           <td>{formatPrice(item.price)}</td>
