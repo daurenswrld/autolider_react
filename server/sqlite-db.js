@@ -1,4 +1,3 @@
-import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -14,20 +13,29 @@ const JSON_DB_PATH = isVercel && fs.existsSync('/tmp/db.json') ? '/tmp/db.json' 
 // Initialize SQLite safely
 let db;
 try {
-  db = new Database(DB_PATH);
-  db.pragma('journal_mode = WAL');
-  db.pragma('synchronous = NORMAL');
-} catch (e) {
-  console.warn('SQLite disk init failed, using memory DB:', e.message);
+  let Database;
   try {
-    db = new Database(':memory:');
-  } catch (err) {
-    db = {
-      prepare: () => ({ run: () => {}, get: () => ({ c: 0 }), all: () => [] }),
-      exec: () => {},
-      transaction: (fn) => fn
-    };
+    Database = (await import('better-sqlite3')).default;
+  } catch (e) {
+    console.warn('better-sqlite3 native module not available:', e.message);
   }
+
+  if (Database) {
+    db = new Database(DB_PATH);
+    try {
+      db.pragma('journal_mode = WAL');
+      db.pragma('synchronous = NORMAL');
+    } catch (e) {}
+  } else {
+    throw new Error('Database native module unavailable');
+  }
+} catch (e) {
+  console.warn('SQLite init fallback to mock interface:', e.message);
+  db = {
+    prepare: () => ({ run: () => {}, get: () => ({ c: 0 }), all: () => [] }),
+    exec: () => {},
+    transaction: (fn) => fn
+  };
 }
 
 // Create SQLite tables if missing
