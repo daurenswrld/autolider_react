@@ -1727,16 +1727,18 @@ app.use((err, req, res, next) => {
   });
 });
 
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Autolider Node.js Express Backend running on http://localhost:${PORT}`);
-});
+if (!process.env.VERCEL) {
+  const server = app.listen(PORT, () => {
+    console.log(`🚀 Autolider Node.js Express Backend running on http://localhost:${PORT}`);
+  });
 
-server.on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.log(`ℹ️ Express Backend is already running on http://localhost:${PORT}`);
-  } else {
-    console.error('Server error:', err);
-  }
-});
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.log(`ℹ️ Express Backend is already running on http://localhost:${PORT}`);
+    } else {
+      console.error('Server error:', err);
+    }
+  });
+}
 
 export default app;
