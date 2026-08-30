@@ -66,6 +66,41 @@ const loginRateLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Anti-Bot & Anti-Spam Rate Limiter for OTP (Max 3 requests per 10 minutes per IP + IP Ban)
+const bannedIPs = new Map();
+
+const checkIpBan = (req, res, next) => {
+  const clientIp = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  const unbanTime = bannedIPs.get(clientIp);
+  if (unbanTime && Date.now() < unbanTime) {
+    const minutesLeft = Math.ceil((unbanTime - Date.now()) / (60 * 1000));
+    return res.status(403).json({
+      success: false,
+      message: `Зафиксирована спам-активность бота. Ваш IP заблокирован. Попробуйте через ${minutesLeft} мин.`
+    });
+  }
+  if (unbanTime && Date.now() >= unbanTime) {
+    bannedIPs.delete(clientIp);
+  }
+  next();
+};
+
+const otpRateLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 5,
+  handler: (req, res) => {
+    const clientIp = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    bannedIPs.set(clientIp, Date.now() + 60 * 60 * 1000); // 1 hour IP ban
+    console.warn(`🚨 [SECURITY BAN] IP ${clientIp} blocked due to excessive OTP requests / bot spam.`);
+    return res.status(429).json({
+      success: false,
+      message: 'Слишком много запросов отправки кодов с вашего IP. Доступ временно ограничен на 1 час.'
+    });
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 20 * 1024 * 1024 }
@@ -134,8 +169,8 @@ function generateOTP() {
   return String(Math.floor(1000 + Math.random() * 9000));
 }
 
-// 1. Send OTP Endpoint (Email via Gmail SMTP App Password & Phone / SMS Gateway Support)
-app.post('/api/auth/send-otp', async (req, res) => {
+// 1. Send OTP Endpoint (With Anti-Bot IP Ban + 60s Cooldown + Gmail SMTP)
+app.post('/api/auth/send-otp', checkIpBan, otpRateLimiter, async (req, res) => {
   const { email, phone } = req.body;
   const target = (phone || email || '').trim();
 
@@ -144,6 +179,17 @@ app.post('/api/auth/send-otp', async (req, res) => {
   }
 
   const cleanTarget = target.toLowerCase();
+
+  // Throttling: Check if OTP was sent to this target less than 45 seconds ago
+  const existingOtp = otpStore.get(cleanTarget);
+  if (existingOtp && (existingOtp.createdAt && (Date.now() - existingOtp.createdAt < 45000))) {
+    const secondsLeft = Math.ceil((45000 - (Date.now() - existingOtp.createdAt)) / 1000);
+    return res.status(429).json({
+      success: false,
+      message: `Код уже был отправлен. Запросить новый код можно через ${secondsLeft} сек.`
+    });
+  }
+
   const dbData = readDB();
   const existingUser = (dbData.customers || []).find(
     (c) => (c.email && c.email.toLowerCase() === cleanTarget) || (c.phone && c.phone === target)
@@ -151,7 +197,7 @@ app.post('/api/auth/send-otp', async (req, res) => {
 
   const code = generateOTP();
   const expiresAt = Date.now() + 5 * 60 * 1000;
-  otpStore.set(cleanTarget, { code, expiresAt, user: existingUser || null });
+  otpStore.set(cleanTarget, { code, expiresAt, createdAt: Date.now(), user: existingUser || null });
 
   // 1. Gmail SMTP Dispatcher (App Password)
   const gmailUser = process.env.GMAIL_USER || process.env.SMTP_USER;
