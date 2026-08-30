@@ -1,3 +1,4 @@
+try { process.loadEnvFile(); } catch (e) {}
 import express from 'express';
 import cors from 'cors';
 import XLSX from 'xlsx';
