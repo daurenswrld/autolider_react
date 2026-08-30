@@ -12,6 +12,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { readDB, writeDB } from './database.js';
 import sqliteDb from './sqlite-db.js';
+import nodemailer from 'nodemailer';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'autolider_super_secret_jwt_key_2026_kz';
 
@@ -132,8 +133,8 @@ function generateOTP() {
   return String(Math.floor(1000 + Math.random() * 9000));
 }
 
-// 1. Send OTP Endpoint (Email & Phone / SMS Gateway Support)
-app.post('/api/auth/send-otp', (req, res) => {
+// 1. Send OTP Endpoint (Email via Gmail SMTP App Password & Phone / SMS Gateway Support)
+app.post('/api/auth/send-otp', async (req, res) => {
   const { email, phone } = req.body;
   const target = (phone || email || '').trim();
 
@@ -151,7 +152,48 @@ app.post('/api/auth/send-otp', (req, res) => {
   const expiresAt = Date.now() + 5 * 60 * 1000;
   otpStore.set(cleanTarget, { code, expiresAt, user: existingUser || null });
 
-  // Production SMS Gateway (SMS.kz / Mobizon / KazInfoTech / WhatsApp API)
+  // 1. Gmail SMTP Dispatcher (App Password)
+  const gmailUser = process.env.GMAIL_USER || process.env.SMTP_USER;
+  const gmailPass = process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS;
+
+  if ((cleanTarget.includes('@') || email) && gmailUser && gmailPass) {
+    try {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: gmailUser,
+          pass: gmailPass
+        }
+      });
+
+      const mailOptions = {
+        from: `"AutoLider Trade" <${gmailUser}>`,
+        to: cleanTarget,
+        subject: `🔑 Ваш код подтверждения в AutoLider: ${code}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <h2 style="color: #ea2427; margin: 0; font-weight: 800; font-size: 24px;">AutoLider Trade</h2>
+              <p style="color: #64748b; font-size: 13px; margin-top: 4px;">Одноразовый код авторизации в личном кабинете</p>
+            </div>
+            <div style="background: #f8fafc; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+              <span style="font-size: 32px; font-weight: 900; letter-spacing: 8px; color: #0f172a;">${code}</span>
+            </div>
+            <p style="color: #475569; font-size: 14px; line-height: 1.5; margin-bottom: 12px;">Введите этот 4-значный код на сайте для завершения входа. Код действителен в течение <strong>5 минут</strong>.</p>
+            <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 20px 0;" />
+            <p style="color: #94a3b8; font-size: 12px; text-align: center; margin: 0;">Если вы не запрашивали данный код, просто проигнорируйте это письмо.</p>
+          </div>
+        `
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log(`📧 [GMAIL SMTP SUCCESS] Sent OTP ${code} to ${cleanTarget}`);
+    } catch (smtpErr) {
+      console.error('❌ [GMAIL SMTP ERROR]:', smtpErr.message);
+    }
+  }
+
+  // 2. Production SMS Gateway (SMS.kz / Mobizon / KazInfoTech / WhatsApp API)
   const SMS_GATEWAY_URL = process.env.SMS_GATEWAY_URL;
   const SMS_API_KEY = process.env.SMS_API_KEY;
 
@@ -173,7 +215,7 @@ app.post('/api/auth/send-otp', (req, res) => {
     success: true,
     isRegistered: !!existingUser,
     message: `Код подтверждения отправлен на ${cleanTarget}`,
-    ...(!process.env.SMS_API_KEY ? { otpCode: code, demoCode: code } : {})
+    ...((!process.env.SMS_API_KEY && !process.env.GMAIL_APP_PASSWORD) ? { otpCode: code, demoCode: code } : {})
   });
 });
 
