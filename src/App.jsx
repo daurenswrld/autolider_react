@@ -29,16 +29,18 @@ import { PrivacyPage } from "./pages/Privacy/PrivacyPage";
 import { OfferPage } from "./pages/Offer/OfferPage";
 import { AdminLayout } from "./admin/AdminLayout";
 import { AdminDashboard } from "./admin/views/AdminDashboard";
+import { SupplierDashboard } from "./admin/views/SupplierDashboard";
 import { AdminProducts } from "./admin/views/AdminProducts";
 import { AdminCategories } from "./admin/views/AdminCategories";
 import { AdminBrands } from "./admin/views/AdminBrands";
 import { AdminOrders } from "./admin/views/AdminOrders";
 import { AdminRequests } from "./admin/views/AdminRequests";
 import { AdminCustomers } from "./admin/views/AdminCustomers";
-import { AdminWarehouses } from "./admin/views/AdminWarehouses";
 import { AdminRoles } from "./admin/views/AdminRoles";
 import { AdminBanners } from "./admin/views/AdminBanners";
 import { AdminSettings } from "./admin/views/AdminSettings";
+import { AdminSellers } from "./admin/views/AdminSellers";
+import { AdminStores } from "./admin/views/AdminStores";
 import { AdminLogin } from "./admin/views/AdminLogin";
 import "./styles/style.scss";
 
@@ -83,8 +85,8 @@ function AppContent() {
     !location.pathname.startsWith('/product/') &&
     !location.pathname.startsWith('/admin');
 
-  // If Admin Login Page
-  if (location.pathname === "/admin/login") {
+  // If Admin / Supplier Login Page
+  if (location.pathname === "/admin/login" || location.pathname === "/supplier/login") {
     return (
       <>
         <AdminLogin />
@@ -95,21 +97,28 @@ function AppContent() {
 
   // If Admin Dashboard Shell
   if (isAdminPage) {
+    // Determine current role
+    const savedUser = (() => {
+      try { return JSON.parse(localStorage.getItem('autolider_admin_user')); } catch { return null; }
+    })();
+    const isSeller = savedUser?.roleKey === 'seller';
+
     return (
       <>
         <Routes>
           <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
+            <Route index element={isSeller ? <SupplierDashboard /> : <AdminDashboard />} />
             <Route path="products" element={<AdminProducts />} />
             <Route path="categories" element={<AdminCategories />} />
             <Route path="brands" element={<AdminBrands />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="requests" element={<AdminRequests />} />
             <Route path="customers" element={<AdminCustomers />} />
-            <Route path="warehouses" element={<AdminWarehouses />} />
             <Route path="roles" element={<AdminRoles />} />
             <Route path="banners" element={<AdminBanners />} />
             <Route path="settings" element={<AdminSettings />} />
+            <Route path="sellers" element={<AdminSellers />} />
+            <Route path="stores" element={<AdminStores />} />
           </Route>
         </Routes>
         <Toast />

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, User, ShoppingCart, Heart, X, Menu, ArrowRight } from 'lucide-react';
+import { Search, User, ShoppingCart, Heart, X, Menu, MapPin } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { CityStorePicker, CityStorePickerTrigger, useCityStore } from '../CityStorePicker/CityStorePicker';
 import './Navbar.css';
 
 export const Navbar = ({ onOpenSearch }) => {
@@ -11,6 +12,8 @@ export const Navbar = ({ onOpenSearch }) => {
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isStorePickerOpen, setIsStorePickerOpen] = useState(false);
+  const { selectedStore, saveStore } = useCityStore();
 
   const filteredProducts = searchQuery.trim()
     ? products.filter((p) => {
@@ -82,8 +85,14 @@ export const Navbar = ({ onOpenSearch }) => {
           ))}
         </nav>
 
-        {/* Right: Actions (Search, Favorites, Profile with red indicator, Cart) */}
+        {/* Right: Actions */}
         <div className="navbar-actions">
+          {/* City/Store Picker */}
+          <CityStorePickerTrigger
+            selectedStore={selectedStore}
+            onClick={() => setIsStorePickerOpen(true)}
+          />
+
           {/* Search Toggle */}
           <button
             className="navbar-action-btn"
@@ -176,6 +185,22 @@ export const Navbar = ({ onOpenSearch }) => {
                   {link.title}
                 </Link>
               ))}
+              <button
+                type="button"
+                className="mobile-drawer-store-btn"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsStorePickerOpen(true);
+                }}
+              >
+                <MapPin size={16} color="#ea2427" />
+                <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left', minWidth: 0 }}>
+                  <span style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Магазин / Город</span>
+                  <span style={{ fontSize: 13, color: '#ffffff', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {selectedStore ? `${selectedStore.city} — ${selectedStore.address}` : 'Выберите магазин'}
+                  </span>
+                </div>
+              </button>
               <Link
                 to="/profile"
                 className="mobile-drawer-link profile-link"
@@ -267,6 +292,15 @@ export const Navbar = ({ onOpenSearch }) => {
             </div>
           )}
         </div>
+      )}
+
+      {/* City Store Picker Modal */}
+      {isStorePickerOpen && (
+        <CityStorePicker
+          selectedStore={selectedStore}
+          onSelect={saveStore}
+          onClose={() => setIsStorePickerOpen(false)}
+        />
       )}
     </header>
   );

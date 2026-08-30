@@ -452,6 +452,8 @@ input[type="number"] {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 8px;
+  flex-direction: row-reverse;
+  justify-content: start;
 }
 
 .brand-chip-item,
@@ -799,6 +801,19 @@ input[type="number"] {
   border: 1px solid #e2e8f0;
 }
 
+.seller-store-pill {
+  display: inline-flex;
+  align-items: center;
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fee2e2;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .product-brand-tag {
   color: #ea2427;
   font-size: 11px;
@@ -952,4 +967,3 @@ input[type="number"] {
   color: #ea2427;
   text-decoration: underline;
 }
-

@@ -57,6 +57,13 @@ export const AdminOrders = () => {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
+  // Detect seller role
+  const sellerInfo = (() => {
+    try { return JSON.parse(localStorage.getItem('autolider_admin_user')); } catch { return null; }
+  })();
+  const isSeller = sellerInfo?.roleKey === 'seller';
+  const sellerId = sellerInfo?.sellerId || null;
+
   const getItemDetails = (rawItem, idx, fallbackOrderTotal = 0, totalItems = 1) => {
     const pObj = rawItem?.product || rawItem?.item || rawItem?.rawProduct || rawItem || {};
 
@@ -151,7 +158,21 @@ export const AdminOrders = () => {
     setLoading(true);
     try {
       const res = await fetch('/api/orders');
-      if (res.ok) setOrders(await res.json());
+      if (res.ok) {
+        let data = await res.json();
+        // Filter for seller: only orders containing seller's products
+        if (isSeller && sellerId) {
+          const sellerProdRes = await fetch(`/api/products?all=true&seller_id=${sellerId}`);
+          if (sellerProdRes.ok) {
+            const sellerProds = await sellerProdRes.json();
+            const productIds = new Set(sellerProds.map((p) => String(p.id)));
+            data = data.filter((o) =>
+              (o.items || []).some((item) => productIds.has(String(item.id || item.productId)))
+            );
+          }
+        }
+        setOrders(data);
+      }
     } catch (err) {
       console.error('Failed to load orders:', err);
     } finally {
@@ -433,6 +454,7 @@ export const AdminOrders = () => {
                             >
                               <option value="pending">Ожидает оплаты</option>
                               <option value="processing">В обработке</option>
+                              <option value="paid">Оплачен ✔</option>
                               <option value="shipping">В пути</option>
                               <option value="delivered">Доставлен</option>
                               <option value="canceled">Отменен</option>

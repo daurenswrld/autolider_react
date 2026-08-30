@@ -1,14 +1,24 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ShieldCheck, Lock, User, ArrowRight } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { ShieldCheck, Lock, User, ArrowRight, Truck } from "lucide-react";
 import "./AdminLogin.css";
 
 export const AdminLogin = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const [activeTab, setActiveTab] = useState(
+    location.pathname === '/supplier/login' ? 'supplier' : 'admin'
+  );
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (location.pathname === '/supplier/login') setActiveTab('supplier');
+    else if (location.pathname === '/admin/login') setActiveTab('admin');
+  }, [location.pathname]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -19,7 +29,7 @@ export const AdminLogin = () => {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, portalType: activeTab }),
       });
 
       const data = await res.json();
@@ -63,6 +73,26 @@ export const AdminLogin = () => {
   return (
     <div className="admin-login-page">
       <div className="login-card-box">
+        {/* Role Mode Tabs */}
+        <div className="login-role-tabs">
+          <button
+            type="button"
+            className={`login-role-tab ${activeTab === 'admin' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('admin'); setError(''); navigate('/admin/login'); }}
+          >
+            <ShieldCheck size={16} />
+            <span>Администратор</span>
+          </button>
+          <button
+            type="button"
+            className={`login-role-tab ${activeTab === 'supplier' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('supplier'); setError(''); navigate('/supplier/login'); }}
+          >
+            <Truck size={16} />
+            <span>Поставщик</span>
+          </button>
+        </div>
+
         <div className="login-card-header">
           <div className="login-logo-wrap">
             <img
@@ -75,8 +105,14 @@ export const AdminLogin = () => {
               }}
             />
           </div>
-          <h2 className="login-title">Вход в панель управления</h2>
-          <p className="login-subtitle">Autolider Admin • Панель управления</p>
+          <h2 className="login-title">
+            {activeTab === 'supplier' ? 'Кабинет Поставщика' : 'Панель Управления'}
+          </h2>
+          <p className="login-subtitle">
+            {activeTab === 'supplier'
+              ? 'Авторизация для партнеров и поставщиков AutoLider'
+              : 'Вход в административную панель сайта'}
+          </p>
         </div>
 
         {error && <div className="login-error-alert">{error}</div>}
@@ -87,7 +123,7 @@ export const AdminLogin = () => {
             <input
               type="text"
               required
-              placeholder="Логин"
+              placeholder={activeTab === 'supplier' ? 'Логин поставщика / Код' : 'Логин администратора'}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />
@@ -105,7 +141,7 @@ export const AdminLogin = () => {
           </div>
 
           <button type="submit" className="btn-login-submit" disabled={loading}>
-            <span>{loading ? "Вход..." : "Войти в панель"}</span>
+            <span>{loading ? "Вход..." : activeTab === 'supplier' ? "Войти в кабинет поставщика" : "Войти в панель"}</span>
             <ArrowRight size={18} />
           </button>
         </form>

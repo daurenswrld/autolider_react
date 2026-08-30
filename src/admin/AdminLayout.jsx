@@ -20,6 +20,8 @@ import {
   Bell,
   ShieldAlert,
   Search,
+  Store,
+  Truck,
 } from "lucide-react";
 import "./AdminLayout.css";
 
@@ -85,7 +87,16 @@ export const AdminLayout = () => {
       const saved = localStorage.getItem("autolider_admin_user");
       if (saved) {
         try {
-          setAdminUser(JSON.parse(saved));
+          const u = JSON.parse(saved);
+          setAdminUser(u);
+
+          // Security Guard: Prevent suppliers from accessing admin-only pages
+          if (u?.roleKey === 'seller') {
+            const allowedSellerPaths = ['/admin', '/admin/products', '/admin/orders'];
+            if (!allowedSellerPaths.includes(location.pathname)) {
+              navigate('/admin', { replace: true });
+            }
+          }
         } catch (e) {}
       }
     }
@@ -120,6 +131,7 @@ export const AdminLayout = () => {
   };
 
   const allNavItems = [
+    // ---- ADMIN & MANAGER ----
     {
       title: "Дашборд",
       path: "/admin",
@@ -171,10 +183,17 @@ export const AdminLayout = () => {
       icon: ImageIcon,
       roles: ["admin", "manager"],
     },
+    // ---- ADMIN ONLY ----
     {
-      title: "Склады (БД)",
-      path: "/admin/warehouses",
-      icon: Building2,
+      title: "Поставщики",
+      path: "/admin/sellers",
+      icon: Truck,
+      roles: ["admin"],
+    },
+    {
+      title: "Магазины",
+      path: "/admin/stores",
+      icon: Store,
       roles: ["admin"],
     },
     {
@@ -189,11 +208,31 @@ export const AdminLayout = () => {
       icon: Settings,
       roles: ["admin"],
     },
+    // ---- SELLER ONLY ----
+    {
+      title: "Мой кабинет",
+      path: "/admin",
+      icon: LayoutDashboard,
+      exact: true,
+      roles: ["seller"],
+    },
+    {
+      title: "Мои товары",
+      path: "/admin/products",
+      icon: Package,
+      roles: ["seller"],
+    },
+    {
+      title: "Мои заказы",
+      path: "/admin/orders",
+      icon: ShoppingCart,
+      roles: ["seller"],
+    },
   ];
 
   const currentRole = adminUser?.roleKey || "admin";
   const navItems = allNavItems.filter((item) =>
-    item.roles.includes(currentRole),
+    item.roles.includes(currentRole)
   );
 
   if (!localStorage.getItem("autolider_admin_token")) {

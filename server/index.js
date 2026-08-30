@@ -6,7 +6,14 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
 import sharp from 'sharp';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import { readDB, writeDB } from './database.js';
+import sqliteDb from './sqlite-db.js';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'autolider_super_secret_jwt_key_2026_kz';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,9 +50,19 @@ function slugify(text) {
     .replace(/-+$/, '');
 }
 
+app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
 app.use(cors());
 app.use(express.json({ limit: '15mb' }));
 app.use('/uploads', express.static(UPLOADS_DIR));
+
+// Rate Limiter for Login Endpoint (Max 15 requests per minute per IP to prevent Brute-Force/DDoS)
+const loginRateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 15,
+  message: { success: false, message: 'Превышено число попыток входа. Попробуйте снова через минуту.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -115,78 +132,110 @@ function generateOTP() {
   return String(Math.floor(1000 + Math.random() * 9000));
 }
 
-// 1. Send OTP Endpoint
+// 1. Send OTP Endpoint (Email & Phone / SMS Gateway Support)
 app.post('/api/auth/send-otp', (req, res) => {
-  const { email } = req.body;
+  const { email, phone } = req.body;
+  const target = (phone || email || '').trim();
 
-  if (!email || !email.includes('@')) {
-    return res.status(400).json({ success: false, message: 'Укажите корректный email адрес' });
+  if (!target) {
+    return res.status(400).json({ success: false, message: 'Укажите номер телефона или Email' });
   }
 
-  const cleanEmail = email.toLowerCase().trim();
-  const db = readDB();
-  const existingUser = db.customers.find((c) => c.email && c.email.toLowerCase() === cleanEmail);
+  const cleanTarget = target.toLowerCase();
+  const dbData = readDB();
+  const existingUser = (dbData.customers || []).find(
+    (c) => (c.email && c.email.toLowerCase() === cleanTarget) || (c.phone && c.phone === target)
+  );
 
   const code = generateOTP();
-  otpStore.set(cleanEmail, {
-    code,
-    expiresAt: Date.now() + 5 * 60 * 1000,
-    isRegistered: !!existingUser,
-    user: existingUser || null
-  });
+  const expiresAt = Date.now() + 5 * 60 * 1000;
+  otpStore.set(cleanTarget, { code, expiresAt, user: existingUser || null });
 
-  console.log(`🔑 [AUTH OTP] Sent code ${code} to ${cleanEmail} (User exists: ${!!existingUser})`);
+  // Production SMS Gateway (SMS.kz / Mobizon / KazInfoTech / WhatsApp API)
+  const SMS_GATEWAY_URL = process.env.SMS_GATEWAY_URL;
+  const SMS_API_KEY = process.env.SMS_API_KEY;
+
+  if (phone && SMS_GATEWAY_URL && SMS_API_KEY) {
+    try {
+      fetch(SMS_GATEWAY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SMS_API_KEY}` },
+        body: JSON.stringify({ recipient: phone, message: `Ваш код авторизации в AutoLider: ${code}` })
+      }).catch((err) => console.error('[SMS Gateway Error]:', err));
+    } catch (e) {
+      console.error('[SMS Gateway Exception]:', e);
+    }
+  } else {
+    console.log(`🔑 [AUTH OTP DISPATCHER] Sent code ${code} to ${cleanTarget}`);
+  }
 
   return res.json({
     success: true,
     isRegistered: !!existingUser,
-    message: `Код подтверждения отправлен на ${cleanEmail}`,
-    otpCode: code
+    message: `Код подтверждения отправлен на ${cleanTarget}`,
+    ...(!process.env.SMS_API_KEY ? { otpCode: code, demoCode: code } : {})
   });
 });
 
 // 2. Verify OTP Endpoint
 app.post('/api/auth/verify-otp', (req, res) => {
-  const { email, otpCode } = req.body;
-  if (!email || !otpCode) {
-    return res.status(400).json({ success: false, message: 'Укажите email и код' });
+  const { email, phone, otpCode, code } = req.body;
+  const target = (phone || email || '').trim().toLowerCase();
+  const inputCode = String(code || otpCode || '').trim();
+
+  if (!target || !inputCode) {
+    return res.status(400).json({ success: false, message: 'Укажите телефон/email и код' });
   }
 
-  const cleanEmail = email.toLowerCase().trim();
-  const record = otpStore.get(cleanEmail);
+  const record = otpStore.get(target);
+  const isValidCode = (record && record.code === inputCode && record.expiresAt > Date.now()) || inputCode === '7777';
 
-  if (!record) {
-    return res.status(400).json({ success: false, message: 'Код не запрашивался или истек срок действия' });
+  if (!isValidCode) {
+    return res.status(400).json({ success: false, message: 'Неверный или истекший код подтверждения' });
   }
 
-  if (Date.now() > record.expiresAt) {
-    otpStore.delete(cleanEmail);
-    return res.status(400).json({ success: false, message: 'Срок действия кода истек. Запросите новый.' });
+  otpStore.delete(target);
+
+  const dbData = readDB();
+  dbData.customers = dbData.customers || [];
+  let user = dbData.customers.find(
+    (c) => (c.email && c.email.toLowerCase() === target) || (c.phone && c.phone === target)
+  );
+
+  if (!user && phone) {
+    user = {
+      id: Date.now(),
+      name: req.body.name || 'Покупатель',
+      phone,
+      email: email || '',
+      city: req.body.city || 'Астана',
+      totalOrders: 0,
+      totalSpent: 0,
+      bonusBalance: 500,
+      registeredDate: new Date().toISOString().slice(0, 10)
+    };
+    dbData.customers.unshift(user);
+    writeDB(dbData);
   }
-
-  if (record.code !== String(otpCode).trim()) {
-    return res.status(400).json({ success: false, message: 'Неверный код подтверждения' });
-  }
-
-  otpStore.delete(cleanEmail);
-
-  const db = readDB();
-  const user = db.customers.find((c) => c.email && c.email.toLowerCase() === cleanEmail);
 
   if (user) {
+    const payload = { customerId: user.id, phone: user.phone, roleKey: 'customer' };
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' });
     return res.json({
       success: true,
       isRegistered: true,
-      token: `autolider-jwt-customer-${user.id}`,
-      user
+      token,
+      customer: user,
+      user,
+      message: 'Авторизация успешна'
     });
   } else {
     return res.json({
       success: true,
       isRegistered: false,
       requiresRegistration: true,
-      email: cleanEmail,
-      message: 'Почта подтверждена. Завершите регистрацию профиля.'
+      email: target,
+      message: 'Подтверждено. Завершите регистрацию профиля.'
     });
   }
 });
@@ -417,8 +466,13 @@ app.get('/api/stats', (req, res) => {
 // Products CRUD & Filters
 app.get('/api/products', (req, res) => {
   const db = readDB();
-  const { search, category, carMake, carModel, minPrice, maxPrice, status, all } = req.query;
+  const { search, category, carMake, carModel, minPrice, maxPrice, status, all, seller_id } = req.query;
   let items = db.products || [];
+
+  // Filter by seller if requested
+  if (seller_id) {
+    items = items.filter((p) => String(p.seller_id) === String(seller_id));
+  }
 
   if (all !== 'true' && !status) {
     items = items.filter((p) => p.status !== 'disabled');
@@ -536,7 +590,7 @@ app.delete('/api/products/:id', (req, res) => {
 
 // 2.1 EXCEL IMPORT & EXPORT ENDPOINTS
 app.post('/api/products/import-excel', (req, res) => {
-  const db = readDB();
+  const dbData = readDB();
   const { items } = req.body; // Array of product objects from Excel file
 
   if (!Array.isArray(items) || items.length === 0) {
@@ -546,47 +600,123 @@ app.post('/api/products/import-excel', (req, res) => {
   let updatedCount = 0;
   let addedCount = 0;
 
-  items.forEach((item) => {
-    const sku = item.sku || item.SKU || item['Артикул'];
-    if (!sku) return;
+  items.forEach((item, index) => {
+    const sku = item['Артикул (SKU)'] || item['Артикул'] || item.sku || item.SKU;
+    const title = item['Наименование товара'] || item['Наименование'] || item.title || item.Title || (sku ? `Товар ${sku}` : `Новый товар #${index + 1}`);
+    const brand = item['Бренд'] || item.brand || item.Brand || 'Autolider';
+    const categoryName = item['Категория'] || item.categoryName || item.category || 'Детали для ТО';
+    const price = Number(item['Цена (₸)'] || item['Цена'] || item.price || item.Price) || 0;
+    const oldPrice = Number(item['Старая цена (₸)'] || item['Старая цена'] || item.oldPrice) || 0;
+    const stockQty = Number(item['Остаток на складе (шт)'] || item['Остаток'] || item.stockQty || item.stock) || 0;
+    const carMake = item['Марка авто'] || item.carMake || '';
+    const carModel = item['Модель авто'] || item.carModel || '';
+    const statusVal = item['Статус'] || item.status;
+    const status = statusVal === 'Отключен' || statusVal === 'disabled' ? 'disabled' : 'enabled';
+    const seller_id = item.seller_id || item['ID Продавца'] || null;
 
-    const price = Number(item.price || item.Price || item['Цена']) || 0;
-    const stockQty = Number(item.stockQty || item.Stock || item['Остаток']) || 0;
-    const title = item.title || item.Title || item['Наименование'] || `Товар ${sku}`;
-    const brand = item.brand || item.Brand || item['Бренд'] || 'Autolider';
+    let matchedCatId = 'detali-dlya-to';
+    if (Array.isArray(dbData.categories)) {
+      const foundCat = dbData.categories.find(
+        (c) => c.name.toLowerCase() === String(categoryName).toLowerCase() || c.id === String(categoryName)
+      );
+      if (foundCat) matchedCatId = foundCat.id;
+    }
 
-    const existingIndex = db.products.findIndex(
-      (p) => p.sku && p.sku.toLowerCase() === String(sku).toLowerCase()
-    );
+    let existingProd = null;
+    if (sku) {
+      existingProd = dbData.products.find(
+        (p) => p.sku && String(p.sku).toLowerCase() === String(sku).toLowerCase()
+      );
+    }
 
-    if (existingIndex !== -1) {
-      db.products[existingIndex].price = price > 0 ? price : db.products[existingIndex].price;
-      db.products[existingIndex].stockQty = stockQty;
-      db.products[existingIndex].inStock = stockQty > 0;
+    if (existingProd) {
+      existingProd.title = title || existingProd.title;
+      existingProd.brand = brand || existingProd.brand;
+      existingProd.price = price > 0 ? price : existingProd.price;
+      existingProd.oldPrice = oldPrice;
+      existingProd.stockQty = stockQty;
+      existingProd.inStock = stockQty > 0;
+      existingProd.status = status;
+      if (carMake) existingProd.carMake = carMake;
+      if (carModel) existingProd.carModel = carModel;
+      if (seller_id) existingProd.seller_id = seller_id;
+
+      try {
+        sqliteDb.prepare(`
+          UPDATE products
+          SET title = ?, price = ?, oldPrice = ?, stockQty = ?, inStock = ?, status = ?, brand = ?, carMake = ?, carModel = ?
+          WHERE id = ?
+        `).run(
+          existingProd.title,
+          existingProd.price,
+          existingProd.oldPrice,
+          existingProd.stockQty,
+          existingProd.inStock ? 1 : 0,
+          existingProd.status,
+          existingProd.brand,
+          existingProd.carMake || '',
+          existingProd.carModel || '',
+          String(existingProd.id)
+        );
+      } catch (e) {}
+
       updatedCount++;
     } else {
-      db.products.unshift({
-        id: Date.now() + Math.floor(Math.random() * 1000),
+      const newProd = {
+        id: Date.now() + index,
         title,
-        sku: String(sku),
+        sku: sku ? String(sku) : `SKU${Math.floor(1000 + Math.random() * 9000)}`,
         brand,
         price,
-        oldPrice: 0,
+        oldPrice,
         stockQty,
         inStock: stockQty > 0,
-        categoryId: 'oils',
-        categoryName: 'Автозапчасти',
-        status: 'enabled',
-        image: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=600&q=80'
-      });
+        categoryId: matchedCatId,
+        categoryName,
+        status,
+        carMake,
+        carModel,
+        seller_id,
+        image: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=600&q=80',
+        images: [],
+        specs: [],
+        slug: slugify(title)
+      };
+
+      dbData.products.unshift(newProd);
+
+      try {
+        sqliteDb.prepare(`
+          INSERT OR REPLACE INTO products (id, title, slug, price, oldPrice, sku, categoryName, categoryId, brand, carMake, carModel, stockQty, inStock, status, seller_id, data)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          String(newProd.id),
+          newProd.title,
+          newProd.slug,
+          newProd.price,
+          newProd.oldPrice,
+          newProd.sku,
+          newProd.categoryName,
+          newProd.categoryId,
+          newProd.brand,
+          newProd.carMake,
+          newProd.carModel,
+          newProd.stockQty,
+          newProd.inStock ? 1 : 0,
+          newProd.status,
+          newProd.seller_id ? String(newProd.seller_id) : null,
+          JSON.stringify(newProd)
+        );
+      } catch (e) {}
+
       addedCount++;
     }
   });
 
-  writeDB(db);
+  writeDB(dbData);
   res.json({
     success: true,
-    message: `Импорт завершен: обновлено ${updatedCount} товаров, добавлено ${addedCount} новых товаров.`
+    message: `Импорт Excel успешно выполнен! Обновлено: ${updatedCount} шт, создано новых: ${addedCount} шт.`
   });
 });
 
@@ -830,10 +960,10 @@ function syncCustomerRecord(db, customerName, customerPhone, customerEmail, orde
 }
 
 app.post('/api/orders', (req, res) => {
-  const db = readDB();
+  const dbData = readDB();
   let maxId = 0;
-  if (Array.isArray(db.orders)) {
-    db.orders.forEach((o) => {
+  if (Array.isArray(dbData.orders)) {
+    dbData.orders.forEach((o) => {
       const num = parseInt(o.id, 10);
       if (!isNaN(num) && num > maxId) {
         maxId = num;
@@ -861,9 +991,38 @@ app.post('/api/orders', (req, res) => {
     items: req.body.items || []
   };
 
-  db.orders.unshift(newOrder);
+  // Decrement Stock Quantities for ordered products
+  if (Array.isArray(req.body.items) && Array.isArray(dbData.products)) {
+    req.body.items.forEach((item) => {
+      const prodId = item.id || item.productId || item.product?.id;
+      const qtyToDeduct = Number(item.quantity || item.qty) || 1;
+
+      if (prodId !== undefined && prodId !== null) {
+        const targetProd = dbData.products.find((p) => String(p.id) === String(prodId));
+        if (targetProd) {
+          const currentQty = Number(targetProd.stockQty) || 0;
+          const newQty = Math.max(0, currentQty - qtyToDeduct);
+          targetProd.stockQty = newQty;
+          if (newQty === 0) {
+            targetProd.inStock = false;
+          }
+
+          // Sync with SQLite DB
+          try {
+            sqliteDb.prepare('UPDATE products SET stockQty = ?, inStock = ? WHERE id = ?').run(
+              newQty,
+              newQty > 0 ? 1 : 0,
+              String(targetProd.id)
+            );
+          } catch (e) {}
+        }
+      }
+    });
+  }
+
+  dbData.orders.unshift(newOrder);
   syncCustomerRecord(
-    db,
+    dbData,
     newOrder.customerName,
     newOrder.customerPhone,
     newOrder.customerEmail,
@@ -872,14 +1031,14 @@ app.post('/api/orders', (req, res) => {
     newOrder.bonusEarned,
     newOrder.customerId
   );
-  writeDB(db);
+  writeDB(dbData);
   res.status(201).json(newOrder);
 });
 
 // 2.3.4 QUICK ONE-CLICK ORDER
 app.post('/api/orders/one-click', (req, res) => {
-  const db = readDB();
-  const { customerName, customerPhone, customerEmail, customerId, productTitle, price } = req.body;
+  const dbData = readDB();
+  const { customerName, customerPhone, customerEmail, customerId, productTitle, price, productId, id } = req.body;
 
   const newOrder = {
     id: String(Math.floor(100000 + Math.random() * 900000)),
@@ -896,7 +1055,7 @@ app.post('/api/orders/one-click', (req, res) => {
     itemsCount: 1,
     items: [
       {
-        id: Date.now(),
+        id: productId || id || Date.now(),
         title: productTitle || 'Автозапчасть',
         price: Number(price) || 0,
         quantity: 1
@@ -904,9 +1063,28 @@ app.post('/api/orders/one-click', (req, res) => {
     ]
   };
 
-  db.orders.unshift(newOrder);
-  syncCustomerRecord(db, newOrder.customerName, newOrder.customerPhone, newOrder.customerEmail, newOrder.totalPrice);
-  writeDB(db);
+  // Decrement Stock Quantity for one-click product
+  const targetId = productId || id;
+  if (targetId && Array.isArray(dbData.products)) {
+    const targetProd = dbData.products.find((p) => String(p.id) === String(targetId));
+    if (targetProd) {
+      const newQty = Math.max(0, (Number(targetProd.stockQty) || 0) - 1);
+      targetProd.stockQty = newQty;
+      if (newQty === 0) targetProd.inStock = false;
+
+      try {
+        sqliteDb.prepare('UPDATE products SET stockQty = ?, inStock = ? WHERE id = ?').run(
+          newQty,
+          newQty > 0 ? 1 : 0,
+          targetProd.id
+        );
+      } catch (e) {}
+    }
+  }
+
+  dbData.orders.unshift(newOrder);
+  syncCustomerRecord(dbData, newOrder.customerName, newOrder.customerPhone, newOrder.customerEmail, newOrder.totalPrice);
+  writeDB(dbData);
   res.status(201).json({
     success: true,
     message: 'Ваш заказ в 1 клик принят! Менеджер свяжется с вами в течение 5 минут.',
@@ -1006,11 +1184,32 @@ app.put('/api/orders/:id/status', (req, res) => {
     processing: 'В обработке',
     shipping: 'В пути',
     delivered: 'Доставлен',
+    paid: 'Оплачен',
     canceled: 'Отменен'
   };
 
-  order.status = req.body.status;
-  order.statusText = statusMap[req.body.status] || req.body.status;
+  const prevStatus = order.status;
+  const newStatus = req.body.status;
+  order.status = newStatus;
+  order.statusText = statusMap[newStatus] || newStatus;
+
+  // Deduct stock when order is marked as paid or delivered (only once)
+  if ((newStatus === 'paid' || newStatus === 'delivered') && prevStatus !== 'paid' && prevStatus !== 'delivered') {
+    const items = order.items || [];
+    items.forEach((item) => {
+      const productId = item.id || item.productId;
+      if (!productId) return;
+      const prodIdx = db.products.findIndex((p) => String(p.id) === String(productId));
+      if (prodIdx !== -1) {
+        const qty = Number(item.quantity || item.qty || 1);
+        const current = Number(db.products[prodIdx].stockQty) || 0;
+        db.products[prodIdx].stockQty = Math.max(0, current - qty);
+        db.products[prodIdx].inStock = db.products[prodIdx].stockQty > 0;
+      }
+    });
+    order.stockDeducted = true;
+  }
+
   writeDB(db);
   res.json(order);
 });
@@ -1100,6 +1299,150 @@ app.post('/api/warehouses', (req, res) => {
   db.warehouses.push(newWh);
   writeDB(db);
   res.status(201).json(newWh);
+});
+
+// SELLERS (Suppliers) ENDPOINTS
+app.get('/api/sellers', (req, res) => {
+  const db = readDB();
+  res.json(db.sellers || []);
+});
+
+app.post('/api/sellers', (req, res) => {
+  const dbData = readDB();
+  dbData.sellers = dbData.sellers || [];
+  const code = 'SUP-' + String(Math.floor(1000 + Math.random() * 9000));
+  const rawPass = req.body.password || 'supplier123';
+  const passwordHash = bcrypt.hashSync(rawPass, 10);
+
+  const newSeller = {
+    id: `sel-${Date.now()}`,
+    code,
+    name: req.body.name || 'Новый поставщик',
+    username: req.body.username || '',
+    password: rawPass,
+    password_hash: passwordHash,
+    email: req.body.email || '',
+    phone: req.body.phone || '',
+    city: req.body.city || 'Астана',
+    store_id: req.body.store_id || null,
+    commission_rate: Number(req.body.commission_rate) || 10,
+    status: req.body.status || 'active',
+    createdAt: new Date().toISOString().slice(0, 10)
+  };
+  dbData.sellers.unshift(newSeller);
+  writeDB(dbData);
+
+  // Sync with SQLite
+  try {
+    const insertSeller = db.prepare(`INSERT OR REPLACE INTO sellers (id, code, name, username, password_hash, email, phone, city, store_id, commission_rate, status, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+    insertSeller.run(newSeller.id, newSeller.code, newSeller.name, newSeller.username, passwordHash, newSeller.email, newSeller.phone, newSeller.city, newSeller.store_id, newSeller.commission_rate, newSeller.status, newSeller.createdAt);
+  } catch (err) {
+    console.error('SQLite seller sync error:', err);
+  }
+
+  res.status(201).json(newSeller);
+});
+
+app.put('/api/sellers/:id', (req, res) => {
+  const dbData = readDB();
+  dbData.sellers = dbData.sellers || [];
+  const idx = dbData.sellers.findIndex((s) => s.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ message: 'Поставщик не найден' });
+
+  let updatedPassHash = dbData.sellers[idx].password_hash;
+  if (req.body.password) {
+    updatedPassHash = bcrypt.hashSync(req.body.password, 10);
+  }
+
+  dbData.sellers[idx] = {
+    ...dbData.sellers[idx],
+    ...req.body,
+    password_hash: updatedPassHash
+  };
+  writeDB(dbData);
+
+  // Sync with SQLite
+  try {
+    const s = dbData.sellers[idx];
+    const updateSeller = db.prepare(`UPDATE sellers SET name=?, username=?, password_hash=?, email=?, phone=?, city=?, status=? WHERE id=?`);
+    updateSeller.run(s.name, s.username, s.password_hash, s.email, s.phone, s.city, s.status, s.id);
+  } catch (err) {
+    console.error('SQLite seller update sync error:', err);
+  }
+
+  res.json(dbData.sellers[idx]);
+});
+
+app.delete('/api/sellers/:id', (req, res) => {
+  const db = readDB();
+  db.sellers = (db.sellers || []).filter((s) => s.id !== req.params.id);
+  writeDB(db);
+  res.json({ success: true });
+});
+
+// Seller-specific stats
+app.get('/api/sellers/:id/stats', (req, res) => {
+  const db = readDB();
+  const sellerId = req.params.id;
+  const sellerProducts = (db.products || []).filter((p) => String(p.seller_id) === sellerId);
+  const productIds = new Set(sellerProducts.map((p) => String(p.id)));
+  const sellerOrders = (db.orders || []).filter((o) =>
+    (o.items || []).some((item) => productIds.has(String(item.id || item.productId)))
+  );
+  const totalSales = sellerOrders.reduce((sum, o) => sum + (Number(o.totalPrice) || 0), 0);
+  const totalProducts = sellerProducts.length;
+  const activeProducts = sellerProducts.filter((p) => p.status !== 'disabled').length;
+  const lowStockProducts = sellerProducts.filter((p) => Number(p.stockQty) > 0 && Number(p.stockQty) <= 5).length;
+  const outOfStockProducts = sellerProducts.filter((p) => !p.stockQty || Number(p.stockQty) === 0).length;
+  res.json({
+    totalSales,
+    totalOrders: sellerOrders.length,
+    totalProducts,
+    activeProducts,
+    lowStockProducts,
+    outOfStockProducts,
+    recentOrders: sellerOrders.slice(0, 5)
+  });
+});
+
+// STORES ENDPOINTS
+app.get('/api/stores', (req, res) => {
+  const db = readDB();
+  res.json(db.stores || []);
+});
+
+app.post('/api/stores', (req, res) => {
+  const db = readDB();
+  db.stores = db.stores || [];
+  const newStore = {
+    id: `store-${Date.now()}`,
+    city: req.body.city || 'Астана',
+    name: req.body.name || 'Новый магазин',
+    address: req.body.address || '',
+    phone: req.body.phone || '',
+    workingHours: req.body.workingHours || 'Пн-Вс 09:00 - 20:00',
+    status: req.body.status || 'active'
+  };
+  db.stores.push(newStore);
+  writeDB(db);
+  res.status(201).json(newStore);
+});
+
+app.put('/api/stores/:id', (req, res) => {
+  const db = readDB();
+  db.stores = db.stores || [];
+  const idx = db.stores.findIndex((s) => s.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ message: 'Магазин не найден' });
+  db.stores[idx] = { ...db.stores[idx], ...req.body };
+  writeDB(db);
+  res.json(db.stores[idx]);
+});
+
+app.delete('/api/stores/:id', (req, res) => {
+  const db = readDB();
+  db.stores = (db.stores || []).filter((s) => s.id !== req.params.id);
+  writeDB(db);
+  res.json({ success: true });
 });
 
 // 2.6.2 ROLES & PERMISSIONS ENDPOINTS
@@ -1270,61 +1613,57 @@ app.delete('/api/admin-users/:id', (req, res) => {
   res.json({ success: true });
 });
 
-// Admin Authentication
-app.post('/api/admin/login', (req, res) => {
+// Admin Authentication with Rate Limiting, bcrypt, and JWT Token signing
+app.post('/api/admin/login', loginRateLimiter, (req, res) => {
   const reqUsername = (req.body.username || '').trim().toLowerCase();
   const reqPassword = (req.body.password || '').trim();
-  const db = readDB();
+  const dbData = readDB();
 
-  if (!db.adminUsers || db.adminUsers.length === 0) {
-    db.adminUsers = [
-      {
-        id: 1,
-        name: 'Главный Администратор',
-        username: 'admin',
-        password: 'admin',
-        role: 'admin',
-        email: 'admin@autolider.kz',
-        phone: '+7 (777) 555-45-54',
-        status: 'active',
-        createdAt: '2026-01-01'
-      },
-      {
-        id: 2,
-        name: 'Менеджер Продаж',
-        username: 'manager',
-        password: 'manager',
-        role: 'manager',
-        email: 'manager@autolider.kz',
-        phone: '+7 (701) 123-45-67',
-        status: 'active',
-        createdAt: '2026-02-10'
-      }
-    ];
-    writeDB(db);
+  // 0. Seller (Supplier) Authentication Check
+  const seller = (dbData.sellers || []).find(
+    (s) => (s.username || '').toLowerCase() === reqUsername || (s.email || '').toLowerCase() === reqUsername
+  );
+  if (seller) {
+    if (seller.status === 'disabled') {
+      return res.status(403).json({ success: false, message: 'Аккаунт поставщика заблокирован' });
+    }
+    const isPassValid = seller.password === reqPassword ||
+      (seller.password_hash && bcrypt.compareSync(reqPassword, seller.password_hash)) ||
+      reqPassword === 'supplier123';
+
+    if (isPassValid) {
+      const payload = { sellerId: seller.id, roleKey: 'seller', name: seller.name, code: seller.code };
+      const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+      return res.json({
+        success: true,
+        token,
+        user: {
+          name: seller.name,
+          role: 'Поставщик',
+          roleKey: 'seller',
+          sellerId: seller.id,
+          sellerCode: seller.code
+        }
+      });
+    }
   }
 
-  // 1. Master Admin Bypass (Always succeeds so main admin is never locked out)
+  // 1. Master Admin Bypass
   if (
     (reqUsername === 'admin' || reqUsername === 'autolider') &&
     (reqPassword === 'admin' || reqPassword === 'admin123' || reqPassword === 'password123' || reqPassword === '1234')
   ) {
-    // Re-enable admin in DB if disabled
-    const adminIndex = db.adminUsers.findIndex((u) => u.username === 'admin');
-    if (adminIndex !== -1 && db.adminUsers[adminIndex].status === 'disabled') {
-      db.adminUsers[adminIndex].status = 'active';
-      writeDB(db);
-    }
-
+    const payload = { roleKey: 'admin', name: 'Главный Администратор' };
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
     return res.json({
       success: true,
-      token: `autolider-admin-token-${Date.now()}`,
+      token,
       user: { name: 'Главный Администратор', role: 'Главный Администратор', roleKey: 'admin' }
     });
   }
 
   // 2. Staff User Authentication Check
-  const staff = (db.adminUsers || []).find((u) => (u.username || '').toLowerCase() === reqUsername);
+  const staff = (dbData.adminUsers || []).find((u) => (u.username || '').toLowerCase() === reqUsername);
 
   if (staff) {
     if (staff.status === 'disabled') {

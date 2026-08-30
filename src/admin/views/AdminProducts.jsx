@@ -20,6 +20,7 @@ import {
   ThumbsUp,
   Sliders,
   Car,
+  Store,
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import { uploadImageFile } from "../../services/api";
@@ -93,7 +94,15 @@ export const AdminProducts = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
+  const [sellers, setSellers] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Detect seller role
+  const sellerInfo = (() => {
+    try { return JSON.parse(localStorage.getItem('autolider_admin_user')); } catch { return null; }
+  })();
+  const isSeller = sellerInfo?.roleKey === 'seller';
+  const sellerId = sellerInfo?.sellerId || null;
 
   // Filters State
   const [search, setSearch] = useState("");
@@ -130,14 +139,19 @@ export const AdminProducts = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [resProd, resCat, resBrands] = await Promise.all([
-        fetch("/api/products?all=true"),
+      const productsUrl = isSeller && sellerId
+        ? `/api/products?all=true&seller_id=${sellerId}`
+        : '/api/products?all=true';
+      const [resProd, resCat, resBrands, resSellers] = await Promise.all([
+        fetch(productsUrl),
         fetch("/api/categories?all=true"),
         fetch("/api/brands?all=true"),
+        fetch("/api/sellers"),
       ]);
       if (resProd.ok) setProducts(await resProd.json());
       if (resCat.ok) setCategories(await resCat.json());
       if (resBrands.ok) setBrands(await resBrands.json());
+      if (resSellers.ok) setSellers(await resSellers.json());
     } catch (err) {
       console.error("Failed to fetch products:", err);
     } finally {
@@ -148,6 +162,16 @@ export const AdminProducts = () => {
   useEffect(() => {
     loadData();
   }, []);
+
+  const getSellerStoreName = (product) => {
+    if (product.sellerName) return product.sellerName;
+    if (product.seller_id) {
+      const found = sellers.find((s) => String(s.id) === String(product.seller_id));
+      if (found) return found.name;
+    }
+    if (isSeller && sellerInfo?.name) return sellerInfo.name;
+    return "Главный магазин AutoLider";
+  };
 
   const filteredProducts = products.filter((p) => {
     const matchesSearch =
@@ -433,6 +457,8 @@ export const AdminProducts = () => {
           ? formData.carModels.join(", ")
           : "",
       specs: cleanSpecs,
+      // Auto-assign seller_id when saving as supplier
+      ...(isSeller && sellerId ? { seller_id: sellerId } : {}),
     };
 
     try {
@@ -481,26 +507,28 @@ export const AdminProducts = () => {
 
   const handleExportExcel = () => {
     try {
-      const exportData = products.map((p) => ({
+      const itemsToExport = filteredProducts.length > 0 ? filteredProducts : products;
+      const exportData = itemsToExport.map((p) => ({
         "Артикул (SKU)": p.sku || "",
         "Наименование товара": p.title || "",
-        Бренд: p.brand || "",
-        Категория: p.categoryName || "",
+        "Бренд": p.brand || "",
+        "Категория": p.categoryName || "",
         "Цена (₸)": p.price || 0,
         "Старая цена (₸)": p.oldPrice || 0,
         "Остаток на складе (шт)": p.stockQty || 0,
         "Марка авто": p.carMake || "",
         "Модель авто": p.carModel || "",
-        Статус: p.status === "enabled" ? "Включен" : "Отключен",
+        "Поставщик / Магазин": getSellerStoreName(p),
+        "Статус": p.status === "enabled" ? "Включен" : "Отключен",
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(exportData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Товары Autolider");
-      XLSX.writeFile(
-        workbook,
-        `autolider_catalog_${new Date().toISOString().slice(0, 10)}.xlsx`,
-      );
+      const filename = isSeller && sellerInfo?.name
+        ? `autolider_${sellerInfo.name.toLowerCase().replace(/\s+/g, '_')}_catalog_${new Date().toISOString().slice(0, 10)}.xlsx`
+        : `autolider_catalog_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      XLSX.writeFile(workbook, filename);
     } catch (err) {
       console.error("Excel Export Error:", err);
       alert("Ошибка при генерации Excel файла");
@@ -618,7 +646,8 @@ export const AdminProducts = () => {
           <table className="admin-products-table">
             <thead>
               <tr>
-                <th style={{ width: "38%" }}>Товар</th>
+                <th style={{ width: "32%" }}>Товар</th>
+                <th>Магазин / Поставщик</th>
                 <th>Категория</th>
                 <th>Цена</th>
                 <th>Остаток</th>
@@ -653,15 +682,17 @@ export const AdminProducts = () => {
                             {p.title}
                           </a>
                           <div className="product-sub-tags">
-                            <span className="product-sku-tag">
-                              {p.sku || "Без SKU"}
-                            </span>
-                            {p.brand && (
+                            {p.sku && !p.sku.toLowerCase().includes('test') && (
+                              <span className="product-sku-tag">
+                                {p.sku}
+                              </span>
+                            )}
+                            {p.brand && !p.brand.toLowerCase().includes('autolider test') && (
                               <span className="product-brand-tag">
                                 {p.brand}
                               </span>
                             )}
-                            {p.carMake && (
+                            {p.carMake && !p.carMake.toLowerCase().includes('autolider test') && (
                               <span className="product-carmake-tag">
                                 {p.carMake}
                               </span>
@@ -669,6 +700,12 @@ export const AdminProducts = () => {
                           </div>
                         </div>
                       </div>
+                    </td>
+                    <td>
+                      <span className="seller-store-pill">
+                        <Store size={13} style={{ marginRight: 5, color: '#ea2427' }} />
+                        {getSellerStoreName(p)}
+                      </span>
                     </td>
                     <td>
                       <span className="cat-pill-badge">

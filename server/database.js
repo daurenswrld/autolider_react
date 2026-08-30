@@ -37,6 +37,63 @@ const INITIAL_DATA = {
       usersCount: 1
     }
   ],
+  sellers: [],
+  stores: [
+    {
+      id: 'store-astana-1',
+      city: 'Астана',
+      name: 'AutoLider — ул. Кунаева',
+      address: 'ул. Кунаева, 12',
+      phone: '+7 (717) 200-00-01',
+      status: 'active',
+      workingHours: 'Пн-Вс 09:00 - 20:00'
+    },
+    {
+      id: 'store-astana-2',
+      city: 'Астана',
+      name: 'AutoLider — просп. Туран',
+      address: 'просп. Туран, 30',
+      phone: '+7 (717) 200-00-02',
+      status: 'active',
+      workingHours: 'Пн-Вс 09:00 - 20:00'
+    },
+    {
+      id: 'store-astana-3',
+      city: 'Астана',
+      name: 'AutoLider — ул. Сарыарка',
+      address: 'ул. Сарыарка, 55',
+      phone: '+7 (717) 200-00-03',
+      status: 'active',
+      workingHours: 'Пн-Вс 09:00 - 20:00'
+    },
+    {
+      id: 'store-almaty-1',
+      city: 'Алматы',
+      name: 'AutoLider — ул. Абая',
+      address: 'ул. Абая, 56',
+      phone: '+7 (727) 300-00-01',
+      status: 'active',
+      workingHours: 'Пн-Вс 09:00 - 21:00'
+    },
+    {
+      id: 'store-almaty-2',
+      city: 'Алматы',
+      name: 'AutoLider — просп. Назарбаева',
+      address: 'просп. Назарбаева, 99',
+      phone: '+7 (727) 300-00-02',
+      status: 'active',
+      workingHours: 'Пн-Вс 09:00 - 21:00'
+    },
+    {
+      id: 'store-almaty-3',
+      city: 'Алматы',
+      name: 'AutoLider — ул. Панфилова',
+      address: 'ул. Панфилова, 10',
+      phone: '+7 (727) 300-00-03',
+      status: 'active',
+      workingHours: 'Пн-Вс 09:00 - 21:00'
+    }
+  ],
   orders: [],
   customers: [],
   banners: [],
@@ -81,6 +138,16 @@ export function readDB() {
 
     if (!data.vinRequests) {
       data.vinRequests = [];
+    }
+
+    // Auto-migrate: add sellers if missing
+    if (!data.sellers) {
+      data.sellers = [];
+    }
+
+    // Auto-migrate: add stores if missing
+    if (!data.stores || data.stores.length === 0) {
+      data.stores = INITIAL_DATA.stores;
     }
 
     return data;

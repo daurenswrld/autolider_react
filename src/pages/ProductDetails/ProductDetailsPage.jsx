@@ -267,6 +267,8 @@ export const ProductDetailsPage = () => {
   const currentMainImg =
     gallery[selectedThumb] || gallery[0] || product.image || product.photoUrl;
 
+  const isInStock = product.inStock !== false && product.stockQty !== 0 && (product.stockQty > 0 || product.stockQty === undefined || product.stockQty === null || product.inStock === true);
+
   const calculatedDiscount =
     product.discountPercent ||
     (product.oldPrice && product.price && product.oldPrice > product.price

@@ -1,0 +1,232 @@
+.supplier-dashboard {
+  padding: 0;
+}
+
+/* Stats Grid */
+.sup-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+@media (max-width: 900px) {
+  .sup-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 500px) {
+  .sup-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sup-stat-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.sup-stat-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+.sup-stat-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+.sup-stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+.sup-stat-icon.sales {
+  background: linear-gradient(135deg, #ea2427, #c81d1f);
+}
+.sup-stat-icon.products {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+}
+.sup-stat-icon.orders {
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+}
+.sup-stat-icon.alert {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+.sup-stat-value {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+.sup-stat-footer {
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* Redesigned Premium Code Banner */
+.sup-code-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+}
+
+.sup-code-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+
+.sup-code-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #fef3f2;
+  border: 1px solid #fee2e2;
+  color: #ea2427;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sup-code-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 2px;
+  text-align: left;
+}
+
+.sup-code-hint {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.sup-code-badge-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.sup-code-badge {
+  background: #fef2f2;
+  color: #ea2427;
+  border: 1.5px dashed #fecaca;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  font-family: inherit;
+}
+
+.sup-code-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  color: #334155;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.sup-code-copy-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+.sup-code-copy-btn:active {
+  background: #f1f5f9;
+}
+
+@media (max-width: 680px) {
+  .sup-code-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .sup-code-badge-wrap {
+    justify-content: space-between;
+    width: 100%;
+  }
+}
+
+/* Quick grid */
+.sup-quick-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+}
+@media (max-width: 700px) {
+  .sup-quick-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sup-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 14px;
+}
+
+.sup-empty {
+  padding: 30px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+/* Status badges */
+.sup-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.sup-status-badge.delivered {
+  background: #dcfce7;
+  color: #15803d;
+}
+.sup-status-badge.shipping {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.sup-status-badge.processing {
+  background: #fef9c3;
+  color: #854d0e;
+}
+.sup-status-badge.canceled {
+  background: #fee2e2;
+  color: #dc2626;
+}
+.sup-status-badge.pending {
+  background: #f1f5f9;
+  color: #64748b;
+}
