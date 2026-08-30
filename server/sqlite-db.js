@@ -7,13 +7,28 @@ import bcrypt from 'bcryptjs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DB_PATH = path.join(__dirname, 'autolider.db');
-const JSON_DB_PATH = path.join(__dirname, 'db.json');
+const isVercel = Boolean(process.env.VERCEL);
+const DB_PATH = isVercel ? '/tmp/autolider.db' : path.join(__dirname, 'autolider.db');
+const JSON_DB_PATH = isVercel && fs.existsSync('/tmp/db.json') ? '/tmp/db.json' : path.join(__dirname, 'db.json');
 
-// Initialize SQLite with WAL mode for ultimate concurrency & performance
-const db = new Database(DB_PATH);
-db.pragma('journal_mode = WAL');
-db.pragma('synchronous = NORMAL');
+// Initialize SQLite safely
+let db;
+try {
+  db = new Database(DB_PATH);
+  db.pragma('journal_mode = WAL');
+  db.pragma('synchronous = NORMAL');
+} catch (e) {
+  console.warn('SQLite disk init failed, using memory DB:', e.message);
+  try {
+    db = new Database(':memory:');
+  } catch (err) {
+    db = {
+      prepare: () => ({ run: () => {}, get: () => ({ c: 0 }), all: () => [] }),
+      exec: () => {},
+      transaction: (fn) => fn
+    };
+  }
+}
 
 // Create SQLite tables if missing
 db.exec(`

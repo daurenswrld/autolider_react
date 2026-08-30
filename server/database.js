@@ -112,11 +112,20 @@ const INITIAL_DATA = {
 
 export function readDB() {
   try {
-    if (!fs.existsSync(DB_FILE)) {
-      fs.writeFileSync(DB_FILE, JSON.stringify(INITIAL_DATA, null, 2), 'utf8');
+    const isVercel = Boolean(process.env.VERCEL);
+    const targetFile = isVercel && fs.existsSync('/tmp/db.json') ? '/tmp/db.json' : DB_FILE;
+
+    if (!fs.existsSync(targetFile)) {
+      if (fs.existsSync(DB_FILE)) {
+        const initialContent = fs.readFileSync(DB_FILE, 'utf8');
+        if (isVercel) {
+          try { fs.writeFileSync('/tmp/db.json', initialContent, 'utf8'); } catch (e) {}
+        }
+        return JSON.parse(initialContent);
+      }
       return INITIAL_DATA;
     }
-    const content = fs.readFileSync(DB_FILE, 'utf8');
+    const content = fs.readFileSync(targetFile, 'utf8');
     const data = JSON.parse(content);
 
     if (Array.isArray(data.products)) {
@@ -159,7 +168,9 @@ export function readDB() {
 
 export function writeDB(data) {
   try {
-    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
+    const isVercel = Boolean(process.env.VERCEL);
+    const targetFile = isVercel ? '/tmp/db.json' : DB_FILE;
+    fs.writeFileSync(targetFile, JSON.stringify(data, null, 2), 'utf8');
   } catch (err) {
     console.error('Error writing DB file:', err);
   }
