@@ -187,8 +187,25 @@ export const AdminOrders = () => {
     };
   };
 
-  const getOrderSellers = (order) => {
+  const getSupplierFilteredItems = (order) => {
     const rawItems = order.items && order.items.length > 0 ? order.items : [order];
+    if (!isSeller || !sellerId) return rawItems;
+
+    const filtered = rawItems.filter((it, idx) => {
+      const pObj = it?.product || it?.item || it || {};
+      const sId = it.seller_id || it.sellerId || pObj.seller_id || pObj.sellerId;
+      if (sId) return String(sId) === String(sellerId);
+
+      const prodId = String(it.id || it.productId || pObj.id || '');
+      const matched = (products || []).find((p) => String(p.id) === prodId);
+      return matched && String(matched.seller_id) === String(sellerId);
+    });
+
+    return filtered.length > 0 ? filtered : rawItems;
+  };
+
+  const getOrderSellers = (order) => {
+    const rawItems = getSupplierFilteredItems(order);
     const sellerNames = new Set();
 
     rawItems.forEach((it, idx) => {
@@ -198,7 +215,7 @@ export const AdminOrders = () => {
       }
     });
 
-    if (sellerNames.size === 0) return 'AutoLider';
+    if (sellerNames.size === 0) return isSeller && sellerInfo?.name ? sellerInfo.name : 'AutoLider';
     return Array.from(sellerNames).join(', ');
   };
 
@@ -221,7 +238,11 @@ export const AdminOrders = () => {
             const sellerProds = await sellerProdRes.json();
             const productIds = new Set(sellerProds.map((p) => String(p.id)));
             data = data.filter((o) =>
-              (o.items || []).some((item) => productIds.has(String(item.id || item.productId)))
+              (o.items || []).some((item) => {
+                const sId = item.seller_id || item.sellerId;
+                if (sId) return String(sId) === String(sellerId);
+                return productIds.has(String(item.id || item.productId));
+              })
             );
           }
         }
@@ -275,6 +296,14 @@ export const AdminOrders = () => {
     });
   }, [orders, searchTerm, statusFilter, monthFilter]);
 
+  const getOrderDisplayPrice = (order) => {
+    if (!isSeller || !sellerId) return order.totalPrice || 0;
+    const items = getSupplierFilteredItems(order);
+    const parsedItems = items.map((it, idx) => getItemDetails(it, idx, order.totalPrice, items.length));
+    const sum = parsedItems.reduce((acc, i) => acc + i.totalSum, 0);
+    return sum > 0 ? sum : order.totalPrice || 0;
+  };
+
   // Group filtered orders by month
   const monthGroups = useMemo(() => {
     const groups = {};
@@ -289,11 +318,11 @@ export const AdminOrders = () => {
         };
       }
       groups[key].orders.push(o);
-      groups[key].totalRevenue += Number(o.totalPrice) || 0;
+      groups[key].totalRevenue += Number(getOrderDisplayPrice(o)) || 0;
     });
 
     return Object.values(groups).sort((a, b) => b.key.localeCompare(a.key));
-  }, [filteredOrders]);
+  }, [filteredOrders, isSeller, sellerId, products]);
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
@@ -523,7 +552,7 @@ export const AdminOrders = () => {
                                 {sNames}
                               </span>
                             </td>
-                            <td className="font-bold text-price">{formatPrice(o.totalPrice)}</td>
+                            <td className="font-bold text-price">{formatPrice(getOrderDisplayPrice(o))}</td>
                             <td className="text-sub">{o.paymentMethod}</td>
                             <td>
                               <select
@@ -572,10 +601,10 @@ export const AdminOrders = () => {
 
       {/* Order Details Modal */}
       {selectedOrder && (() => {
-        const rawItems = selectedOrder.items && selectedOrder.items.length > 0 ? selectedOrder.items : [selectedOrder];
+        const rawItems = getSupplierFilteredItems(selectedOrder);
         const parsedItems = rawItems.map((it, idx) => getItemDetails(it, idx, selectedOrder.totalPrice, rawItems.length));
         const itemsTotal = parsedItems.reduce((sum, i) => sum + i.totalSum, 0);
-        const displayOrderPrice = selectedOrder.totalPrice && selectedOrder.totalPrice > 0 ? selectedOrder.totalPrice : itemsTotal;
+        const displayOrderPrice = isSeller && sellerId ? itemsTotal : (selectedOrder.totalPrice && selectedOrder.totalPrice > 0 ? selectedOrder.totalPrice : itemsTotal);
         const orderBonusSpent = typeof selectedOrder.bonusSpent === 'number'
           ? selectedOrder.bonusSpent
           : Number(selectedOrder.usedBonuses || selectedOrder.bonus || 0);

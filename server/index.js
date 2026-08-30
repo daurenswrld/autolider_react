@@ -1062,6 +1062,20 @@ app.post('/api/orders', (req, res) => {
   }
   const nextId = String(maxId + 1).padStart(6, '0');
 
+  const enrichedItems = (req.body.items || []).map((item) => {
+    const prodId = item.id || item.productId || item.product?.id;
+    const targetProd = (dbData.products || []).find((p) => String(p.id) === String(prodId));
+    const sellerId = item.seller_id || item.sellerId || targetProd?.seller_id || targetProd?.sellerId || null;
+    const sellerName = item.seller_name || item.sellerName || targetProd?.seller_name || targetProd?.sellerName || '';
+    return {
+      ...item,
+      seller_id: sellerId,
+      sellerId: sellerId,
+      seller_name: sellerName,
+      sellerName: sellerName
+    };
+  });
+
   const newOrder = {
     id: nextId,
     date: new Date().toISOString().replace('T', ' ').slice(0, 16),
@@ -1077,8 +1091,8 @@ app.post('/api/orders', (req, res) => {
     comment: req.body.comment || '',
     bonusSpent: Number(req.body.bonusSpent) || 0,
     bonusEarned: Number(req.body.bonusEarned) || 0,
-    itemsCount: req.body.items ? req.body.items.length : 1,
-    items: req.body.items || []
+    itemsCount: enrichedItems.length,
+    items: enrichedItems
   };
 
   // Decrement Stock Quantities for ordered products
@@ -1129,6 +1143,10 @@ app.post('/api/orders', (req, res) => {
 app.post('/api/orders/one-click', (req, res) => {
   const dbData = readDB();
   const { customerName, customerPhone, customerEmail, customerId, productTitle, price, productId, id } = req.body;
+  const targetId = productId || id;
+  const targetProd = (dbData.products || []).find((p) => String(p.id) === String(targetId));
+  const sellerId = targetProd?.seller_id || targetProd?.sellerId || null;
+  const sellerName = targetProd?.seller_name || targetProd?.sellerName || '';
 
   const newOrder = {
     id: String(Math.floor(100000 + Math.random() * 900000)),
@@ -1145,16 +1163,19 @@ app.post('/api/orders/one-click', (req, res) => {
     itemsCount: 1,
     items: [
       {
-        id: productId || id || Date.now(),
-        title: productTitle || 'Автозапчасть',
+        id: targetId || Date.now(),
+        title: productTitle || targetProd?.title || 'Автозапчасть',
         price: Number(price) || 0,
-        quantity: 1
+        quantity: 1,
+        seller_id: sellerId,
+        sellerId: sellerId,
+        seller_name: sellerName,
+        sellerName: sellerName
       }
     ]
   };
 
   // Decrement Stock Quantity for one-click product
-  const targetId = productId || id;
   if (targetId && Array.isArray(dbData.products)) {
     const targetProd = dbData.products.find((p) => String(p.id) === String(targetId));
     if (targetProd) {
