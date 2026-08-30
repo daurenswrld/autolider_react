@@ -34,14 +34,33 @@ export const AppProvider = ({ children }) => {
       .catch((err) => console.warn('Could not fetch settings from server:', err));
   };
 
+  const DEFAULT_CATEGORIES = [
+    { id: 'detali-dlya-to', name: 'Детали для ТО', slug: 'detali-dlya-to', status: 'enabled' },
+    { id: 'dvigatel', name: 'Двигатель', slug: 'dvigatel', status: 'enabled' },
+    { id: 'toplivnaya-sistema', name: 'Топливная система', slug: 'toplivnaya-sistema', status: 'enabled' },
+    { id: 'sistema-okhlazhdeniya', name: 'Система охлаждения', slug: 'sistema-okhlazhdeniya', status: 'enabled' },
+    { id: 'tormoznaya-sistema', name: 'Тормозная система', slug: 'tormoznaya-sistema', status: 'enabled' },
+    { id: 'podveska-i-rulevoe', name: 'Подвеска и рулевое управление', slug: 'podveska-i-rulevoe', status: 'enabled' },
+    { id: 'transmissiya', name: 'Трансмиссия', slug: 'transmissiya', status: 'enabled' },
+    { id: 'elektrika-i-osveshchenie', name: 'Электрика и освещение', slug: 'elektrika-i-osveshchenie', status: 'enabled' },
+    { id: 'kuzovnye-detali', name: 'Кузовные детали', slug: 'kuzovnye-detali', status: 'enabled' }
+  ];
+
   // Refresh functions for synchronization
   const refreshCategories = () => {
     fetch('/api/categories')
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) setCategories(data);
+      .then((res) => {
+        if (res.ok) return res.json();
+        throw new Error('API offline');
       })
-      .catch((err) => console.warn('Could not fetch categories from server:', err));
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) setCategories(data);
+        else setCategories(DEFAULT_CATEGORIES);
+      })
+      .catch((err) => {
+        console.warn('Could not fetch categories from server:', err);
+        setCategories((prev) => (prev.length > 0 ? prev : DEFAULT_CATEGORIES));
+      });
   };
 
   const refreshProducts = () => {

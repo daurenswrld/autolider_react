@@ -78,7 +78,7 @@ const slugify = (text) => {
 };
 
 export const AdminCategories = () => {
-  const { showToast, products = [], refreshCategories } = useApp();
+  const { showToast, products = [], rawCategories = [], refreshCategories } = useApp();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -104,12 +104,21 @@ export const AdminCategories = () => {
     setLoading(true);
     try {
       const res = await fetch("/api/categories?all=true");
-      if (res.ok) setCategories(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setCategories(data);
+          setLoading(false);
+          return;
+        }
+      }
     } catch (err) {
       console.error("Failed to load categories:", err);
-    } finally {
-      setLoading(false);
     }
+    if (rawCategories && rawCategories.length > 0) {
+      setCategories(rawCategories);
+    }
+    setLoading(false);
   };
 
   useEffect(() => {
