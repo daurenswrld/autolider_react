@@ -60,7 +60,6 @@ export const AuthPage = () => {
   const [otpDigits, setOtpDigits] = useState(["", "", "", ""]);
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
-  const [receivedOtpDebug, setReceivedOtpDebug] = useState("");
   const otpInputsRef = useRef([]);
 
   // Registration State (If user not in DB)
@@ -336,14 +335,7 @@ export const AuthPage = () => {
               Мы отправили 4-значный код на <b>{email}</b>
             </p>
 
-            {receivedOtpDebug && (
-              <div className="page-otp-debug">
-                <Sparkles size={16} />
-                <span>
-                  Демо-код OTP: <b>{receivedOtpDebug}</b>
-                </span>
-              </div>
-            )}
+
 
             <div className="page-otp-grid">
               {otpDigits.map((digit, idx) => (

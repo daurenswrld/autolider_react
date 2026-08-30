@@ -206,18 +206,7 @@
   box-sizing: border-box;
 }
 
-.page-otp-debug {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1d4ed8;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 13px;
-  margin-bottom: 16px;
-}
+
 
 .page-otp-grid {
   display: flex;
