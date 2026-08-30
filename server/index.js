@@ -214,21 +214,22 @@ app.post('/api/auth/send-otp', checkIpBan, otpRateLimiter, async (req, res) => {
       });
 
       const mailOptions = {
-        from: `"AutoLider Trade" <${gmailUser}>`,
+        from: `"AutoLider" <${gmailUser}>`,
         to: cleanTarget,
-        subject: `🔑 Ваш код подтверждения в AutoLider: ${code}`,
+        subject: `Код подтверждения AutoLider: ${code}`,
+        text: `Ваш код авторизации в сервисе AutoLider: ${code}. Код действителен 5 минут.`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
+          <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
             <div style="text-align: center; margin-bottom: 20px;">
-              <h2 style="color: #ea2427; margin: 0; font-weight: 800; font-size: 24px;">AutoLider Trade</h2>
-              <p style="color: #64748b; font-size: 13px; margin-top: 4px;">Одноразовый код авторизации в личном кабинете</p>
+              <h2 style="color: #ea2427; margin: 0; font-weight: 800; font-size: 22px;">AutoLider</h2>
+              <p style="color: #64748b; font-size: 13px; margin-top: 4px;">Код для входа в личный кабинет</p>
             </div>
-            <div style="background: #f8fafc; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px; border: 1px solid #e2e8f0;">
-              <span style="font-size: 32px; font-weight: 900; letter-spacing: 8px; color: #0f172a;">${code}</span>
+            <div style="background: #f8fafc; padding: 18px; border-radius: 10px; text-align: center; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+              <span style="font-size: 32px; font-weight: 800; letter-spacing: 6px; color: #0f172a;">${code}</span>
             </div>
-            <p style="color: #475569; font-size: 14px; line-height: 1.5; margin-bottom: 12px;">Введите этот 4-значный код на сайте для завершения входа. Код действителен в течение <strong>5 минут</strong>.</p>
+            <p style="color: #475569; font-size: 14px; line-height: 1.5; margin-bottom: 12px;">Введите этот код на сайте для завершения входа. Код действителен <strong>5 минут</strong>.</p>
             <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 20px 0;" />
-            <p style="color: #94a3b8; font-size: 12px; text-align: center; margin: 0;">Если вы не запрашивали данный код, просто проигнорируйте это письмо.</p>
+            <p style="color: #94a3b8; font-size: 12px; text-align: center; margin: 0;">Если вы не запрашивали данный код, разглашать его кому-либо нельзя.</p>
           </div>
         `
       };
