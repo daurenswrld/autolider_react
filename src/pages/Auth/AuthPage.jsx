@@ -119,7 +119,6 @@ export const AuthPage = () => {
       setStep("otp");
       setTimer(60);
       setCanResend(false);
-      setReceivedOtpDebug(data.otpCode || "4829");
       if (showToast)
         showToast(data.message || `Код отправлен на ${email}`, "success");
 
@@ -210,7 +209,6 @@ export const AuthPage = () => {
       });
       setTimer(60);
       setCanResend(false);
-      setReceivedOtpDebug(data.otpCode || "4829");
       if (showToast) showToast(`Новый код отправлен на ${email}`, "info");
     } catch (err) {
       setErrorMsg("Ошибка отправки кода");
