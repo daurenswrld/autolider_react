@@ -1415,7 +1415,8 @@ app.post('/api/warehouses', (req, res) => {
 // SELLERS (Suppliers) ENDPOINTS
 app.get('/api/sellers', (req, res) => {
   const db = readDB();
-  res.json(db.sellers || []);
+  const safeSellers = (db.sellers || []).map(({ password, password_hash, ...rest }) => rest);
+  res.json(safeSellers);
 });
 
 app.post('/api/sellers', (req, res) => {
