@@ -513,7 +513,6 @@ export const AdminOrders = () => {
                         <th>№ Заказа</th>
                         <th>Дата / Время</th>
                         <th>Покупатель</th>
-                        <th>Поставщик</th>
                         <th>Сумма</th>
                         <th>Оплата</th>
                         <th>Статус заказа</th>
@@ -522,8 +521,6 @@ export const AdminOrders = () => {
                     </thead>
                     <tbody>
                       {group.orders.map((o) => {
-                        const sNames = getOrderSellers(o);
-                        const isAutoLider = sNames === 'AutoLider';
                         return (
                           <tr key={o.id}>
                             <td className="font-bold">#{o.id}</td>
@@ -531,26 +528,6 @@ export const AdminOrders = () => {
                             <td className="font-medium">
                               <div>{o.customerName}</div>
                               <div style={{ fontSize: '12px', color: '#94a3b8' }}>{o.customerPhone}</div>
-                            </td>
-                            <td>
-                              <span
-                                style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '5px',
-                                  background: isAutoLider ? '#f1f5f9' : 'rgba(234, 36, 39, 0.08)',
-                                  color: isAutoLider ? '#475569' : '#ea2427',
-                                  padding: '4px 10px',
-                                  borderRadius: '6px',
-                                  fontSize: '12px',
-                                  fontWeight: '700',
-                                  border: '1px solid',
-                                  borderColor: isAutoLider ? '#cbd5e1' : 'rgba(234, 36, 39, 0.2)'
-                                }}
-                              >
-                                <Store size={13} />
-                                {sNames}
-                              </span>
                             </td>
                             <td className="font-bold text-price">{formatPrice(getOrderDisplayPrice(o))}</td>
                             <td className="text-sub">{o.paymentMethod}</td>
