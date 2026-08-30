@@ -635,7 +635,7 @@ app.post('/api/products', (req, res) => {
     categoryName: req.body.categoryName || 'Автозапчасти',
     status: req.body.status || 'enabled',
     description: req.body.description || '',
-    image: req.body.image || '',
+    image: req.body.image || '/uploads/no-photo.png',
     images: Array.isArray(req.body.images) ? req.body.images : [],
     isUniversal: !!req.body.isUniversal,
     carMakes: Array.isArray(req.body.carMakes) ? req.body.carMakes : [],
@@ -767,7 +767,7 @@ app.post('/api/products/import-excel', (req, res) => {
         carMake,
         carModel,
         seller_id,
-        image: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=600&q=80',
+        image: '/uploads/no-photo.png',
         images: [],
         specs: [],
         slug: slugify(title)

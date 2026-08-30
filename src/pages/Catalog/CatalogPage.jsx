@@ -616,7 +616,7 @@ export const CatalogPage = () => {
                         ? isInWishlist(p.id)
                         : favorites[p.id] || false;
                       const isAdded = addedItems[p.id] || false;
-                      const imgSrc = p.image || p.photoUrl || p.img || "/assets/img/test_accessosry.png";
+                      const imgSrc = p.image || p.photoUrl || p.img || "/uploads/no-photo.png";
                       const displayPrice = typeof p.price === "number" ? `${new Intl.NumberFormat("ru-RU").format(p.price)} ₸` : p.price;
                       const displayOldPrice = p.oldPrice && p.oldPrice > 0 ? (typeof p.oldPrice === "number" ? `${new Intl.NumberFormat("ru-RU").format(p.oldPrice)} ₸` : p.oldPrice) : null;
 
@@ -666,7 +666,7 @@ export const CatalogPage = () => {
                               onError={(e) => {
                                 e.target.onerror = null;
                                 e.target.src =
-                                  "/assets/img/test_accessosry.png";
+                                  "/uploads/no-photo.png";
                               }}
                             />
                           </Link>
