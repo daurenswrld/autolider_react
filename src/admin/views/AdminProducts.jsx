@@ -662,14 +662,14 @@ export const AdminProducts = () => {
                     <td>
                       <div className="product-cell-main">
                         <div className="product-compact-thumb">
-                          {p.image || p.photoUrl ? (
-                            <img src={p.image || p.photoUrl} alt={p.title} />
-                          ) : (
-                            <Package
-                              size={18}
-                              className="thumb-placeholder-icon"
-                            />
-                          )}
+                          <img
+                            src={p.image || p.photoUrl || '/uploads/no-photo.png'}
+                            alt={p.title}
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = '/uploads/no-photo.png';
+                            }}
+                          />
                         </div>
                         <div className="product-info-meta">
                           <a

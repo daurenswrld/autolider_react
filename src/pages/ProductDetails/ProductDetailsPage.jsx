@@ -347,20 +347,20 @@ export const ProductDetailsPage = () => {
                   </div>
                 )}
 
-                {currentMainImg ? (
-                  <img
-                    src={currentMainImg}
-                    alt={product.title}
-                    className="product-main-img"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "contain",
-                    }}
-                  />
-                ) : (
-                  <ImageIcon size={96} strokeWidth={1} />
-                )}
+                <img
+                  src={currentMainImg || '/uploads/no-photo.png'}
+                  alt={product.title}
+                  className="product-main-img"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = '/uploads/no-photo.png';
+                  }}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                  }}
+                />
               </div>
 
               {/* Thumbnails Row */}
