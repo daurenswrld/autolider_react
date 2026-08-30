@@ -146,11 +146,52 @@ export const AdminStores = () => {
         </button>
       </div>
 
-      <div className="admin-filter-card">
-        <div className="search-input-box">
+      {/* City quick filter pills */}
+      <div className="admin-filter-card" style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <button
+          className={`btn-admin-secondary ${!search ? "active" : ""}`}
+          onClick={() => setSearch("")}
+          style={{
+            background: !search ? "#ea2427" : "#fff",
+            color: !search ? "#fff" : "#475569",
+            borderColor: !search ? "#ea2427" : "#e2e8f0",
+            fontWeight: 600,
+            fontSize: 13,
+            padding: "8px 16px",
+            borderRadius: 8
+          }}
+        >
+          Все города ({stores.length})
+        </button>
+        {["Астана", "Алматы", "Шымкент", "Караганда"].map((cityName) => {
+          const count = stores.filter((s) => s.city === cityName).length;
+          const isActive = search.toLowerCase() === cityName.toLowerCase();
+          return (
+            <button
+              key={cityName}
+              onClick={() => setSearch(isActive ? "" : cityName)}
+              style={{
+                background: isActive ? "#ea2427" : "#f8fafc",
+                color: isActive ? "#fff" : "#475569",
+                border: "1px solid",
+                borderColor: isActive ? "#ea2427" : "#e2e8f0",
+                fontWeight: 600,
+                fontSize: 13,
+                padding: "8px 14px",
+                borderRadius: 8,
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+            >
+              {cityName} ({count})
+            </button>
+          );
+        })}
+
+        <div className="search-input-box" style={{ marginLeft: "auto", minWidth: 260 }}>
           <Search size={18} />
           <input
-            placeholder="Поиск по городу или адресу..."
+            placeholder="Поиск по адресу или названию..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -160,45 +201,88 @@ export const AdminStores = () => {
       {loading ? (
         <div
           className="admin-card"
-          style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}
+          style={{ padding: "60px 20px", textAlign: "center", color: "#64748b" }}
         >
-          Загрузка...
+          <div className="loading-spinner-box" style={{ marginBottom: 12 }}>
+            <MapPin size={32} className="animate-bounce" style={{ color: "#ea2427" }} />
+          </div>
+          <p style={{ margin: 0, fontWeight: 600 }}>Загрузка списка точек продаж...</p>
         </div>
       ) : filtered.length === 0 ? (
         <div
           className="admin-card"
-          style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}
+          style={{
+            padding: "64px 24px",
+            textAlign: "center",
+            background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+            border: "1px dashed #cbd5e1",
+            borderRadius: 16,
+            marginTop: 12
+          }}
         >
-          <MapPin size={36} style={{ opacity: 0.3, marginBottom: 8 }} />
-          <br />
-          Магазинов нет
+          <div
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: "50%",
+              background: "rgba(234, 36, 39, 0.08)",
+              color: "#ea2427",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 16,
+              boxShadow: "0 0 20px rgba(234, 36, 39, 0.15)"
+            }}
+          >
+            <MapPin size={36} />
+          </div>
+          <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0f172a", margin: "0 0 8px 0" }}>
+            Магазины не найдены
+          </h3>
+          <p style={{ fontSize: 14, color: "#64748b", maxWidth: 440, margin: "0 auto 24px auto", lineHeight: 1.5 }}>
+            {search
+              ? `По вашему запросу "${search}" филиалы не найдены. Попробуйте сбросить фильтры.`
+              : "В системе еще нет зарегистрированных филиалов и пунктов выдачи AutoLider. Добавьте первый магазин!"}
+          </p>
+          <button
+            className="btn-admin-primary"
+            onClick={openAdd}
+            style={{ padding: "12px 24px", fontSize: 14, margin: "0 auto" }}
+          >
+            <Plus size={18} />
+            <span>Добавить магазин</span>
+          </button>
         </div>
       ) : (
         cities.map((city) => (
-          <div key={city} className="admin-card" style={{ marginBottom: 16 }}>
-            <div className="admin-card-header" style={{ marginBottom: 14 }}>
+          <div key={city} className="admin-card" style={{ marginBottom: 20, border: "1px solid #e2e8f0", borderRadius: 14 }}>
+            <div className="admin-card-header" style={{ padding: "16px 20px", borderBottom: "1px solid #f1f5f9" }}>
               <h3
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 8,
+                  gap: 10,
                   margin: 0,
-                  fontSize: 15,
+                  fontSize: 16,
                   fontWeight: 700,
+                  color: "#0f172a"
                 }}
               >
-                <MapPin size={16} color="#ea2427" /> {city}
+                <div style={{ background: "rgba(234, 36, 39, 0.1)", padding: 6, borderRadius: 8, display: "flex" }}>
+                  <MapPin size={18} color="#ea2427" />
+                </div>
+                {city}
                 <span
                   style={{
                     background: "#f1f5f9",
-                    color: "#64748b",
+                    color: "#475569",
                     borderRadius: 20,
-                    padding: "2px 10px",
+                    padding: "4px 12px",
                     fontSize: 12,
-                    fontWeight: 600,
+                    fontWeight: 700,
                   }}
                 >
-                  {filtered.filter((s) => s.city === city).length} магазинов
+                  {filtered.filter((s) => s.city === city).length} точек
                 </span>
               </h3>
             </div>
@@ -206,10 +290,10 @@ export const AdminStores = () => {
               <table className="admin-table">
                 <thead>
                   <tr>
-                    <th>Адрес</th>
-                    <th>Название</th>
+                    <th>Адрес филиала</th>
+                    <th>Название точки</th>
                     <th>Телефон</th>
-                    <th>Часы работы</th>
+                    <th>Режим работы</th>
                     <th>Статус</th>
                     <th style={{ textAlign: "right" }}>Действия</th>
                   </tr>
@@ -219,13 +303,23 @@ export const AdminStores = () => {
                     .filter((s) => s.city === city)
                     .map((s) => (
                       <tr key={s.id}>
-                        <td style={{ fontWeight: 600 }}>{s.address}</td>
+                        <td style={{ fontWeight: 600, color: "#0f172a" }}>{s.address}</td>
                         <td style={{ color: "#64748b", fontSize: 13 }}>
-                          {s.name}
+                          {s.name || "Филиал AutoLider"}
                         </td>
-                        <td style={{ fontSize: 13 }}>{s.phone || "—"}</td>
-                        <td style={{ fontSize: 13 }}>
-                          {s.workingHours || "—"}
+                        <td style={{ fontSize: 13, color: "#334155" }}>
+                          {s.phone ? (
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                              <Phone size={13} color="#64748b" /> {s.phone}
+                            </span>
+                          ) : "—"}
+                        </td>
+                        <td style={{ fontSize: 13, color: "#334155" }}>
+                          {s.workingHours ? (
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                              <Clock size={13} color="#64748b" /> {s.workingHours}
+                            </span>
+                          ) : "—"}
                         </td>
                         <td>
                           <span
@@ -240,12 +334,14 @@ export const AdminStores = () => {
                             <button
                               className="btn-action-icon edit"
                               onClick={() => openEdit(s)}
+                              title="Редактировать"
                             >
                               <Edit2 size={15} />
                             </button>
                             <button
                               className="btn-action-icon delete"
                               onClick={() => handleDelete(s.id, s.address)}
+                              title="Удалить"
                             >
                               <Trash2 size={15} />
                             </button>
