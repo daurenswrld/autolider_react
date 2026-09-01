@@ -33,6 +33,7 @@ import { SupplierDashboard } from "./admin/views/SupplierDashboard";
 import { AdminProducts } from "./admin/views/AdminProducts";
 import { AdminCategories } from "./admin/views/AdminCategories";
 import { AdminBrands } from "./admin/views/AdminBrands";
+import { AdminForeignBrands } from "./admin/views/AdminForeignBrands";
 import { AdminOrders } from "./admin/views/AdminOrders";
 import { AdminRequests } from "./admin/views/AdminRequests";
 import { AdminCustomers } from "./admin/views/AdminCustomers";
@@ -111,6 +112,7 @@ function AppContent() {
             <Route path="products" element={<AdminProducts />} />
             <Route path="categories" element={<AdminCategories />} />
             <Route path="brands" element={<AdminBrands />} />
+            <Route path="foreign-brands" element={<AdminForeignBrands />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="requests" element={<AdminRequests />} />
             <Route path="customers" element={<AdminCustomers />} />

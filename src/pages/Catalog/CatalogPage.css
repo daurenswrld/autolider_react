@@ -727,16 +727,17 @@
 }
 
 .brand-card-logo-box {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
-  background: #f8fafc;
+  width: 68px;
+  height: 68px;
+  border-radius: 14px;
+  background: #ffffff;
   border: 1px solid #e2e8f0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px;
+  padding: 4px;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .brand-card-logo-img {

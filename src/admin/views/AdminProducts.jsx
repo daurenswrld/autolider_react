@@ -94,6 +94,7 @@ export const AdminProducts = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
+  const [foreignBrands, setForeignBrands] = useState([]);
   const [sellers, setSellers] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -142,15 +143,17 @@ export const AdminProducts = () => {
       const productsUrl = isSeller && sellerId
         ? `/api/products?all=true&seller_id=${sellerId}`
         : '/api/products?all=true';
-      const [resProd, resCat, resBrands, resSellers] = await Promise.all([
+      const [resProd, resCat, resBrands, resForeign, resSellers] = await Promise.all([
         fetch(productsUrl),
         fetch("/api/categories?all=true"),
         fetch("/api/brands?all=true"),
+        fetch("/api/foreign-brands?all=true"),
         fetch("/api/sellers"),
       ]);
       if (resProd.ok) setProducts(await resProd.json());
       if (resCat.ok) setCategories(await resCat.json());
       if (resBrands.ok) setBrands(await resBrands.json());
+      if (resForeign.ok) setForeignBrands(await resForeign.json());
       if (resSellers.ok) setSellers(await resSellers.json());
     } catch (err) {
       console.error("Failed to fetch products:", err);
@@ -1121,7 +1124,17 @@ export const AdminProducts = () => {
                       <div className="picker-block">
                         <h4>1. Выберите марки автомобилей:</h4>
                         <div className="chips-grid">
-                          {brands.map((b) => {
+                          {[
+                            ...(brands || []),
+                            ...(foreignBrands || []).filter(
+                              (fb) =>
+                                !(brands || []).some(
+                                  (b) =>
+                                    (b.name || "").toUpperCase() ===
+                                    (fb.name || "").toUpperCase(),
+                                ),
+                            ),
+                          ].map((b) => {
                             const isSelected = (
                               formData.carMakes || []
                             ).includes(b.name);
@@ -1156,8 +1169,8 @@ export const AdminProducts = () => {
                         <h4>2. Выберите модели автомобилей:</h4>
                         {formData.carMakes && formData.carMakes.length > 0 ? (
                           <div className="chips-grid">
-                            {brands
-                              .filter((b) => formData.carMakes.includes(b.name))
+                            {[...(brands || []), ...(foreignBrands || [])]
+                              .filter((b) => (formData.carMakes || []).includes(b.name))
                               .flatMap((b) =>
                                 (b.models || []).map((m) => ({
                                   ...m,

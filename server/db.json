@@ -835,23 +835,7 @@
       "createdAt": "2026-01-01"
     }
   ],
-  "sellers": [
-    {
-      "id": "sel-1788169340455",
-      "code": "SUP-2768",
-      "name": "Тестовый поставщик",
-      "username": "test01",
-      "password": "123",
-      "password_hash": "$2b$10$RVUP2gMls0TXFouAsC/I8uACE2W0n.J.4JFRPq4.7jGvl4ulqxwqa",
-      "email": "test@mail.ru",
-      "phone": "+7 (777) 777-77-77",
-      "city": "Астана",
-      "store_id": null,
-      "commission_rate": 10,
-      "status": "active",
-      "createdAt": "2026-08-31"
-    }
-  ],
+  "sellers": [],
   "stores": [
     {
       "id": "store-astana-1",
@@ -906,6 +890,51 @@
       "phone": "+7 (727) 300-00-03",
       "status": "active",
       "workingHours": "Пн-Вс 09:00 - 21:00"
+    }
+  ],
+  "foreignBrands": [
+    {
+      "id": "fb-mercedes",
+      "name": "MERCEDES",
+      "logoUrl": "/uploads/logo-1788269440919-4952.webp",
+      "status": "enabled",
+      "models": []
+    },
+    {
+      "id": "fb-toyota",
+      "name": "TOYOTA",
+      "logoUrl": "/uploads/logo-1788269447806-1958.webp",
+      "status": "enabled"
+    },
+    {
+      "id": "fb-bmw",
+      "name": "BMW",
+      "logoUrl": "/uploads/logo-1788269453591-9256.webp",
+      "status": "enabled"
+    },
+    {
+      "id": "fb-hyundai",
+      "name": "HYUNDAI",
+      "logoUrl": "/uploads/logo-1788269459623-2068.webp",
+      "status": "enabled"
+    },
+    {
+      "id": "fb-kia",
+      "name": "KIA",
+      "logoUrl": "/uploads/logo-1788269463258-3422.webp",
+      "status": "enabled"
+    },
+    {
+      "id": "fb-lexus",
+      "name": "LEXUS",
+      "logoUrl": "/uploads/logo-1788269466859-5270.webp",
+      "status": "enabled"
+    },
+    {
+      "id": "fb-mitsubishi",
+      "name": "MITSUBISHI",
+      "logoUrl": "/uploads/logo-1788269471105-3743.webp",
+      "status": "enabled"
     }
   ]
 }

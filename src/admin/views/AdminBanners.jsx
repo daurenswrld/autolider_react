@@ -330,7 +330,7 @@ export const AdminBanners = () => {
                   onClick={() => handleOpenEditModal(b)}
                   title="Редактировать баннер"
                 >
-                  <Edit2 size={14} /> <span>Изменить</span>
+                  <Edit2 size={16} />
                 </button>
 
                 <button
@@ -338,7 +338,7 @@ export const AdminBanners = () => {
                   onClick={() => handleDeleteBanner(b.id)}
                   title="Удалить баннер"
                 >
-                  <Trash2 size={14} /> <span>Удалить</span>
+                  <Trash2 size={16} />
                 </button>
               </div>
             </div>

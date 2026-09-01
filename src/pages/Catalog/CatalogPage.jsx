@@ -16,7 +16,7 @@ import { updateSEO } from "../../utils/seo";
 import "./CatalogPage.css";
 
 export const CatalogPage = () => {
-  const { products = [], categories: apiCategories = [], toggleWishlist, isInWishlist, addToCart, currentUser, user } = useApp();
+  const { products = [], categories: apiCategories = [], foreignBrands = [], toggleWishlist, isInWishlist, addToCart, currentUser, user } = useApp();
   const [searchParams] = useSearchParams();
   const { brandParam, modelParam, categoryParam } = useParams();
   const navigate = useNavigate();
@@ -42,9 +42,32 @@ export const CatalogPage = () => {
       .catch((err) => console.error("Failed to load brands in catalog:", err));
   }, []);
 
-  const brandsList = apiBrands;
+  const allBrandsList = React.useMemo(() => {
+    const list = [...apiBrands];
+    (foreignBrands || []).forEach((fb) => {
+      if (!list.some((b) => b.name.toLowerCase() === fb.name.toLowerCase())) {
+        list.push({
+          id: fb.id,
+          name: fb.name,
+          logoUrl: fb.logoUrl,
+          heroUrl: fb.heroUrl || "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
+          models: fb.models || [],
+          isForeign: true
+        });
+      }
+    });
+    return list;
+  }, [apiBrands, foreignBrands]);
+
+  const catalogBrandsList = apiBrands;
+  const brandsList = allBrandsList;
   const currentBrandObj =
-    brandsList.find((b) => b.name === selectedBrand) || brandsList[0];
+    brandsList.find(
+      (b) =>
+        b.name.toLowerCase() === (selectedBrand || "").toLowerCase() ||
+        b.slug === selectedBrand ||
+        slugify(b.name) === slugify(selectedBrand || "")
+    ) || (selectedBrand ? { name: selectedBrand, logoUrl: "", models: [] } : brandsList[0]);
   const currentModels = currentBrandObj ? currentBrandObj.models || [] : [];
 
   const rawCategories = apiCategories || [];
@@ -110,7 +133,7 @@ export const CatalogPage = () => {
     } else {
       setSelectedCategory(null);
     }
-  }, [brandParam, modelParam, categoryParam, searchParams, apiBrands, rawCategories]);
+  }, [brandParam, modelParam, categoryParam, searchParams, brandsList, rawCategories]);
 
   // SEO Title & Description Sync based on Brand, Model, Category
   useEffect(() => {
@@ -297,7 +320,7 @@ export const CatalogPage = () => {
             </div>
 
             <div className="all-brands-grid">
-              {[...brandsList].reverse().map((b) => {
+              {[...catalogBrandsList].reverse().map((b) => {
                 const modelCount = b.models ? b.models.length : 0;
                 return (
                   <div
@@ -330,7 +353,7 @@ export const CatalogPage = () => {
             {/* Left Sidebar: Brands List */}
             <aside className="catalog-sidebar">
               <ul className="sidebar-brands-list">
-                {[...brandsList].reverse().map((b) => (
+                {[...catalogBrandsList].reverse().map((b) => (
                   <li
                     key={b.name}
                     className={`sidebar-brand-item ${selectedBrand === b.name ? "active" : ""}`}
@@ -349,40 +372,54 @@ export const CatalogPage = () => {
               </ul>
             </aside>
 
-          {/* Main Content View */}
-          <main className="catalog-main-content">
-            {/* STAGE 1: Models Selection */}
-            {!selectedModel && !selectedCategory && (
-              <div className="stage-models">
-                <div className="catalog-brand-banner">
-                  {currentBrandObj?.logoUrl && (
-                    <img
-                      src={currentBrandObj.logoUrl}
-                      alt={selectedBrand}
-                      className="catalog-brand-banner-logo"
-                    />
-                  )}
-                  <div>
-                    <h1 className="catalog-title">{selectedBrand}</h1>
-                  </div>
-                </div>
-
-                {currentModels.length === 0 ? (
-                  <div className="empty-models-placeholder">
-                    <div className="empty-models-icon-wrapper">
-                      <Car size={44} strokeWidth={1.5} color="#94a3b8" />
+            {/* Main Content View */}
+            <main className="catalog-main-content">
+              {/* STAGE 1: Models Selection */}
+              {!selectedModel && !selectedCategory && (
+                <div className="stage-models">
+                  <div className="catalog-brand-banner">
+                    {currentBrandObj?.logoUrl && (
+                      <img
+                        src={currentBrandObj.logoUrl}
+                        alt={selectedBrand}
+                        className="catalog-brand-banner-logo"
+                      />
+                    )}
+                    <div>
+                      <h1 className="catalog-title">{selectedBrand}</h1>
                     </div>
-                    <h3 className="empty-models-title">
-                      Список моделей обновляется
-                    </h3>
-                    <p className="empty-models-desc">
-                      Для марки <strong>{selectedBrand}</strong> список
-                      модификаций временно на пополнении. Вы можете оставить
-                      заявку на подбор запчасти по VIN-коду или связаться с
-                      нашим специалистом.
-                    </p>
                   </div>
-                ) : (
+
+                  {currentModels.length === 0 ? (
+                    <div className="empty-models-placeholder-box" style={{
+                      background: "#fff",
+                      borderRadius: "16px",
+                      padding: "48px 24px",
+                      textAlign: "center",
+                      border: "1px solid #e2e8f0",
+                      marginTop: "20px",
+                      boxShadow: "0 4px 15px rgba(0,0,0,0.03)"
+                    }}>
+                      <div style={{
+                        width: "64px",
+                        height: "64px",
+                        borderRadius: "50%",
+                        background: "#f1f5f9",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        margin: "0 auto 16px"
+                      }}>
+                        <Car size={32} color="#64748b" strokeWidth={1.5} />
+                      </div>
+                      <h3 style={{ fontSize: "20px", fontWeight: "700", color: "#0f172a", marginBottom: "8px" }}>
+                        Список моделей для {selectedBrand} обновляется
+                      </h3>
+                      <p style={{ color: "#64748b", maxWidth: "480px", margin: "0 auto", fontSize: "14px", lineHeight: "1.6" }}>
+                        Модификации и детали для марки <strong>{selectedBrand}</strong> находятся в процессе пополнения. Скоро здесь появятся доступные модели и автозапчасти.
+                      </p>
+                    </div>
+                  ) : (
                   <div className="models-grid">
                     {currentModels.map((m, idx) => (
                       <div
@@ -492,7 +529,7 @@ export const CatalogPage = () => {
             )}
 
             {/* STAGE 3: Products Grid */}
-            {selectedModel && selectedCategory && (
+            {selectedCategory && (
               <div className="stage-products">
                 <div className="catalog-header-back">
                   <button className="btn-back" onClick={handleBackToCategories}>
@@ -507,15 +544,18 @@ export const CatalogPage = () => {
                       if (p.status === "disabled") return false;
 
                       const matchesBrand =
+                        !selectedBrand ||
                         !p.carMake ||
                         p.carMake === "Универсальный" ||
                         p.isUniversal ||
+                        (p.brand && p.brand.toLowerCase().includes(selectedBrand.toLowerCase())) ||
                         (Array.isArray(p.carMakes) &&
                           (p.carMakes.length === 0 ||
                             p.carMakes.some((m) =>
                               m.toLowerCase().includes(selectedBrand.toLowerCase())
                             ))) ||
-                        p.carMake.toLowerCase().includes(selectedBrand.toLowerCase());
+                        (typeof p.carMake === "string" &&
+                          p.carMake.toLowerCase().includes(selectedBrand.toLowerCase()));
 
                       const matchesModel =
                         !selectedModel ||

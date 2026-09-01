@@ -22,6 +22,7 @@ import {
   Search,
   Store,
   Truck,
+  Globe,
 } from "lucide-react";
 import "./AdminLayout.css";
 
@@ -159,6 +160,12 @@ export const AdminLayout = () => {
       title: "Марки и модели",
       path: "/admin/brands",
       icon: Car,
+      roles: ["admin", "manager"],
+    },
+    {
+      title: "Иномарки (Главная)",
+      path: "/admin/foreign-brands",
+      icon: Globe,
       roles: ["admin", "manager"],
     },
     {

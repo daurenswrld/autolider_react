@@ -10,7 +10,7 @@ import { useApp } from "../../context/AppContext";
 import "./HeroSection.css";
 
 export const HeroSection = () => {
-  const { showToast, currentUser, user } = useApp();
+  const { showToast, currentUser, user, foreignBrands = [] } = useApp();
   const activeUser = currentUser || user;
 
   const [vinQuery, setVinQuery] = useState("");
@@ -176,12 +176,21 @@ export const HeroSection = () => {
         }))
       : adSlides;
 
-  // Left sidebar brands from DB
-  const sidebarBrands = dbBrands.slice(0, 5).map((b) => ({
-    name: b.name,
-    logo: b.logoUrl || "/uploads/no-photo.png",
-    slug: b.slug,
-  }));
+  // Left sidebar foreign brands from DB/Admin
+  const defaultForeignBrands = [
+    { name: "MERCEDES", logoUrl: "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=160&q=80" },
+    { name: "TOYOTA", logoUrl: "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?auto=format&fit=crop&w=160&q=80" },
+    { name: "BMW", logoUrl: "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=160&q=80" },
+    { name: "HYUNDAI", logoUrl: "https://images.unsplash.com/photo-1619682817481-e994891cd1f5?auto=format&fit=crop&w=160&q=80" },
+    { name: "KIA", logoUrl: "https://images.unsplash.com/photo-1609521263047-f8d205293f24?auto=format&fit=crop&w=160&q=80" },
+    { name: "LEXUS", logoUrl: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=160&q=80" },
+    { name: "MITSUBISHI", logoUrl: "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=160&q=80" }
+  ];
+
+  const sidebarForeignBrands =
+    foreignBrands && foreignBrands.length > 0
+      ? foreignBrands.filter((b) => b.status !== "disabled")
+      : defaultForeignBrands;
 
   // Hero strip brand logos
   const heroStripBrands = dbBrands.slice(0, 5).map((b) => ({
@@ -231,17 +240,23 @@ export const HeroSection = () => {
           {/* Top Sidebar Box: Brands List */}
           <div className="sidebar-brands-card">
             <ul className="sidebar-brands-list">
-              {sidebarBrands.map((brand, idx) => (
-                <li key={idx}>
+              {sidebarForeignBrands.map((brand, idx) => (
+                <li key={brand.id || idx}>
                   <Link
-                    to={`/catalog/${brand.slug || slugify(brand.name)}`}
+                    to={`/catalog/${slugify(brand.name)}/`}
                     className="sidebar-brand-item"
                   >
-                    <img
-                      src={brand.logo}
-                      alt={brand.name}
-                      className="sidebar-brand-logo"
-                    />
+                    {brand.logoUrl ? (
+                      <img
+                        src={brand.logoUrl}
+                        alt={brand.name}
+                        className="sidebar-brand-logo"
+                      />
+                    ) : (
+                      <div className="sidebar-brand-logo-fallback">
+                        {brand.name.slice(0, 2)}
+                      </div>
+                    )}
                     <span>{brand.name}</span>
                   </Link>
                 </li>

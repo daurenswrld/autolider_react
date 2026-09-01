@@ -12,6 +12,18 @@ export const AppProvider = ({ children }) => {
   // Categories state loaded from backend API
   const [categories, setCategories] = useState([]);
 
+  // Foreign brands state loaded from backend API
+  const [foreignBrands, setForeignBrands] = useState([]);
+
+  const refreshForeignBrands = () => {
+    fetch('/api/foreign-brands')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setForeignBrands(data);
+      })
+      .catch((err) => console.warn('Could not fetch foreign brands from server:', err));
+  };
+
   // Settings state loaded from backend API
   const [settings, setSettings] = useState({
     storeName: 'Autolider Marketplace',
@@ -76,6 +88,7 @@ export const AppProvider = ({ children }) => {
     refreshCategories();
     refreshProducts();
     refreshSettings();
+    refreshForeignBrands();
   }, []);
 
   // Cart state
@@ -378,6 +391,8 @@ export const AppProvider = ({ children }) => {
         refreshProducts,
         refreshCategories,
         refreshSettings,
+        foreignBrands,
+        refreshForeignBrands,
         settings,
         addProduct,
         updateProduct,

@@ -13,6 +13,7 @@ import bcrypt from 'bcryptjs';
 import { readDB, writeDB } from './database.js';
 import sqliteDb from './sqlite-db.js';
 import nodemailer from 'nodemailer';
+import sharp from 'sharp';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'autolider_super_secret_jwt_key_2026_kz';
 
@@ -127,22 +128,34 @@ app.post('/api/upload', (req, res, next) => {
     const type = req.body.type || 'img';
     const timestamp = Date.now();
     const random = Math.floor(1000 + Math.random() * 9000);
-    const filename = `${type}-${timestamp}-${random}.webp`;
-    const outputPath = path.join(UPLOADS_DIR, filename);
+    let filename = `${type}-${timestamp}-${random}.webp`;
+    let outputPath = path.join(UPLOADS_DIR, filename);
 
-    let sharpInstance = sharp(req.file.buffer);
+    try {
+      if (sharp) {
+        let sharpInstance = sharp(req.file.buffer);
 
-    if (type === 'logo') {
-      sharpInstance = sharpInstance.resize({ width: 400, height: 400, fit: 'inside', withoutEnlargement: true });
-    } else if (type === 'hero' || type === 'model') {
-      sharpInstance = sharpInstance.resize({ width: 1200, fit: 'inside', withoutEnlargement: true });
-    } else {
-      sharpInstance = sharpInstance.resize({ width: 1000, fit: 'inside', withoutEnlargement: true });
+        if (type === 'logo') {
+          sharpInstance = sharpInstance.resize({ width: 400, height: 400, fit: 'inside', withoutEnlargement: true });
+        } else if (type === 'hero' || type === 'model') {
+          sharpInstance = sharpInstance.resize({ width: 1200, fit: 'inside', withoutEnlargement: true });
+        } else {
+          sharpInstance = sharpInstance.resize({ width: 1000, fit: 'inside', withoutEnlargement: true });
+        }
+
+        await sharpInstance
+          .webp({ quality: 75, effort: 6 })
+          .toFile(outputPath);
+      } else {
+        throw new Error('Sharp module unavailable');
+      }
+    } catch (sharpErr) {
+      console.warn('Sharp processing warning, writing raw buffer directly:', sharpErr.message);
+      const ext = path.extname(req.file.originalname) || '.png';
+      filename = `${type}-${timestamp}-${random}${ext}`;
+      outputPath = path.join(UPLOADS_DIR, filename);
+      fs.writeFileSync(outputPath, req.file.buffer);
     }
-
-    await sharpInstance
-      .webp({ quality: 75, effort: 6 })
-      .toFile(outputPath);
 
     const stats = fs.statSync(outputPath);
     const fileUrl = `/uploads/${filename}`;
@@ -907,6 +920,125 @@ app.delete('/api/brands/:id', (req, res) => {
   db.brands = db.brands.filter((b) => b.id !== req.params.id);
   writeDB(db);
   res.json({ success: true, message: 'Марка авто удалена' });
+});
+
+// Foreign Brands CRUD ("Иномарки на главной")
+app.get('/api/foreign-brands', (req, res) => {
+  const db = readDB();
+  const allForeign = db.foreignBrands || [];
+
+  if (req.query.all === 'true') {
+    return res.json(allForeign);
+  }
+
+  const activeForeign = allForeign.filter((b) => b.status !== 'disabled');
+  res.json(activeForeign);
+});
+
+app.post('/api/foreign-brands', (req, res) => {
+  const db = readDB();
+  if (!db.foreignBrands) db.foreignBrands = [];
+
+  const { name, logoUrl, status } = req.body;
+  if (!name) return res.status(400).json({ message: 'Укажите название иномарки' });
+
+  const newBrand = {
+    id: `fb-${Date.now()}`,
+    name,
+    logoUrl: logoUrl || 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=160&q=80',
+    status: status || 'enabled'
+  };
+
+  db.foreignBrands.unshift(newBrand);
+  writeDB(db);
+  res.status(201).json(newBrand);
+});
+
+app.put('/api/foreign-brands/:id', (req, res) => {
+  const db = readDB();
+  if (!db.foreignBrands) db.foreignBrands = [];
+
+  const brand = db.foreignBrands.find((b) => String(b.id) === String(req.params.id));
+  if (!brand) return res.status(404).json({ message: 'Иномарка не найдена' });
+
+  if (req.body.name !== undefined) brand.name = req.body.name;
+  if (req.body.logoUrl !== undefined) brand.logoUrl = req.body.logoUrl;
+  if (req.body.status !== undefined) brand.status = req.body.status;
+
+  writeDB(db);
+  res.json(brand);
+});
+
+app.delete('/api/foreign-brands/:id', (req, res) => {
+  const db = readDB();
+  if (!db.foreignBrands) db.foreignBrands = [];
+
+  db.foreignBrands = db.foreignBrands.filter((b) => String(b.id) !== String(req.params.id));
+  writeDB(db);
+  res.json({ success: true, message: 'Иномарка удалена' });
+});
+
+// Add model to foreign brand
+app.post('/api/foreign-brands/:brandId/models', (req, res) => {
+  const db = readDB();
+  if (!db.foreignBrands) db.foreignBrands = [];
+
+  const brand = db.foreignBrands.find((b) => String(b.id) === String(req.params.brandId));
+  if (!brand) return res.status(404).json({ message: 'Иномарка не найдена' });
+
+  const { name, photoUrl, status } = req.body;
+  if (!name) return res.status(400).json({ message: 'Укажите название модели' });
+
+  if (!brand.models) brand.models = [];
+  const modelSlug = generateModelSlug(brand, name);
+
+  const newModel = {
+    id: `fb-m-${Date.now()}`,
+    name,
+    slug: modelSlug,
+    photoUrl: photoUrl || brand.heroUrl || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=400&q=80',
+    status: status || 'enabled'
+  };
+
+  brand.models.push(newModel);
+  writeDB(db);
+  res.status(201).json(newModel);
+});
+
+// Update model of foreign brand
+app.put('/api/foreign-brands/:brandId/models/:modelId', (req, res) => {
+  const db = readDB();
+  if (!db.foreignBrands) db.foreignBrands = [];
+
+  const brand = db.foreignBrands.find((b) => String(b.id) === String(req.params.brandId));
+  if (!brand) return res.status(404).json({ message: 'Иномарка не найдена' });
+
+  const model = (brand.models || []).find((m) => String(m.id) === String(req.params.modelId));
+  if (!model) return res.status(404).json({ message: 'Модель не найдена' });
+
+  const { name, photoUrl, status } = req.body;
+  if (name !== undefined) {
+    model.name = name;
+    model.slug = generateModelSlug(brand, name, model.id);
+  }
+  if (photoUrl !== undefined) model.photoUrl = photoUrl;
+  if (status !== undefined) model.status = status;
+
+  writeDB(db);
+  res.json(model);
+});
+
+// Delete model of foreign brand
+app.delete('/api/foreign-brands/:brandId/models/:modelId', (req, res) => {
+  const db = readDB();
+  if (!db.foreignBrands) db.foreignBrands = [];
+
+  const brand = db.foreignBrands.find((b) => String(b.id) === String(req.params.brandId));
+  if (!brand) return res.status(404).json({ message: 'Иномарка не найдена' });
+
+  brand.models = (brand.models || []).filter((m) => String(m.id) !== String(req.params.modelId));
+  writeDB(db);
+  res.json({ success: true, message: 'Модель удалена' });
 });
 
 function generateModelSlug(brand, modelName, currentModelId = null) {
@@ -1880,6 +2012,275 @@ app.post('/api/admin/login', loginRateLimiter, (req, res) => {
     success: false,
     message: portalType === 'supplier' ? 'Неверный логин или пароль поставщика' : 'Неверный логин или пароль администратора'
   });
+});
+
+// Root Route: Backend API Landing Dashboard
+app.get('/', (req, res) => {
+  if (req.query.json === 'true' || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+    return res.json({
+      status: 'online',
+      name: 'AutoLider Express Backend API',
+      port: PORT,
+      timestamp: new Date().toISOString(),
+      endpoints: [
+        '/api/health',
+        '/api/products',
+        '/api/categories',
+        '/api/foreign-brands',
+        '/api/brands',
+        '/api/orders',
+        '/uploads'
+      ]
+    });
+  }
+
+  res.send(`<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoLider Express API Server</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --accent: #ea2427;
+      --green: #22c55e;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 40px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    .container {
+      max-width: 680px;
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+      margin-bottom: 24px;
+    }
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .logo-badge {
+      width: 44px;
+      height: 44px;
+      background: var(--accent);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 20px;
+      color: white;
+      box-shadow: 0 4px 14px rgba(234, 36, 39, 0.4);
+    }
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: var(--green);
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--green);
+    }
+    .section-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .info-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border);
+      padding: 14px;
+      border-radius: 12px;
+    }
+    .info-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .info-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .endpoints-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+    .endpoint-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(15, 23, 42, 0.4);
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--text);
+      transition: all 0.2s ease;
+    }
+    .endpoint-item:hover {
+      border-color: var(--accent);
+      background: rgba(234, 36, 39, 0.08);
+      transform: translateX(4px);
+    }
+    .method-tag {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+      font-family: monospace;
+    }
+    .path-text {
+      font-family: monospace;
+      font-size: 13.5px;
+      font-weight: 600;
+    }
+    .actions {
+      display: flex;
+      gap: 12px;
+    }
+    .btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      text-align: center;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 13.5px;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #d01d20;
+    }
+    .btn-secondary {
+      background: #334155;
+      color: white;
+    }
+    .btn-secondary:hover {
+      background: #475569;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="title-group">
+        <div class="logo-badge">AL</div>
+        <div>
+          <h1>AutoLider API Backend Server</h1>
+          <div style="font-size: 12.5px; color: var(--text-muted);">Node.js / Express REST API</div>
+        </div>
+      </div>
+      <div class="status-pill">
+        <span class="pulse-dot"></span>
+        API Online
+      </div>
+    </div>
+
+    <div class="section-title">Статус системы</div>
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-label">Тип приложения</div>
+        <div class="info-value">Backend API Server</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Локальный порт</div>
+        <div class="info-value">http://localhost:5000</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Клиент React (Dev)</div>
+        <div class="info-value">http://localhost:5173</div>
+      </div>
+    </div>
+
+    <div class="section-title">Основные API эндпоинты</div>
+    <div class="endpoints-list">
+      <a href="/api/health" target="_blank" class="endpoint-item">
+        <span class="path-text">/api/health</span>
+        <span class="method-tag">GET</span>
+      </a>
+      <a href="/api/products" target="_blank" class="endpoint-item">
+        <span class="path-text">/api/products</span>
+        <span class="method-tag">GET</span>
+      </a>
+      <a href="/api/categories" target="_blank" class="endpoint-item">
+        <span class="path-text">/api/categories</span>
+        <span class="method-tag">GET</span>
+      </a>
+      <a href="/api/foreign-brands" target="_blank" class="endpoint-item">
+        <span class="path-text">/api/foreign-brands</span>
+        <span class="method-tag">GET</span>
+      </a>
+      <a href="/api/brands" target="_blank" class="endpoint-item">
+        <span class="path-text">/api/brands</span>
+        <span class="method-tag">GET</span>
+      </a>
+    </div>
+
+    <div class="actions">
+      <a href="http://localhost:5173" class="btn btn-primary">Перейти на сайт (localhost:5173)</a>
+      <a href="/api/health" class="btn btn-secondary">Проверить статус /api/health</a>
+    </div>
+  </div>
+</body>
+</html>`);
 });
 
 // Catch-all 404 for unmapped API routes
