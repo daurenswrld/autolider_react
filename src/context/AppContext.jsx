@@ -275,31 +275,67 @@ export const AppProvider = ({ children }) => {
   };
 
   // Product CRUD for Seller
-  const addProduct = (newProd) => {
+  const addProduct = async (newProd) => {
+    try {
+      const res = await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newProd)
+      });
+      if (res.ok) {
+        const created = await res.json();
+        setProducts((prev) => [created, ...prev]);
+        showToast('Новый товар опубликован на маркетплейсе');
+        return created;
+      }
+    } catch (e) {
+      console.error('Error adding product:', e);
+    }
     const created = {
       ...newProd,
       id: Date.now(),
       rating: 5.0,
       reviewsCount: 0,
-      inStock: true,
-      seller: {
-        name: user.company.name,
-        rating: user.company.rating,
-        salesCount: 1
-      }
+      inStock: true
     };
     setProducts((prev) => [created, ...prev]);
     showToast('Новый товар опубликован на маркетплейсе');
+    return created;
   };
 
-  const updateProduct = (id, updatedFields) => {
+  const updateProduct = async (id, updatedFields) => {
+    try {
+      const res = await fetch(`/api/products/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedFields)
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setProducts((prev) => prev.map((p) => (p.id === id ? updated : p)));
+        showToast('Данные товара обновлены');
+        return;
+      }
+    } catch (e) {
+      console.error('Error updating product:', e);
+    }
     setProducts((prev) =>
       prev.map((p) => (p.id === id ? { ...p, ...updatedFields } : p))
     );
     showToast('Данные товара обновлены');
   };
 
-  const deleteProduct = (id) => {
+  const deleteProduct = async (id) => {
+    try {
+      const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setProducts((prev) => prev.filter((p) => p.id !== id));
+        showToast('Товар удален', 'warning');
+        return;
+      }
+    } catch (e) {
+      console.error('Error deleting product:', e);
+    }
     setProducts((prev) => prev.filter((p) => p.id !== id));
     showToast('Товар удален', 'warning');
   };

@@ -70,6 +70,8 @@ export const AuthPage = () => {
   });
   const [customCity, setCustomCity] = useState("");
 
+  const [otpToken, setOtpToken] = useState("");
+
   // OTP Timer
   useEffect(() => {
     let interval = null;
@@ -116,11 +118,14 @@ export const AuthPage = () => {
         body: JSON.stringify({ email }),
       });
 
+      if (data.otpToken) setOtpToken(data.otpToken);
       setStep("otp");
       setTimer(60);
       setCanResend(false);
-      if (showToast)
-        showToast(data.message || `Код отправлен на ${email}`, "success");
+      const msg = data.demoCode
+        ? `${data.message || 'Код отправлен'}. Тестовый код: ${data.demoCode}`
+        : (data.message || `Код отправлен на ${email}`);
+      if (showToast) showToast(msg, "success", 4000);
 
       setTimeout(() => {
         if (otpInputsRef.current[0]) {
@@ -172,7 +177,7 @@ export const AuthPage = () => {
       const data = await safeJsonFetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otpCode: fullCode }),
+        body: JSON.stringify({ email, otpCode: fullCode, otpToken }),
       });
 
       if (data.isRegistered && data.user) {

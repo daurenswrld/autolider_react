@@ -176,44 +176,25 @@ export const HeroSection = () => {
         }))
       : adSlides;
 
-  // Left sidebar brands from DB or fallback
-  const sidebarBrands =
-    dbBrands.length > 0
-      ? dbBrands.slice(0, 5).map((b) => ({
-          name: b.name,
-          logo: b.logoUrl || "/assets/img/mercedes.png",
-          slug: b.slug,
-        }))
-      : Array(5)
-          .fill(null)
-          .map((_, i) => ({
-            name: "MERCEDES",
-            logo: "/assets/img/mercedes.png",
-          }));
+  // Left sidebar brands from DB
+  const sidebarBrands = dbBrands.slice(0, 5).map((b) => ({
+    name: b.name,
+    logo: b.logoUrl || "/uploads/no-photo.png",
+    slug: b.slug,
+  }));
 
-  // Hero strip brand logos (static)
-  const heroStripBrands = [
-    { name: "HAVAL", logo: "/assets/img/haval.png" },
-    { name: "CHERY", logo: "/assets/img/chery.png" },
-    { name: "JAC", logo: "/assets/img/jac.png" },
-    { name: "CHANGAN", logo: "/assets/img/changan.png" },
-    { name: "BYD", logo: "/assets/img/byd.png" },
-  ];
+  // Hero strip brand logos
+  const heroStripBrands = dbBrands.slice(0, 5).map((b) => ({
+    name: b.name,
+    logo: b.logoUrl || "/uploads/no-photo.png",
+  }));
 
   // Main catalog brands grid matching reference design
-  const catalogBrands =
-    dbBrands.length > 0
-      ? dbBrands.map((b) => ({
-          name: b.name,
-          logo: b.logoUrl || "/assets/img/mercedes.png",
-        }))
-      : [
-          { name: "HAVAL", logo: "/assets/img/haval.png" },
-          { name: "CHERY", logo: "/assets/img/chery.png" },
-          { name: "JAC", logo: "/assets/img/jac.png" },
-          { name: "CHANGAN", logo: "/assets/img/changan.png" },
-          { name: "BYD", logo: "/assets/img/byd.png" },
-        ];
+  const catalogBrands = dbBrands.map((b) => ({
+    name: b.name,
+    logo: b.logoUrl || "/uploads/no-photo.png",
+    slug: b.slug,
+  }));
 
   // 4 Info Benefits items
   const benefits = [

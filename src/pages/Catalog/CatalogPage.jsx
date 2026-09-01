@@ -42,53 +42,12 @@ export const CatalogPage = () => {
       .catch((err) => console.error("Failed to load brands in catalog:", err));
   }, []);
 
-  const fallbackBrands = [
-    {
-      name: "HAVAL",
-      logoUrl: "",
-      heroUrl: "",
-      models: [
-        { id: "f7", name: "Haval F7", photoUrl: "" },
-        { id: "jolion", name: "Haval Jolion", photoUrl: "" },
-      ],
-    },
-    {
-      name: "TOYOTA",
-      logoUrl: "",
-      heroUrl: "",
-      models: [
-        { id: "camry", name: "Toyota Camry", photoUrl: "" },
-        { id: "rav4", name: "Toyota RAV4", photoUrl: "" },
-      ],
-    },
-    {
-      name: "BMW",
-      logoUrl: "",
-      heroUrl: "",
-      models: [
-        { id: "m5", name: "BMW M5", photoUrl: "" },
-        { id: "x5", name: "BMW X5", photoUrl: "" },
-      ],
-    },
-  ];
-
-  const brandsList = apiBrands.length > 0 ? apiBrands : fallbackBrands;
+  const brandsList = apiBrands;
   const currentBrandObj =
     brandsList.find((b) => b.name === selectedBrand) || brandsList[0];
   const currentModels = currentBrandObj ? currentBrandObj.models || [] : [];
 
-  // Default Categories (Stage 2 Fallback)
-  const defaultCategories = [
-    { id: "tires", name: "Шины и диски", img: "/assets/img/test_accessosry.png" },
-    { id: "oils", name: "Масла и автохимия", img: "/assets/img/test_accessosry.png" },
-    { id: "brakes", name: "Тормозная система", img: "/assets/img/test_accessosry.png" },
-    { id: "batteries", name: "Аккумуляторы", img: "/assets/img/test_accessosry.png" },
-    { id: "filters", name: "Фильтры", img: "/assets/img/test_accessosry.png" },
-    { id: "ignition", name: "Зажигание и электрика", img: "/assets/img/test_accessosry.png" },
-    { id: "suspension", name: "Подвеска и рулевое", img: "/assets/img/test_accessosry.png" },
-  ];
-
-  const rawCategories = apiCategories && apiCategories.length > 0 ? apiCategories : defaultCategories;
+  const rawCategories = apiCategories || [];
   const categoriesList = rawCategories.filter((cat) => cat.status !== "disabled");
 
   // Sync state from URL parameters

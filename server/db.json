@@ -1,50 +1,5 @@
 {
-  "products": [
-    {
-      "id": 1788111648471,
-      "title": "Шины",
-      "sku": "SKU9765",
-      "brand": "Michelin",
-      "price": 20000,
-      "oldPrice": 79999,
-      "stockQty": 8990,
-      "inStock": true,
-      "categoryId": "dvigatel",
-      "categoryName": "Двигатель",
-      "status": "enabled",
-      "carMake": "Универсальный",
-      "carModel": "Все модели",
-      "seller_id": null,
-      "image": "/uploads/no-photo.png",
-      "images": [],
-      "specs": [],
-      "slug": "shiny"
-    },
-    {
-      "title": "Шины",
-      "sku": "SKU9766",
-      "brand": "Michelin",
-      "price": 30000,
-      "oldPrice": 79999,
-      "stockQty": 8980,
-      "categoryId": "dvigatel",
-      "categoryName": "Двигатель",
-      "status": "enabled",
-      "image": "/uploads/product-1788111457804-3336.webp",
-      "images": [],
-      "isUniversal": true,
-      "carMakes": [],
-      "carModels": [],
-      "description": "Описание товара",
-      "specs": [],
-      "slug": "shiny",
-      "inStock": true,
-      "carMake": "Универсальный",
-      "carModel": "Все модели",
-      "seller_id": "sel-1788111368278",
-      "id": 1788111462888
-    }
-  ],
+  "products": [],
   "categories": [
     {
       "id": "detali-dlya-to",
@@ -59,7 +14,7 @@
       "id": "dvigatel",
       "name": "Двигатель",
       "slug": "dvigatel",
-      "count": 2,
+      "count": 0,
       "parentId": null,
       "status": "enabled",
       "img": "/uploads/category-1787676807165-7141.webp"
@@ -185,84 +140,18 @@
       "status": "enabled"
     }
   ],
-  "orders": [
-    {
-      "id": "000001",
-      "date": "2026-08-30 17:38",
-      "customerName": "Ердаулет Бекузак",
-      "customerPhone": "+7 (700) 244-57-10",
-      "customerEmail": "werdikw199@gmail.com",
-      "customerId": 1788111307455,
-      "address": "Самовывоз из автохаба (Астана)",
-      "status": "delivered",
-      "statusText": "Доставлен",
-      "totalPrice": 499400,
-      "paymentMethod": "Freedom Pay (Банковская карта)",
-      "comment": "",
-      "bonusSpent": 5000,
-      "bonusEarned": 0,
-      "itemsCount": 1,
-      "items": [
-        {
-          "id": 1788111462888,
-          "title": "Шины",
-          "price": 52000,
-          "quantity": 10,
-          "qty": 10,
-          "sku": "SKU9766",
-          "article": "SKU9766",
-          "image": "/uploads/product-1788111457804-3336.webp",
-          "product": {
-            "title": "Шины",
-            "sku": "SKU9766",
-            "brand": "Michelin",
-            "price": 52000,
-            "oldPrice": 79999,
-            "stockQty": 9000,
-            "categoryId": "dvigatel",
-            "categoryName": "Двигатель",
-            "status": "enabled",
-            "image": "/uploads/product-1788111457804-3336.webp",
-            "images": [],
-            "isUniversal": true,
-            "carMakes": [],
-            "carModels": [],
-            "description": "Описание товара",
-            "specs": [],
-            "slug": "shiny",
-            "inStock": true,
-            "carMake": "Универсальный",
-            "carModel": "Все модели",
-            "seller_id": "sel-1788111368278",
-            "id": 1788111462888
-          }
-        }
-      ],
-      "stockDeducted": true
-    }
-  ],
+  "orders": [],
   "customers": [
     {
-      "id": 1788111307455,
-      "name": "Ердаулет Бекузак",
-      "phone": "+7 (700) 244-57-10",
-      "email": "werdikw199@gmail.com",
-      "city": "Астана",
-      "totalOrders": 1,
-      "totalSpent": 499400,
-      "bonusBalance": 0,
-      "registeredDate": "2026-08-30"
-    },
-    {
-      "id": 1788110565407,
-      "name": "Даурен Бекузаков",
+      "id": 1788169737484,
+      "name": "Даурен",
       "phone": "+7 (700) 244-57-18",
       "email": "bekuzakovd@gmail.com",
-      "city": "Тараз",
+      "city": "Астана",
       "totalOrders": 0,
       "totalSpent": 0,
       "bonusBalance": 5000,
-      "registeredDate": "2026-08-30"
+      "registeredDate": "2026-08-31"
     }
   ],
   "banners": [],
@@ -948,19 +837,19 @@
   ],
   "sellers": [
     {
-      "id": "sel-1788111368278",
-      "code": "SUP-7745",
-      "name": "Автогид Тараз",
-      "username": "autogid",
-      "password": "1234",
-      "password_hash": "$2b$10$ciHYEfTaMsW27.2rBwCrM.uIL0GZiZ88zBnI3tZMMXZzp4NUhSj/e",
-      "email": "autogid@mail.ru",
+      "id": "sel-1788169340455",
+      "code": "SUP-2768",
+      "name": "Тестовый поставщик",
+      "username": "test01",
+      "password": "123",
+      "password_hash": "$2b$10$RVUP2gMls0TXFouAsC/I8uACE2W0n.J.4JFRPq4.7jGvl4ulqxwqa",
+      "email": "test@mail.ru",
       "phone": "+7 (777) 777-77-77",
-      "city": "Тараз",
+      "city": "Астана",
       "store_id": null,
       "commission_rate": 10,
       "status": "active",
-      "createdAt": "2026-08-30"
+      "createdAt": "2026-08-31"
     }
   ],
   "stores": [

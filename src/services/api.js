@@ -3,7 +3,7 @@
  * Senior-level HTTP Service with safe response handling and zero HTML parse crashes.
  */
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 export async function requestApi(endpoint, options = {}) {
   const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
