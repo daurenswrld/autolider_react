@@ -391,13 +391,17 @@ export const AdminProducts = () => {
     try {
       const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
       if (res.ok) {
-        setProducts((prev) => prev.filter((p) => p.id !== id));
+        setProducts((prev) => prev.filter((p) => String(p.id) !== String(id)));
         if (refreshProducts) refreshProducts();
         if (refreshCategories) refreshCategories();
         showToast(`Товар "${title}" удален`);
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        showToast(errData.message || "Ошибка при удалении товара", "error");
       }
     } catch (err) {
       console.error("Failed to delete product:", err);
+      showToast("Ошибка соединения с сервером", "error");
     }
   };
 
