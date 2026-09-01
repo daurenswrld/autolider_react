@@ -280,9 +280,7 @@ app.post('/api/auth/send-otp', checkIpBan, otpRateLimiter, async (req, res) => {
     success: true,
     isRegistered: !!existingUser,
     message: `Код подтверждения отправлен на ${cleanTarget}`,
-    otpToken,
-    otpCode: code,
-    demoCode: code
+    otpToken
   });
 });
 
@@ -319,10 +317,6 @@ app.post('/api/auth/verify-otp', (req, res) => {
     if (record && String(record.code) === inputCode && record.expiresAt > Date.now()) {
       isValidCode = true;
     }
-  }
-
-  if (!isValidCode && (inputCode === '7777' || inputCode === '0000')) {
-    isValidCode = true;
   }
 
   if (!isValidCode) {

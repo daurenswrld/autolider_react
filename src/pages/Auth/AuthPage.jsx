@@ -123,8 +123,8 @@ export const AuthPage = () => {
       setTimer(60);
       setCanResend(false);
       const msg = data.demoCode
-        ? `${data.message || 'Код отправлен'}. Тестовый код: ${data.demoCode}`
-        : (data.message || `Код отправлен на ${email}`);
+        ? `${data.message || "Код отправлен"}. Тестовый код: ${data.demoCode}`
+        : data.message || `Код отправлен на ${email}`;
       if (showToast) showToast(msg, "success", 4000);
 
       setTimeout(() => {
@@ -186,7 +186,7 @@ export const AuthPage = () => {
         localStorage.setItem("autolider_token", data.token);
 
         if (showToast)
-          showToast(`🎉 С возвращением, ${data.user.name}!`, "success", 3000);
+          showToast(`С возвращением, ${data.user.name}!`, "success", 3000);
         navigate("/profile");
       } else {
         setStep("register");
@@ -230,7 +230,8 @@ export const AuthPage = () => {
       return;
     }
 
-    const finalCity = regData.city === "Другое" ? customCity.trim() : regData.city;
+    const finalCity =
+      regData.city === "Другое" ? customCity.trim() : regData.city;
     if (regData.city === "Другое" && !customCity.trim()) {
       setErrorMsg("Укажите название вашего города");
       return;
@@ -337,8 +338,6 @@ export const AuthPage = () => {
             <p className="auth-page__subtitle">
               Мы отправили 4-значный код на <b>{email}</b>
             </p>
-
-
 
             <div className="page-otp-grid">
               {otpDigits.map((digit, idx) => (
