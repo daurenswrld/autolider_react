@@ -82,6 +82,8 @@ const checkIpBan = (req, res, next) => {
     bannedIPs.delete(clientIp);
   }
   next();
+};
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', environment: process.env.VERCEL ? 'vercel' : 'local', timestamp: new Date().toISOString() });
 });
