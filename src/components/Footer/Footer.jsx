@@ -99,7 +99,7 @@ export const Footer = () => {
           {/* Column 4: Brand Circular Logo */}
           <div className="footer-col footer-logo-col">
             <img
-              src="/assets/img/logo.png"
+              src="/assets/img/logo.webp"
               alt="AUTOLIDER TRADE"
               className="footer-logo"
               onError={(e) => {

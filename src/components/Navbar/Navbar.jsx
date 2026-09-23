@@ -58,7 +58,7 @@ export const Navbar = ({ onOpenSearch }) => {
         {/* Left: Logo */}
         <Link to="/" className="navbar-logo-link">
           <img
-            src="/assets/img/logo.png"
+            src="/assets/img/logo.webp"
             alt="AUTOLIDER TRADE"
             className="navbar-logo"
             onError={(e) => {

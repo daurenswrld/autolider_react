@@ -124,7 +124,7 @@ export const HeroSection = () => {
       ),
       subtitle: "Доставка 7 - 10 дней",
       btnText: "НАЙТИ ЗАПЧАСТЬ",
-      image: "/assets/img/hero-img.png",
+      image: "/assets/img/hero-car.webp",
     },
     {
       title: (
@@ -134,7 +134,7 @@ export const HeroSection = () => {
       ),
       subtitle: "В наличии и под заказ",
       btnText: "СМОТРЕТЬ КАТАЛОГ",
-      image: "/assets/img/hero-img.png",
+      image: "/assets/img/hero-car.webp",
     },
   ];
 
@@ -172,7 +172,7 @@ export const HeroSection = () => {
           subtitle: b.subtitle,
           btnText: (b.btnText || "ПОДРОБНЕЕ").toUpperCase(),
           btnLink: b.btnLink || "/catalog",
-          image: b.image || "/assets/img/hero-img.png",
+          image: b.image || "/assets/img/hero-car.webp",
         }))
       : adSlides;
 
@@ -197,22 +197,22 @@ export const HeroSection = () => {
   // 4 Info Benefits items
   const benefits = [
     {
-      icon: "/assets/img/info-1.png",
+      icon: "/assets/img/info-1.webp",
       title: "Доставка",
       subtitle: "По всему Казахстану",
     },
     {
-      icon: "/assets/img/info-2.png",
+      icon: "/assets/img/info-2.webp",
       title: "Прямые поставки",
       subtitle: "Из Китая",
     },
     {
-      icon: "/assets/img/info-3.png",
+      icon: "/assets/img/info-3.webp",
       title: "Цены ниже",
       subtitle: "Рынка",
     },
     {
-      icon: "/assets/img/info-4.png",
+      icon: "/assets/img/info-4.webp",
       title: "Подбор по VIN",
       subtitle: "За 5 минут",
     },
@@ -432,12 +432,12 @@ export const HeroSection = () => {
             {/* Right SUV Car Image */}
             <div className="banner-car-wrapper">
               <img
-                src="/assets/img/hero-img.png"
+                src="/assets/img/hero-car.webp"
                 alt="Autolider SUV Car"
                 className="banner-car-image"
                 onError={(e) => {
                   e.target.onerror = null;
-                  e.target.src = "/assets/img/hero-img.png";
+                  e.target.src = "/assets/img/hero-car.webp";
                 }}
               />
             </div>
@@ -533,7 +533,7 @@ export const HeroSection = () => {
                         draggable="false"
                         onError={(e) => {
                           e.target.onerror = null;
-                          e.target.src = "/assets/img/hero-img.png";
+                          e.target.src = "/assets/img/hero-car.webp";
                         }}
                       />
                     </div>

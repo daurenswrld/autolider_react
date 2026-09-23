@@ -281,7 +281,7 @@ export const AuthPage = () => {
         <div className="auth-page__logo">
           <Link to="/">
             <img
-              src="/assets/img/logo.png"
+              src="/assets/img/logo.webp"
               alt="AUTOLIDER"
               onError={(e) => {
                 e.target.onerror = null;
