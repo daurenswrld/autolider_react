@@ -110,10 +110,10 @@
 }
 
 .sidebar-brand-logo {
-  width: 29px;
-  height: 29px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1));
+  mix-blend-mode: multiply;
 }
 
 /* Sidebar QR Box */
@@ -251,7 +251,7 @@
 }
 
 .strip-brand-img {
-  max-height: 35px;
+  max-height: 48px;
   width: auto;
   object-fit: contain;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
@@ -413,13 +413,12 @@
 }
 
 .brand-logo-img {
-  height: 70px;
-  max-height: 74px;
+  height: 96px;
   width: auto;
-  max-width: 90%;
+  max-width: 100%;
   object-fit: contain;
   margin-bottom: 8px;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.08));
+  mix-blend-mode: multiply;
   transition: transform 0.2s ease;
 }
 
@@ -843,6 +842,12 @@
 }
 
 @media (max-width: 768px) {
+  .strip-brand-img {
+    max-height: 35px;
+  }
+  .brand-logo-img {
+    height: 72px;
+  }
   .hero-banner-content {
     flex-direction: column;
     align-items: flex-start;
