@@ -320,6 +320,85 @@
   gap: 20px;
 }
 
+/* Price filter & sorting toolbar */
+.catalog-toolbar {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+  padding: 14px 16px;
+  background: #f8f9fc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+.catalog-toolbar-price,
+.catalog-toolbar-sort {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.catalog-toolbar-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111216;
+  white-space: nowrap;
+}
+
+.catalog-toolbar-input,
+.catalog-toolbar-select {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #d5d9e2;
+  border-radius: 8px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  color: #111216;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.catalog-toolbar-input {
+  width: 120px;
+}
+
+.catalog-toolbar-input:focus,
+.catalog-toolbar-select:focus {
+  border-color: #e63125;
+  box-shadow: 0 0 0 3px rgba(230, 49, 37, 0.12);
+}
+
+.catalog-toolbar-dash {
+  color: #94a3b8;
+}
+
+.catalog-toolbar-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.catalog-toolbar-reset {
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: #e63125;
+  cursor: pointer;
+}
+
+.catalog-toolbar-reset:hover {
+  text-decoration: underline;
+}
+
 .product-card {
   background: #ffffff;
   border-radius: 14px;
@@ -611,7 +690,33 @@
     font-size: 13px;
   }
   .products-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .catalog-toolbar {
+    padding: 12px;
+    min-width: 0;
+  }
+  .catalog-toolbar-price,
+  .catalog-toolbar-sort {
+    width: 100%;
+  }
+  .catalog-toolbar-label {
+    min-width: 88px;
+  }
+  .catalog-toolbar-input {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+    font-size: 16px; /* prevents iOS zoom on focus */
+  }
+  .catalog-toolbar-select {
+    flex: 1;
+    font-size: 16px;
+  }
+  .catalog-toolbar-summary {
+    margin-left: 0;
+    width: 100%;
+    justify-content: space-between;
   }
 }
 

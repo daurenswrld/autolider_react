@@ -31,6 +31,11 @@ export const CatalogPage = () => {
   const [favorites, setFavorites] = useState({});
   const [addedItems, setAddedItems] = useState({});
 
+  // Price filter & sorting (Stage 3)
+  const [priceFrom, setPriceFrom] = useState("");
+  const [priceTo, setPriceTo] = useState("");
+  const [sortBy, setSortBy] = useState("default");
+
   useEffect(() => {
     fetch("/api/brands")
       .then((res) => res.json())
@@ -162,6 +167,31 @@ export const CatalogPage = () => {
 
   // Products List (Stage 3)
   const productsList = products;
+
+  // Price range belongs to the category being viewed — clear it when the category changes
+  useEffect(() => {
+    setPriceFrom("");
+    setPriceTo("");
+  }, [selectedCategory]);
+
+  const applyPriceAndSort = (items) => {
+    const min = priceFrom !== "" ? Number(priceFrom) : null;
+    const max = priceTo !== "" ? Number(priceTo) : null;
+    const result = items.filter((p) => {
+      const price = Number(p.price) || 0;
+      return (min === null || price >= min) && (max === null || price <= max);
+    });
+    if (sortBy === "price_asc") result.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
+    if (sortBy === "price_desc") result.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
+    if (sortBy === "new") result.sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0));
+    return result;
+  };
+
+  const resetPriceAndSort = () => {
+    setPriceFrom("");
+    setPriceTo("");
+    setSortBy("default");
+  };
 
   const formatItemCount = (count) => {
     const lastTwo = count % 100;
@@ -590,6 +620,72 @@ export const CatalogPage = () => {
                       return matchesBrand && matchesModel && matchesCat;
                     });
 
+                    const visible = applyPriceAndSort(filtered);
+                    const hasPriceOrSort = priceFrom !== "" || priceTo !== "" || sortBy !== "default";
+                    const prices = filtered.map((p) => Number(p.price) || 0);
+                    const toolbar = filtered.length > 0 && (
+                      <div key="catalog-toolbar" className="catalog-toolbar">
+                        <div className="catalog-toolbar-price">
+                          <span className="catalog-toolbar-label">Цена, ₸</span>
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            min="0"
+                            className="catalog-toolbar-input"
+                            placeholder={`от ${new Intl.NumberFormat("ru-RU").format(Math.min(...prices))}`}
+                            value={priceFrom}
+                            onChange={(e) => setPriceFrom(e.target.value)}
+                            aria-label="Цена от"
+                          />
+                          <span className="catalog-toolbar-dash">—</span>
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            min="0"
+                            className="catalog-toolbar-input"
+                            placeholder={`до ${new Intl.NumberFormat("ru-RU").format(Math.max(...prices))}`}
+                            value={priceTo}
+                            onChange={(e) => setPriceTo(e.target.value)}
+                            aria-label="Цена до"
+                          />
+                        </div>
+                        <div className="catalog-toolbar-sort">
+                          <span className="catalog-toolbar-label">Сортировка</span>
+                          <select
+                            className="catalog-toolbar-select"
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            aria-label="Сортировка"
+                          >
+                            <option value="default">По умолчанию</option>
+                            <option value="price_asc">Сначала дешевле</option>
+                            <option value="price_desc">Сначала дороже</option>
+                            <option value="new">Сначала новые</option>
+                          </select>
+                        </div>
+                        <div className="catalog-toolbar-summary">
+                          <span>Найдено: {formatItemCount(visible.length)}</span>
+                          {hasPriceOrSort && (
+                            <button type="button" className="catalog-toolbar-reset" onClick={resetPriceAndSort}>
+                              Сбросить
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+
+                    if (filtered.length > 0 && visible.length === 0) {
+                      return (
+                        <>
+                          {toolbar}
+                          <div className="no-products-msg" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "40px 20px", color: "#64748b" }}>
+                            <h3>В этом диапазоне цен товаров нет</h3>
+                            <p>Измените цену или нажмите «Сбросить»</p>
+                          </div>
+                        </>
+                      );
+                    }
+
                     if (filtered.length === 0) {
                       return (
                         <div
@@ -609,7 +705,7 @@ export const CatalogPage = () => {
                       );
                     }
 
-                    return filtered.map((p) => {
+                    return [toolbar, ...visible.map((p) => {
                       const qty = cartQuantities[p.id] || 1;
                       const isFav = isInWishlist
                         ? isInWishlist(p.id)
@@ -734,7 +830,7 @@ export const CatalogPage = () => {
                           </div>
                         </div>
                       );
-                    });
+                    })];
                   })()}
                 </div>
               </div>
