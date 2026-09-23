@@ -10,6 +10,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { readDB, writeDB } from './database.js';
 import sqliteDb from './sqlite-db.js';
 import nodemailer from 'nodemailer';
@@ -178,8 +179,30 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
+// Customer session token (Authorization: Bearer <token>)
+function signCustomerToken(customer) {
+  return jwt.sign({ customerId: customer.id, phone: customer.phone, roleKey: 'customer' }, JWT_SECRET, { expiresIn: '30d' });
+}
+
+function getAuthCustomer(req, db) {
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : '';
+  if (!token) return null;
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    if (payload.roleKey !== 'customer' || !payload.customerId) return null;
+    return (db.customers || []).find((c) => String(c.id) === String(payload.customerId)) || null;
+  } catch (e) {
+    return null;
+  }
+}
+
 // In-memory OTP code store
 const otpStore = new Map();
+
+function hashOtp(target, code) {
+  return crypto.createHmac('sha256', JWT_SECRET).update(`${target}:${code}`).digest('hex');
+}
 
 function generateOTP() {
   return String(Math.floor(1000 + Math.random() * 9000));
@@ -213,7 +236,8 @@ app.post('/api/auth/send-otp', checkIpBan, otpRateLimiter, async (req, res) => {
 
   const code = generateOTP();
   const expiresAt = Date.now() + 5 * 60 * 1000;
-  const otpToken = jwt.sign({ target: cleanTarget, code, expiresAt }, JWT_SECRET, { expiresIn: '10m' });
+  // The token goes to the browser, so it carries only a keyed hash of the code, never the code itself
+  const otpToken = jwt.sign({ target: cleanTarget, codeHash: hashOtp(cleanTarget, code), expiresAt }, JWT_SECRET, { expiresIn: '10m' });
   otpStore.set(cleanTarget, { code, expiresAt, createdAt: Date.now(), user: existingUser || null });
 
   // 1. Gmail SMTP Dispatcher (App Password)
@@ -302,7 +326,7 @@ app.post('/api/auth/verify-otp', (req, res) => {
       if (
         decoded &&
         decoded.target === target &&
-        String(decoded.code) === inputCode &&
+        decoded.codeHash === hashOtp(target, inputCode) &&
         decoded.expiresAt > Date.now()
       ) {
         isValidCode = true;
@@ -348,8 +372,7 @@ app.post('/api/auth/verify-otp', (req, res) => {
   }
 
   if (user) {
-    const payload = { customerId: user.id, phone: user.phone, roleKey: 'customer' };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' });
+    const token = signCustomerToken(user);
     return res.json({
       success: true,
       isRegistered: true,
@@ -364,6 +387,8 @@ app.post('/api/auth/verify-otp', (req, res) => {
       isRegistered: false,
       requiresRegistration: true,
       email: target,
+      // Proof that this email passed OTP; required by /api/auth/register
+      registrationToken: jwt.sign({ target, purpose: 'register' }, JWT_SECRET, { expiresIn: '30m' }),
       message: 'Подтверждено. Завершите регистрацию профиля.'
     });
   }
@@ -378,13 +403,23 @@ app.post('/api/auth/register', (req, res) => {
   }
 
   const cleanEmail = email.toLowerCase().trim();
+
+  let verifiedTarget = null;
+  try {
+    const decoded = jwt.verify(req.body.registrationToken || '', JWT_SECRET);
+    if (decoded.purpose === 'register') verifiedTarget = decoded.target;
+  } catch (e) {}
+  if (verifiedTarget !== cleanEmail) {
+    return res.status(401).json({ success: false, message: 'Подтвердите почту кодом из письма и повторите регистрацию' });
+  }
+
   const db = readDB();
 
   let user = db.customers.find((c) => c.email && c.email.toLowerCase() === cleanEmail);
   if (user) {
     return res.json({
       success: true,
-      token: `autolider-jwt-customer-${user.id}`,
+      token: signCustomerToken(user),
       user
     });
   }
@@ -410,7 +445,7 @@ app.post('/api/auth/register', (req, res) => {
 
   return res.status(201).json({
     success: true,
-    token: `autolider-jwt-customer-${newCustomer.id}`,
+    token: signCustomerToken(newCustomer),
     user: newCustomer,
     message: `Регистрация завершена! Вам начислено ${welcomeBonus.toLocaleString('ru-RU')} бонусов 🎁`
   });
@@ -1183,6 +1218,28 @@ app.get('/api/orders/count', (req, res) => {
 app.get('/api/orders', (req, res) => {
   const db = readDB();
   res.json(db.orders);
+});
+
+// Orders of the logged-in customer only (personal account)
+app.get('/api/my/orders', (req, res) => {
+  const db = readDB();
+  const customer = getAuthCustomer(req, db);
+  if (!customer) {
+    return res.status(401).json({ success: false, message: 'Войдите в аккаунт, чтобы увидеть свои заказы' });
+  }
+
+  const digits = (v) => String(v || '').replace(/\D/g, '').slice(-10);
+  const phone = digits(customer.phone);
+  const email = (customer.email || '').toLowerCase();
+
+  // Guest / one-click orders have no customerId — match them by the customer's phone or email
+  const own = (db.orders || []).filter((o) =>
+    o.customerId
+      ? String(o.customerId) === String(customer.id)
+      : (phone.length === 10 && digits(o.customerPhone) === phone) ||
+        (email && (o.customerEmail || '').toLowerCase() === email)
+  );
+  res.json(own);
 });
 
 function syncCustomerRecord(db, customerName, customerPhone, customerEmail, orderPrice, bonusSpent = 0, bonusEarned = 0, customerId = null) {

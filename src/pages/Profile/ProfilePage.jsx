@@ -129,12 +129,13 @@ export const ProfilePage = () => {
   const [loadingOrders, setLoadingOrders] = useState(true);
 
   React.useEffect(() => {
-    fetch('/api/orders')
+    // Only this customer's orders; the token is issued at login / registration
+    fetch('/api/my/orders', {
+      headers: { Authorization: `Bearer ${localStorage.getItem('autolider_token') || ''}` }
+    })
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data)) {
-          setOrders(data);
-        }
+        setOrders(Array.isArray(data) ? data : []);
       })
       .catch((err) => console.warn('Order fetch error:', err))
       .finally(() => setLoadingOrders(false));

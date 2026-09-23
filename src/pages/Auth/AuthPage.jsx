@@ -71,6 +71,7 @@ export const AuthPage = () => {
   const [customCity, setCustomCity] = useState("");
 
   const [otpToken, setOtpToken] = useState("");
+  const [registrationToken, setRegistrationToken] = useState("");
 
   // OTP Timer
   useEffect(() => {
@@ -189,6 +190,7 @@ export const AuthPage = () => {
           showToast(`С возвращением, ${data.user.name}!`, "success", 3000);
         navigate("/profile");
       } else {
+        setRegistrationToken(data.registrationToken || "");
         setStep("register");
         setRegData((prev) => ({ ...prev, email }));
         if (showToast)
@@ -248,6 +250,7 @@ export const AuthPage = () => {
           name: regData.name,
           phone: regData.phone,
           city: finalCity,
+          registrationToken,
         }),
       });
 
