@@ -264,51 +264,31 @@ export const ProfilePage = () => {
     try {
       const res = await fetch('/api/auth/profile', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('autolider_token') || ''}`
+        },
         body: JSON.stringify({
-          email: formData.email || currentUser?.email,
+          email: formData.email,
           name: formData.fullName,
           phone: formData.phone,
           city: finalCity
         })
       });
+      const data = await res.json().catch(() => ({}));
 
-      let updatedUserData;
-      if (res.ok) {
-        const data = await res.json();
-        updatedUserData = data.user || {
-          ...currentUser,
-          name: formData.fullName,
-          phone: formData.phone,
-          email: formData.email,
-          city: finalCity
-        };
-      } else {
-        updatedUserData = {
-          ...currentUser,
-          name: formData.fullName,
-          phone: formData.phone,
-          email: formData.email,
-          city: finalCity
-        };
+      // Show the saved state only when the server confirmed it
+      if (!res.ok || !data.user) {
+        if (showToast) showToast(data.message || 'Не удалось сохранить профиль. Попробуйте ещё раз', 'error');
+        return;
       }
 
-      if (setCurrentUser) setCurrentUser(updatedUserData);
-      localStorage.setItem('autolider_user', JSON.stringify(updatedUserData));
+      if (setCurrentUser) setCurrentUser(data.user);
+      localStorage.setItem('autolider_user', JSON.stringify(data.user));
       if (showToast) showToast('Личные данные профиля обновлены', 'success');
       setIsEditing(false);
     } catch (err) {
-      const fallbackUser = {
-        ...currentUser,
-        name: formData.fullName,
-        phone: formData.phone,
-        email: formData.email,
-        city: finalCity
-      };
-      if (setCurrentUser) setCurrentUser(fallbackUser);
-      localStorage.setItem('autolider_user', JSON.stringify(fallbackUser));
-      if (showToast) showToast('Личные данные профиля обновлены', 'success');
-      setIsEditing(false);
+      if (showToast) showToast('Нет связи с сервером. Изменения не сохранены', 'error');
     } finally {
       setIsSaving(false);
     }

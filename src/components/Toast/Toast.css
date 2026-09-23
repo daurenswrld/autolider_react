@@ -32,6 +32,10 @@
   color: #f59e0b;
 }
 
+.toast-icon.error {
+  color: #ef4444;
+}
+
 .toast-icon.info {
   color: #3b82f6;
 }

@@ -452,51 +452,45 @@ app.post('/api/auth/register', (req, res) => {
 });
 
 // Update Profile Endpoint
+// Edits the logged-in customer (from the Bearer token): name, phone, city, email
 app.put('/api/auth/profile', (req, res) => {
-  const { email, name, phone, city } = req.body;
-
-  if (!email) {
-    return res.status(400).json({ success: false, message: 'Укажите email пользователя' });
-  }
-
-  const cleanEmail = email.toLowerCase().trim();
   const db = readDB();
-  const index = db.customers.findIndex((c) => c.email && c.email.toLowerCase() === cleanEmail);
-
-  if (index !== -1) {
-    db.customers[index] = {
-      ...db.customers[index],
-      name: name || db.customers[index].name,
-      phone: phone || db.customers[index].phone,
-      city: city || db.customers[index].city
-    };
-    writeDB(db);
-    return res.json({
-      success: true,
-      user: db.customers[index],
-      message: 'Данные профиля обновлены'
-    });
-  } else {
-    const updatedUser = {
-      id: Date.now(),
-      name: name || 'Пользователь',
-      email: cleanEmail,
-      phone: phone || '',
-      city: city || 'Астана',
-      status: 'Active',
-      ordersCount: 0,
-      totalSpent: 0,
-      bonusBalance: 500,
-      registeredDate: new Date().toISOString().slice(0, 10)
-    };
-    db.customers.unshift(updatedUser);
-    writeDB(db);
-    return res.json({
-      success: true,
-      user: updatedUser,
-      message: 'Профиль сохранен'
-    });
+  const customer = getAuthCustomer(req, db);
+  if (!customer) {
+    return res.status(401).json({ success: false, message: 'Сессия истекла. Войдите в аккаунт заново' });
   }
+
+  const { email, name, phone, city } = req.body;
+  const index = db.customers.findIndex((c) => String(c.id) === String(customer.id));
+
+  let nextEmail = db.customers[index].email || '';
+  if (email !== undefined && email.trim().toLowerCase() !== nextEmail.toLowerCase()) {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      return res.status(400).json({ success: false, message: 'Проверьте email — похоже, в адресе ошибка' });
+    }
+    const taken = db.customers.some(
+      (c) => String(c.id) !== String(customer.id) && c.email && c.email.toLowerCase() === cleanEmail
+    );
+    if (taken) {
+      return res.status(409).json({ success: false, message: 'Этот email уже используется другим аккаунтом' });
+    }
+    nextEmail = cleanEmail;
+  }
+
+  db.customers[index] = {
+    ...db.customers[index],
+    name: name?.trim() || db.customers[index].name,
+    phone: phone?.trim() || db.customers[index].phone,
+    city: city?.trim() || db.customers[index].city,
+    email: nextEmail
+  };
+  writeDB(db);
+  return res.json({
+    success: true,
+    user: db.customers[index],
+    message: 'Данные профиля обновлены'
+  });
 });
 
 // Dynamic Chart Calculator
