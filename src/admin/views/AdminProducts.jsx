@@ -1,3 +1,4 @@
+import { adminFetch } from '../../services/adminFetch';
 import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import {
@@ -144,11 +145,11 @@ export const AdminProducts = () => {
         ? `/api/products?all=true&seller_id=${sellerId}`
         : '/api/products?all=true';
       const [resProd, resCat, resBrands, resForeign, resSellers] = await Promise.all([
-        fetch(productsUrl),
-        fetch("/api/categories?all=true"),
-        fetch("/api/brands?all=true"),
-        fetch("/api/foreign-brands?all=true"),
-        fetch("/api/sellers"),
+        adminFetch(productsUrl),
+        adminFetch("/api/categories?all=true"),
+        adminFetch("/api/brands?all=true"),
+        adminFetch("/api/foreign-brands?all=true"),
+        adminFetch("/api/sellers"),
       ]);
       if (resProd.ok) setProducts(await resProd.json());
       if (resCat.ok) setCategories(await resCat.json());
@@ -220,7 +221,7 @@ export const AdminProducts = () => {
 
     let liveProduct = { ...product };
     try {
-      const res = await fetch(`/api/products/${product.id}`);
+      const res = await adminFetch(`/api/products/${product.id}`);
       if (res.ok) {
         const fetched = await res.json();
         liveProduct = { ...product, ...fetched };
@@ -392,7 +393,7 @@ export const AdminProducts = () => {
       return;
 
     try {
-      const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
+      const res = await adminFetch(`/api/products/${id}`, { method: "DELETE" });
       if (res.ok) {
         setProducts((prev) => prev.filter((p) => String(p.id) !== String(id)));
         if (refreshProducts) refreshProducts();
@@ -471,7 +472,7 @@ export const AdminProducts = () => {
     try {
       if (editingId) {
         // Update product
-        const res = await fetch(`/api/products/${editingId}`, {
+        const res = await adminFetch(`/api/products/${editingId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -485,7 +486,7 @@ export const AdminProducts = () => {
         }
       } else {
         // Create new product
-        const res = await fetch("/api/products", {
+        const res = await adminFetch("/api/products", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -560,7 +561,7 @@ export const AdminProducts = () => {
           return;
         }
 
-        const res = await fetch("/api/products/import-excel", {
+        const res = await adminFetch("/api/products/import-excel", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ items: rawJson }),

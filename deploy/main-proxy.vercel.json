@@ -5,10 +5,7 @@
       "source": "/api/:path*",
       "destination": "https://rxbochoeobudllwztprq.supabase.co/functions/v1/autolider/api/:path*"
     },
-    {
-      "source": "/uploads/(.*)",
-      "destination": "/api/index.js"
-    },
+    { "source": "/uploads/(.*)", "destination": "/api/index.js" },
     {
       "source": "/((?!api|uploads|assets|.*\\..*).*)",
       "destination": "/index.html"

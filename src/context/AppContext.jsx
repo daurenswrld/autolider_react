@@ -1,3 +1,5 @@
+import { adminFetch } from '../services/adminFetch';
+import { customerFetch } from '../services/customerFetch';
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AppContext = createContext();
@@ -76,7 +78,7 @@ export const AppProvider = ({ children }) => {
   };
 
   const refreshProducts = () => {
-    fetch('/api/products')
+    adminFetch('/api/products')
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) setProducts(data);
@@ -122,27 +124,20 @@ export const AppProvider = ({ children }) => {
     try {
       const u = JSON.parse(saved);
       if (u && (u.email || u.id)) {
-        fetch('/api/customers')
+        customerFetch('/api/auth/profile')
           .then((res) => res.json())
-          .then((customers) => {
-            if (Array.isArray(customers)) {
-              const matched = customers.find(
-                (c) =>
-                  String(c.id) === String(u.id) ||
-                  (c.email && u.email && c.email.toLowerCase() === u.email.toLowerCase())
-              );
-              if (matched) {
+          .then((matched) => {
+            if (matched && !matched.message) {
                 const updated = { ...u, ...matched };
                 setCurrentUser(updated);
                 setUser(updated);
                 localStorage.setItem('autolider_user', JSON.stringify(updated));
-              } else {
+            } else if (matched?.message) {
                 // Customer profile was deleted from DB
                 setCurrentUser(null);
                 setUser(null);
                 localStorage.removeItem('autolider_user');
                 localStorage.removeItem('autolider_token');
-              }
             }
           })
           .catch((err) => console.warn('User sync error:', err));
@@ -290,7 +285,7 @@ export const AppProvider = ({ children }) => {
   // Product CRUD for Seller
   const addProduct = async (newProd) => {
     try {
-      const res = await fetch('/api/products', {
+      const res = await adminFetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newProd)
@@ -318,7 +313,7 @@ export const AppProvider = ({ children }) => {
 
   const updateProduct = async (id, updatedFields) => {
     try {
-      const res = await fetch(`/api/products/${id}`, {
+      const res = await adminFetch(`/api/products/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedFields)
@@ -340,7 +335,7 @@ export const AppProvider = ({ children }) => {
 
   const deleteProduct = async (id) => {
     try {
-      const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/products/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setProducts((prev) => prev.filter((p) => p.id !== id));
         showToast('Товар удален', 'warning');

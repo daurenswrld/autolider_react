@@ -4,6 +4,7 @@
  */
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+import { prepareUploadImage } from './prepareUploadImage';
 
 export async function requestApi(endpoint, options = {}) {
   const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
@@ -46,17 +47,19 @@ export async function requestApi(endpoint, options = {}) {
  */
 export async function uploadImageFile(file, type = 'img') {
   const formData = new FormData();
-  formData.append('image', file);
+  formData.append('image', await prepareUploadImage(file, type));
   formData.append('type', type);
 
   const url = `${API_BASE_URL}/api/upload`;
+  const sessionToken = localStorage.getItem('autolider_admin_token');
 
   try {
     const response = await fetch(url, {
       method: 'POST',
       body: formData,
       headers: {
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        ...(sessionToken ? { 'Authorization': `Bearer ${sessionToken}` } : {})
       }
     });
 

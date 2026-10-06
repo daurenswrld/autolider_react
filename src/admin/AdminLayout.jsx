@@ -1,3 +1,4 @@
+import { adminFetch } from '../services/adminFetch';
 import React, { useState, useEffect, useRef } from "react";
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
@@ -54,8 +55,8 @@ export const AdminLayout = () => {
   const fetchCounts = async () => {
     try {
       const [ordersRes, requestsRes] = await Promise.all([
-        fetch("/api/orders/count"),
-        fetch("/api/vin-requests/count"),
+        adminFetch("/api/orders/count"),
+        adminFetch("/api/vin-requests/count"),
       ]);
       if (ordersRes.ok) {
         const { count } = await ordersRes.json();
@@ -110,7 +111,7 @@ export const AdminLayout = () => {
   // Mark as seen when visiting orders or requests pages
   useEffect(() => {
     if (location.pathname === "/admin/orders") {
-      fetch("/api/orders/count")
+      adminFetch("/api/orders/count")
         .then((r) => r.json())
         .then(({ count }) => {
           localStorage.setItem("autolider_orders_seen_count", String(count));
@@ -119,7 +120,7 @@ export const AdminLayout = () => {
         .catch(() => {});
     }
     if (location.pathname === "/admin/requests") {
-      fetch("/api/vin-requests/count")
+      adminFetch("/api/vin-requests/count")
         .then((r) => r.json())
         .then(({ count }) => {
           localStorage.setItem("autolider_requests_seen_count", String(count));

@@ -1,3 +1,4 @@
+import { adminFetch } from '../../services/adminFetch';
 import React, { useState, useEffect } from "react";
 import {
   Plus,
@@ -64,7 +65,7 @@ export const AdminStores = () => {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/stores");
+      const res = await adminFetch("/api/stores");
       if (res.ok) setStores(await res.json());
     } catch (e) {}
     setLoading(false);
@@ -100,7 +101,7 @@ export const AdminStores = () => {
     }
     const method = editingId ? "PUT" : "POST";
     const url = editingId ? `/api/stores/${editingId}` : "/api/stores";
-    const res = await fetch(url, {
+    const res = await adminFetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
@@ -114,7 +115,7 @@ export const AdminStores = () => {
 
   const handleDelete = async (id, name) => {
     if (!window.confirm(`Удалить магазин "${name}"?`)) return;
-    const res = await fetch(`/api/stores/${id}`, { method: "DELETE" });
+    const res = await adminFetch(`/api/stores/${id}`, { method: "DELETE" });
     if (res.ok) {
       toast("Магазин удалён");
       load();

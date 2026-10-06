@@ -15,6 +15,11 @@ import { readDB, writeDB } from './database.js';
 import sqliteDb from './sqlite-db.js';
 import nodemailer from 'nodemailer';
 import sharp from 'sharp';
+import { put } from '@vercel/blob';
+import { guardAdminApi } from './admin-auth.js';
+import { uploadSupabaseImage } from './supabase-storage.js';
+
+const HOSTED = Boolean(process.env.VERCEL || process.env.STORAGE_BACKEND === 'supabase');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'autolider_super_secret_jwt_key_2026_kz';
 
@@ -22,7 +27,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
 
-if (!fs.existsSync(UPLOADS_DIR)) {
+if (!HOSTED && !fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
@@ -57,6 +62,10 @@ app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false 
 app.use(cors());
 app.use(express.json({ limit: '15mb' }));
 app.use('/uploads', express.static(UPLOADS_DIR));
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+}, guardAdminApi);
 
 // Rate Limiter for Login Endpoint (Max 15 requests per minute per IP to prevent Brute-Force/DDoS)
 const loginRateLimiter = rateLimit({
@@ -86,14 +95,14 @@ const checkIpBan = (req, res, next) => {
   next();
 };
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', environment: process.env.VERCEL ? 'vercel' : 'local', timestamp: new Date().toISOString() });
+app.get('/api/health', async (req, res) => {
+  res.json({ status: 'ok', environment: process.env.STORAGE_BACKEND === 'supabase' ? 'supabase' : process.env.VERCEL ? 'vercel' : 'local', timestamp: new Date().toISOString() });
 });
 
 const otpRateLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
   max: 5,
-  handler: (req, res) => {
+  handler: async (req, res) => {
     const clientIp = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     bannedIPs.set(clientIp, Date.now() + 60 * 60 * 1000); // 1 hour IP ban
     console.warn(`🚨 [SECURITY BAN] IP ${clientIp} blocked due to excessive OTP requests / bot spam.`);
@@ -108,11 +117,27 @@ const otpRateLimiter = rateLimit({
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 20 * 1024 * 1024 }
+  // Vercel Functions reject request bodies above 4.5 MB before Sharp can compress them.
+  limits: { fileSize: HOSTED ? 4 * 1024 * 1024 : 20 * 1024 * 1024 }
 });
 
+function requireUploadSession(req, res, next) {
+  if (HOSTED && !process.env.JWT_SECRET) {
+    return res.status(503).json({ success: false, message: 'Сервер загрузки не настроен: отсутствует JWT_SECRET' });
+  }
+  const header = req.get('authorization') || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : '';
+  try {
+    const session = jwt.verify(token, JWT_SECRET);
+    if (['admin', 'staff', 'seller'].includes(session.roleKey)) return next();
+  } catch (error) {
+    // Treat expired or invalid tokens alike; the admin should sign in again.
+  }
+  return res.status(401).json({ success: false, message: 'Войдите в админ-панель повторно для загрузки фото' });
+}
+
 // WebP Image Upload API Endpoint with maximum compression
-app.post('/api/upload', (req, res, next) => {
+app.post('/api/upload', requireUploadSession, (req, res, next) => {
   upload.single('image')(req, res, (err) => {
     if (err) {
       console.error('Multer upload error:', err);
@@ -126,56 +151,57 @@ app.post('/api/upload', (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Файл изображения не передан' });
     }
 
-    const type = req.body.type || 'img';
+    const type = String(req.body.type || 'img').replace(/[^a-z0-9-]/gi, '').slice(0, 32) || 'img';
     const timestamp = Date.now();
     const random = Math.floor(1000 + Math.random() * 9000);
-    let filename = `${type}-${timestamp}-${random}.webp`;
-    let outputPath = path.join(UPLOADS_DIR, filename);
-
-    try {
-      if (sharp) {
-        let sharpInstance = sharp(req.file.buffer);
-
-        if (type === 'logo') {
-          sharpInstance = sharpInstance.resize({ width: 400, height: 400, fit: 'inside', withoutEnlargement: true });
-        } else if (type === 'hero' || type === 'model') {
-          sharpInstance = sharpInstance.resize({ width: 1200, fit: 'inside', withoutEnlargement: true });
-        } else {
-          sharpInstance = sharpInstance.resize({ width: 1000, fit: 'inside', withoutEnlargement: true });
-        }
-
-        await sharpInstance
-          .webp({ quality: 75, effort: 6 })
-          .toFile(outputPath);
+    const filename = `${type}-${timestamp}-${random}.webp`;
+    const supabase = process.env.STORAGE_BACKEND === 'supabase';
+    let output = req.file.buffer;
+    if (!supabase) {
+      let image = sharp(req.file.buffer);
+      if (type === 'logo') {
+        image = image.resize({ width: 400, height: 400, fit: 'inside', withoutEnlargement: true });
+      } else if (type === 'hero' || type === 'model') {
+        image = image.resize({ width: 1200, fit: 'inside', withoutEnlargement: true });
       } else {
-        throw new Error('Sharp module unavailable');
+        image = image.resize({ width: 1000, fit: 'inside', withoutEnlargement: true });
       }
-    } catch (sharpErr) {
-      console.warn('Sharp processing warning, writing raw buffer directly:', sharpErr.message);
-      const ext = path.extname(req.file.originalname) || '.png';
-      filename = `${type}-${timestamp}-${random}${ext}`;
-      outputPath = path.join(UPLOADS_DIR, filename);
-      fs.writeFileSync(outputPath, req.file.buffer);
+      output = await image.webp({ quality: 75, effort: 6 }).toBuffer();
     }
 
-    const stats = fs.statSync(outputPath);
-    const fileUrl = `/uploads/${filename}`;
+    let fileUrl;
+    if (supabase) {
+      fileUrl = await uploadSupabaseImage(filename, output);
+    } else if (process.env.VERCEL) {
+      if (!process.env.BLOB_READ_WRITE_TOKEN) {
+        throw new Error('BLOB_READ_WRITE_TOKEN is required for image uploads on Vercel');
+      }
+      const blob = await put(`uploads/${filename}`, output, {
+        access: 'public',
+        contentType: 'image/webp',
+        addRandomSuffix: true
+      });
+      fileUrl = blob.url;
+    } else {
+      fs.writeFileSync(path.join(UPLOADS_DIR, filename), output);
+      fileUrl = `/uploads/${filename}`;
+    }
 
     res.json({
       success: true,
       url: fileUrl,
       filename,
-      sizeKb: (stats.size / 1024).toFixed(1) + ' KB',
+      sizeKb: (output.length / 1024).toFixed(1) + ' KB',
       message: 'Изображение успешно загружено'
     });
   } catch (err) {
     console.error('Error processing image in /api/upload:', err);
-    res.status(500).json({ success: false, message: `Ошибка обработки изображения: ${err.message}` });
+    res.status(err.status || 500).json({ success: false, message: `Ошибка обработки изображения: ${err.message}` });
   }
 });
 
 // Health Check
-app.get('/api/health', (req, res) => {
+app.get('/api/health', async (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
@@ -229,7 +255,7 @@ app.post('/api/auth/send-otp', checkIpBan, otpRateLimiter, async (req, res) => {
     });
   }
 
-  const dbData = readDB();
+  const dbData = await readDB();
   const existingUser = (dbData.customers || []).find(
     (c) => (c.email && c.email.toLowerCase() === cleanTarget) || (c.phone && c.phone === target)
   );
@@ -239,6 +265,30 @@ app.post('/api/auth/send-otp', checkIpBan, otpRateLimiter, async (req, res) => {
   // The token goes to the browser, so it carries only a keyed hash of the code, never the code itself
   const otpToken = jwt.sign({ target: cleanTarget, codeHash: hashOtp(cleanTarget, code), expiresAt }, JWT_SECRET, { expiresIn: '10m' });
   otpStore.set(cleanTarget, { code, expiresAt, createdAt: Date.now(), user: existingUser || null });
+
+  if (process.env.OTP_DELIVERY_URL && process.env.OTP_DELIVERY_PRIVATE_KEY) {
+    const deliveryToken = jwt.sign({ target: cleanTarget, code }, process.env.OTP_DELIVERY_PRIVATE_KEY, {
+      algorithm: 'RS256', audience: 'autolider-otp-delivery', issuer: 'autolider-storage-api',
+      expiresIn: '30s', jwtid: crypto.randomUUID(),
+    });
+    try {
+      const delivery = await fetch(process.env.OTP_DELIVERY_URL, {
+        method: 'POST', headers: { Authorization: `Bearer ${deliveryToken}` },
+        signal: AbortSignal.timeout(20000),
+      });
+      if (!delivery.ok) {
+        const result = await delivery.json().catch(() => ({}));
+        otpStore.delete(cleanTarget);
+        return res.status(503).json({ success: false, message: result.message || 'Не удалось отправить код' });
+      }
+    } catch {
+      otpStore.delete(cleanTarget);
+      return res.status(503).json({ success: false, message: 'Сервис отправки кодов временно недоступен' });
+    }
+    return res.json({ success: true, isRegistered: !!existingUser,
+      message: `Код подтверждения отправлен на ${cleanTarget}`, otpToken,
+    });
+  }
 
   // 1. Gmail SMTP Dispatcher (App Password)
   const gmailUser = process.env.GMAIL_USER || process.env.SMTP_USER;
@@ -309,7 +359,7 @@ app.post('/api/auth/send-otp', checkIpBan, otpRateLimiter, async (req, res) => {
 });
 
 // 2. Verify OTP Endpoint
-app.post('/api/auth/verify-otp', (req, res) => {
+app.post('/api/auth/verify-otp', async (req, res) => {
   const { email, phone, otpCode, code, otpToken } = req.body;
   const target = (phone || email || '').trim().toLowerCase();
   const inputCode = String(code || otpCode || '').trim();
@@ -349,7 +399,7 @@ app.post('/api/auth/verify-otp', (req, res) => {
 
   otpStore.delete(target);
 
-  const dbData = readDB();
+  const dbData = await readDB();
   dbData.customers = dbData.customers || [];
   let user = dbData.customers.find(
     (c) => (c.email && c.email.toLowerCase() === target) || (c.phone && c.phone === target)
@@ -368,7 +418,7 @@ app.post('/api/auth/verify-otp', (req, res) => {
       registeredDate: new Date().toISOString().slice(0, 10)
     };
     dbData.customers.unshift(user);
-    writeDB(dbData);
+    await writeDB(dbData);
   }
 
   if (user) {
@@ -395,7 +445,7 @@ app.post('/api/auth/verify-otp', (req, res) => {
 });
 
 // 3. Complete Registration Endpoint
-app.post('/api/auth/register', (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
   const { email, name, phone, city } = req.body;
 
   if (!email || !name || !phone) {
@@ -413,7 +463,7 @@ app.post('/api/auth/register', (req, res) => {
     return res.status(401).json({ success: false, message: 'Подтвердите почту кодом из письма и повторите регистрацию' });
   }
 
-  const db = readDB();
+  const db = await readDB();
 
   let user = db.customers.find((c) => c.email && c.email.toLowerCase() === cleanEmail);
   if (user) {
@@ -441,7 +491,7 @@ app.post('/api/auth/register', (req, res) => {
   };
 
   db.customers.unshift(newCustomer);
-  writeDB(db);
+  await writeDB(db);
 
   return res.status(201).json({
     success: true,
@@ -452,9 +502,25 @@ app.post('/api/auth/register', (req, res) => {
 });
 
 // Update Profile Endpoint
+app.get('/api/auth/profile', async (req, res) => {
+  const customer = getAuthCustomer(req, await readDB());
+  if (!customer) return res.status(401).json({ message: 'Войдите в аккаунт повторно' });
+  const { password, password_hash, ...safeCustomer } = customer;
+  res.json(safeCustomer);
+});
+
+app.delete('/api/auth/profile', async (req, res) => {
+  const db = await readDB();
+  const customer = getAuthCustomer(req, db);
+  if (!customer) return res.status(401).json({ message: 'Войдите в аккаунт повторно' });
+  db.customers = db.customers.filter(c => String(c.id) !== String(customer.id));
+  await writeDB(db);
+  res.json({ success: true });
+});
+
 // Edits the logged-in customer (from the Bearer token): name, phone, city, email
-app.put('/api/auth/profile', (req, res) => {
-  const db = readDB();
+app.put('/api/auth/profile', async (req, res) => {
+  const db = await readDB();
   const customer = getAuthCustomer(req, db);
   if (!customer) {
     return res.status(401).json({ success: false, message: 'Сессия истекла. Войдите в аккаунт заново' });
@@ -485,7 +551,7 @@ app.put('/api/auth/profile', (req, res) => {
     city: city?.trim() || db.customers[index].city,
     email: nextEmail
   };
-  writeDB(db);
+  await writeDB(db);
   return res.json({
     success: true,
     user: db.customers[index],
@@ -555,8 +621,8 @@ function calculateDynamicCharts(orders = []) {
 }
 
 // Dashboard Stats
-app.get('/api/stats', (req, res) => {
-  const db = readDB();
+app.get('/api/stats', async (req, res) => {
+  const db = await readDB();
   const totalSales = (db.orders || []).reduce((acc, order) => acc + (Number(order.totalPrice) || 0), 0);
   const totalOrders = (db.orders || []).length;
   const totalCustomers = (db.customers || []).length;
@@ -622,9 +688,10 @@ app.get('/api/stats', (req, res) => {
 });
 
 // Products CRUD & Filters
-app.get('/api/products', (req, res) => {
-  const db = readDB();
-  const { search, category, carMake, carModel, minPrice, maxPrice, status, all, seller_id } = req.query;
+app.get('/api/products', async (req, res) => {
+  const db = await readDB();
+  const { search, category, carMake, carModel, minPrice, maxPrice, status, all } = req.query;
+  const seller_id = req.sellerSession?.sellerId || req.query.seller_id;
   let items = db.products || [];
 
   // Filter by seller if requested
@@ -670,15 +737,15 @@ app.get('/api/products', (req, res) => {
   res.json(items);
 });
 
-app.get('/api/products/:id', (req, res) => {
-  const db = readDB();
+app.get('/api/products/:id', async (req, res) => {
+  const db = await readDB();
   const product = db.products.find((p) => String(p.id) === String(req.params.id));
   if (!product) return res.status(404).json({ message: 'Товар не найден' });
   res.json(product);
 });
 
-app.post('/api/products', (req, res) => {
-  const db = readDB();
+app.post('/api/products', async (req, res) => {
+  const db = await readDB();
   const title = req.body.title || 'Новый товар';
 
   let specsVal = req.body.specs;
@@ -712,12 +779,12 @@ app.post('/api/products', (req, res) => {
   };
 
   db.products.unshift(newProduct);
-  writeDB(db);
+  await writeDB(db);
   res.status(201).json(newProduct);
 });
 
-app.put('/api/products/:id', (req, res) => {
-  const db = readDB();
+app.put('/api/products/:id', async (req, res) => {
+  const db = await readDB();
   const idStr = String(req.params.id);
   const index = db.products.findIndex((p) => String(p.id) === idStr);
   if (index === -1) return res.status(404).json({ message: 'Товар не найден' });
@@ -734,21 +801,21 @@ app.put('/api/products/:id', (req, res) => {
     ...req.body,
     specs: specsVal || []
   };
-  writeDB(db);
+  await writeDB(db);
   res.json(db.products[index]);
 });
 
-app.delete('/api/products/:id', (req, res) => {
-  const db = readDB();
+app.delete('/api/products/:id', async (req, res) => {
+  const db = await readDB();
   const idStr = String(req.params.id);
   db.products = db.products.filter((p) => String(p.id) !== idStr);
-  writeDB(db);
+  await writeDB(db);
   res.json({ success: true, message: 'Товар успешно удален' });
 });
 
 // 2.1 EXCEL IMPORT & EXPORT ENDPOINTS
-app.post('/api/products/import-excel', (req, res) => {
-  const dbData = readDB();
+app.post('/api/products/import-excel', async (req, res) => {
+  const dbData = await readDB();
   const { items } = req.body; // Array of product objects from Excel file
 
   if (!Array.isArray(items) || items.length === 0) {
@@ -871,7 +938,7 @@ app.post('/api/products/import-excel', (req, res) => {
     }
   });
 
-  writeDB(dbData);
+  await writeDB(dbData);
   res.json({
     success: true,
     message: `Импорт Excel успешно выполнен! Обновлено: ${updatedCount} шт, создано новых: ${addedCount} шт.`
@@ -879,8 +946,8 @@ app.post('/api/products/import-excel', (req, res) => {
 });
 
 // Car Brands & Models CRUD
-app.get('/api/brands', (req, res) => {
-  const db = readDB();
+app.get('/api/brands', async (req, res) => {
+  const db = await readDB();
   const allBrands = db.brands || [];
 
   if (req.query.all === 'true') {
@@ -897,8 +964,8 @@ app.get('/api/brands', (req, res) => {
   res.json(activeBrands);
 });
 
-app.post('/api/brands', (req, res) => {
-  const db = readDB();
+app.post('/api/brands', async (req, res) => {
+  const db = await readDB();
   if (!db.brands) db.brands = [];
 
   const { name, country, logoUrl, heroUrl, status } = req.body;
@@ -915,12 +982,12 @@ app.post('/api/brands', (req, res) => {
   };
 
   db.brands.unshift(newBrand);
-  writeDB(db);
+  await writeDB(db);
   res.status(201).json(newBrand);
 });
 
-app.put('/api/brands/:id', (req, res) => {
-  const db = readDB();
+app.put('/api/brands/:id', async (req, res) => {
+  const db = await readDB();
   if (!db.brands) db.brands = [];
 
   const brand = db.brands.find((b) => b.id === req.params.id);
@@ -932,22 +999,22 @@ app.put('/api/brands/:id', (req, res) => {
   if (req.body.heroUrl !== undefined) brand.heroUrl = req.body.heroUrl;
   if (req.body.status !== undefined) brand.status = req.body.status;
 
-  writeDB(db);
+  await writeDB(db);
   res.json(brand);
 });
 
-app.delete('/api/brands/:id', (req, res) => {
-  const db = readDB();
+app.delete('/api/brands/:id', async (req, res) => {
+  const db = await readDB();
   if (!db.brands) db.brands = [];
 
   db.brands = db.brands.filter((b) => b.id !== req.params.id);
-  writeDB(db);
+  await writeDB(db);
   res.json({ success: true, message: 'Марка авто удалена' });
 });
 
 // Foreign Brands CRUD ("Иномарки на главной")
-app.get('/api/foreign-brands', (req, res) => {
-  const db = readDB();
+app.get('/api/foreign-brands', async (req, res) => {
+  const db = await readDB();
   const allForeign = db.foreignBrands || [];
 
   if (req.query.all === 'true') {
@@ -958,8 +1025,8 @@ app.get('/api/foreign-brands', (req, res) => {
   res.json(activeForeign);
 });
 
-app.post('/api/foreign-brands', (req, res) => {
-  const db = readDB();
+app.post('/api/foreign-brands', async (req, res) => {
+  const db = await readDB();
   if (!db.foreignBrands) db.foreignBrands = [];
 
   const { name, logoUrl, status } = req.body;
@@ -973,12 +1040,12 @@ app.post('/api/foreign-brands', (req, res) => {
   };
 
   db.foreignBrands.unshift(newBrand);
-  writeDB(db);
+  await writeDB(db);
   res.status(201).json(newBrand);
 });
 
-app.put('/api/foreign-brands/:id', (req, res) => {
-  const db = readDB();
+app.put('/api/foreign-brands/:id', async (req, res) => {
+  const db = await readDB();
   if (!db.foreignBrands) db.foreignBrands = [];
 
   const brand = db.foreignBrands.find((b) => String(b.id) === String(req.params.id));
@@ -988,22 +1055,22 @@ app.put('/api/foreign-brands/:id', (req, res) => {
   if (req.body.logoUrl !== undefined) brand.logoUrl = req.body.logoUrl;
   if (req.body.status !== undefined) brand.status = req.body.status;
 
-  writeDB(db);
+  await writeDB(db);
   res.json(brand);
 });
 
-app.delete('/api/foreign-brands/:id', (req, res) => {
-  const db = readDB();
+app.delete('/api/foreign-brands/:id', async (req, res) => {
+  const db = await readDB();
   if (!db.foreignBrands) db.foreignBrands = [];
 
   db.foreignBrands = db.foreignBrands.filter((b) => String(b.id) !== String(req.params.id));
-  writeDB(db);
+  await writeDB(db);
   res.json({ success: true, message: 'Иномарка удалена' });
 });
 
 // Add model to foreign brand
-app.post('/api/foreign-brands/:brandId/models', (req, res) => {
-  const db = readDB();
+app.post('/api/foreign-brands/:brandId/models', async (req, res) => {
+  const db = await readDB();
   if (!db.foreignBrands) db.foreignBrands = [];
 
   const brand = db.foreignBrands.find((b) => String(b.id) === String(req.params.brandId));
@@ -1024,13 +1091,13 @@ app.post('/api/foreign-brands/:brandId/models', (req, res) => {
   };
 
   brand.models.push(newModel);
-  writeDB(db);
+  await writeDB(db);
   res.status(201).json(newModel);
 });
 
 // Update model of foreign brand
-app.put('/api/foreign-brands/:brandId/models/:modelId', (req, res) => {
-  const db = readDB();
+app.put('/api/foreign-brands/:brandId/models/:modelId', async (req, res) => {
+  const db = await readDB();
   if (!db.foreignBrands) db.foreignBrands = [];
 
   const brand = db.foreignBrands.find((b) => String(b.id) === String(req.params.brandId));
@@ -1047,20 +1114,20 @@ app.put('/api/foreign-brands/:brandId/models/:modelId', (req, res) => {
   if (photoUrl !== undefined) model.photoUrl = photoUrl;
   if (status !== undefined) model.status = status;
 
-  writeDB(db);
+  await writeDB(db);
   res.json(model);
 });
 
 // Delete model of foreign brand
-app.delete('/api/foreign-brands/:brandId/models/:modelId', (req, res) => {
-  const db = readDB();
+app.delete('/api/foreign-brands/:brandId/models/:modelId', async (req, res) => {
+  const db = await readDB();
   if (!db.foreignBrands) db.foreignBrands = [];
 
   const brand = db.foreignBrands.find((b) => String(b.id) === String(req.params.brandId));
   if (!brand) return res.status(404).json({ message: 'Иномарка не найдена' });
 
   brand.models = (brand.models || []).filter((m) => String(m.id) !== String(req.params.modelId));
-  writeDB(db);
+  await writeDB(db);
   res.json({ success: true, message: 'Модель удалена' });
 });
 
@@ -1078,8 +1145,8 @@ function generateModelSlug(brand, modelName, currentModelId = null) {
 }
 
 // Add model to brand
-app.post('/api/brands/:brandId/models', (req, res) => {
-  const db = readDB();
+app.post('/api/brands/:brandId/models', async (req, res) => {
+  const db = await readDB();
   if (!db.brands) db.brands = [];
 
   const brand = db.brands.find((b) => b.id === req.params.brandId);
@@ -1101,13 +1168,13 @@ app.post('/api/brands/:brandId/models', (req, res) => {
 
   brand.models.push(newModel);
 
-  writeDB(db);
+  await writeDB(db);
   res.status(201).json(newModel);
 });
 
 // Update model of brand
-app.put('/api/brands/:brandId/models/:modelId', (req, res) => {
-  const db = readDB();
+app.put('/api/brands/:brandId/models/:modelId', async (req, res) => {
+  const db = await readDB();
   if (!db.brands) db.brands = [];
 
   const brand = db.brands.find((b) => b.id === req.params.brandId);
@@ -1124,26 +1191,26 @@ app.put('/api/brands/:brandId/models/:modelId', (req, res) => {
   if (photoUrl !== undefined) model.photoUrl = photoUrl;
   if (status !== undefined) model.status = status;
 
-  writeDB(db);
+  await writeDB(db);
   res.json(model);
 });
 
 // Delete model from brand
-app.delete('/api/brands/:brandId/models/:modelId', (req, res) => {
-  const db = readDB();
+app.delete('/api/brands/:brandId/models/:modelId', async (req, res) => {
+  const db = await readDB();
   if (!db.brands) db.brands = [];
 
   const brand = db.brands.find((b) => b.id === req.params.brandId);
   if (!brand) return res.status(404).json({ message: 'Марка не найдена' });
 
   brand.models = (brand.models || []).filter((m) => m.id !== req.params.modelId);
-  writeDB(db);
+  await writeDB(db);
   res.json({ success: true, message: 'Модель удалена' });
 });
 
 // Categories CRUD
-app.get('/api/categories', (req, res) => {
-  const db = readDB();
+app.get('/api/categories', async (req, res) => {
+  const db = await readDB();
   let categoriesList = db.categories || [];
 
   if (req.query.all !== 'true') {
@@ -1159,8 +1226,8 @@ app.get('/api/categories', (req, res) => {
   res.json(categoriesWithCounts);
 });
 
-app.post('/api/categories', (req, res) => {
-  const db = readDB();
+app.post('/api/categories', async (req, res) => {
+  const db = await readDB();
   const catName = req.body.name || 'Новая категория';
   const autoSlug = req.body.slug || slugify(catName) || `cat-${Date.now()}`;
   const imgUrl = req.body.img || req.body.photoUrl || '';
@@ -1175,12 +1242,12 @@ app.post('/api/categories', (req, res) => {
     status: req.body.status || 'enabled'
   };
   db.categories.push(newCat);
-  writeDB(db);
+  await writeDB(db);
   res.status(201).json(newCat);
 });
 
-app.put('/api/categories/:id', (req, res) => {
-  const db = readDB();
+app.put('/api/categories/:id', async (req, res) => {
+  const db = await readDB();
   const index = db.categories.findIndex((c) => c.id === req.params.id);
   if (index === -1) return res.status(404).json({ message: 'Категория не найдена' });
 
@@ -1192,31 +1259,38 @@ app.put('/api/categories/:id', (req, res) => {
   if (req.body.photoUrl) updatedCat.img = req.body.photoUrl;
 
   db.categories[index] = updatedCat;
-  writeDB(db);
+  await writeDB(db);
   res.json(db.categories[index]);
 });
 
-app.delete('/api/categories/:id', (req, res) => {
-  const db = readDB();
+app.delete('/api/categories/:id', async (req, res) => {
+  const db = await readDB();
   db.categories = db.categories.filter((c) => c.id !== req.params.id);
-  writeDB(db);
+  await writeDB(db);
   res.json({ success: true });
 });
 
 // Orders & 1-Click Order
-app.get('/api/orders/count', (req, res) => {
-  const db = readDB();
+app.get('/api/orders/count', async (req, res) => {
+  const db = await readDB();
   res.json({ count: (db.orders || []).length });
 });
 
-app.get('/api/orders', (req, res) => {
-  const db = readDB();
+app.get('/api/orders', async (req, res) => {
+  const db = await readDB();
+  if (req.sellerSession) {
+    const sellerId = String(req.sellerSession.sellerId);
+    return res.json((db.orders || []).filter(o => (o.items || []).some(item => String(item.seller_id) === sellerId)).map(o => ({
+      ...o,
+      items: (o.items || []).filter(item => String(item.seller_id) === sellerId),
+    })));
+  }
   res.json(db.orders);
 });
 
 // Orders of the logged-in customer only (personal account)
-app.get('/api/my/orders', (req, res) => {
-  const db = readDB();
+app.get('/api/my/orders', async (req, res) => {
+  const db = await readDB();
   const customer = getAuthCustomer(req, db);
   if (!customer) {
     return res.status(401).json({ success: false, message: 'Войдите в аккаунт, чтобы увидеть свои заказы' });
@@ -1258,8 +1332,8 @@ function syncCustomerRecord(db, customerName, customerPhone, customerEmail, orde
   }
 }
 
-app.post('/api/orders', (req, res) => {
-  const dbData = readDB();
+app.post('/api/orders', async (req, res) => {
+  const dbData = await readDB();
   let maxId = 0;
   if (Array.isArray(dbData.orders)) {
     dbData.orders.forEach((o) => {
@@ -1344,13 +1418,13 @@ app.post('/api/orders', (req, res) => {
     newOrder.bonusEarned,
     newOrder.customerId
   );
-  writeDB(dbData);
+  await writeDB(dbData);
   res.status(201).json(newOrder);
 });
 
 // 2.3.4 QUICK ONE-CLICK ORDER
-app.post('/api/orders/one-click', (req, res) => {
-  const dbData = readDB();
+app.post('/api/orders/one-click', async (req, res) => {
+  const dbData = await readDB();
   const { customerName, customerPhone, customerEmail, customerId, productTitle, price, productId, id } = req.body;
   const targetId = productId || id;
   const targetProd = (dbData.products || []).find((p) => String(p.id) === String(targetId));
@@ -1404,7 +1478,7 @@ app.post('/api/orders/one-click', (req, res) => {
 
   dbData.orders.unshift(newOrder);
   syncCustomerRecord(dbData, newOrder.customerName, newOrder.customerPhone, newOrder.customerEmail, newOrder.totalPrice);
-  writeDB(dbData);
+  await writeDB(dbData);
   res.status(201).json({
     success: true,
     message: 'Ваш заказ в 1 клик принят! Менеджер свяжется с вами в течение 5 минут.',
@@ -1413,18 +1487,18 @@ app.post('/api/orders/one-click', (req, res) => {
 });
 
 // VIN REQUESTS ENDPOINTS
-app.get('/api/vin-requests/count', (req, res) => {
-  const db = readDB();
+app.get('/api/vin-requests/count', async (req, res) => {
+  const db = await readDB();
   res.json({ count: (db.vinRequests || []).length });
 });
 
-app.get('/api/vin-requests', (req, res) => {
-  const db = readDB();
+app.get('/api/vin-requests', async (req, res) => {
+  const db = await readDB();
   res.json(db.vinRequests || []);
 });
 
-app.post('/api/vin-requests', (req, res) => {
-  const db = readDB();
+app.post('/api/vin-requests', async (req, res) => {
+  const db = await readDB();
   const { vin, phone, name, email } = req.body;
 
   if (!vin || !phone) {
@@ -1446,7 +1520,7 @@ app.post('/api/vin-requests', (req, res) => {
   db.vinRequests = db.vinRequests || [];
   db.vinRequests.unshift(newVinRequest);
 
-  writeDB(db);
+  await writeDB(db);
 
   res.status(201).json({
     success: true,
@@ -1455,8 +1529,8 @@ app.post('/api/vin-requests', (req, res) => {
   });
 });
 
-app.put('/api/vin-requests/:id/status', (req, res) => {
-  const db = readDB();
+app.put('/api/vin-requests/:id/status', async (req, res) => {
+  const db = await readDB();
   const reqId = String(req.params.id);
   const target = (db.vinRequests || []).find((r) => String(r.id) === reqId);
   if (!target) return res.status(404).json({ message: 'Заявка не найдена' });
@@ -1476,12 +1550,12 @@ app.put('/api/vin-requests/:id/status', (req, res) => {
     target.note = req.body.note;
   }
 
-  writeDB(db);
+  await writeDB(db);
   res.json(target);
 });
 
-app.delete('/api/vin-requests/:id', (req, res) => {
-  const db = readDB();
+app.delete('/api/vin-requests/:id', async (req, res) => {
+  const db = await readDB();
   const reqId = String(req.params.id);
   const initialLen = (db.vinRequests || []).length;
   db.vinRequests = (db.vinRequests || []).filter((r) => String(r.id) !== reqId);
@@ -1490,12 +1564,12 @@ app.delete('/api/vin-requests/:id', (req, res) => {
     return res.status(404).json({ message: 'Заявка не найдена' });
   }
 
-  writeDB(db);
+  await writeDB(db);
   res.json({ success: true, message: 'Заявка удалена' });
 });
 
-app.put('/api/orders/:id/status', (req, res) => {
-  const db = readDB();
+app.put('/api/orders/:id/status', async (req, res) => {
+  const db = await readDB();
   const order = db.orders.find((o) => o.id === req.params.id);
   if (!order) return res.status(404).json({ message: 'Заказ не найден' });
 
@@ -1530,28 +1604,28 @@ app.put('/api/orders/:id/status', (req, res) => {
     order.stockDeducted = true;
   }
 
-  writeDB(db);
+  await writeDB(db);
   res.json(order);
 });
 
-app.delete('/api/orders/:id', (req, res) => {
-  const db = readDB();
+app.delete('/api/orders/:id', async (req, res) => {
+  const db = await readDB();
   const index = db.orders.findIndex((o) => o.id === req.params.id);
   if (index === -1) return res.status(404).json({ message: 'Заказ не найден' });
 
   db.orders.splice(index, 1);
-  writeDB(db);
+  await writeDB(db);
   res.json({ success: true, message: 'Заказ удален' });
 });
 
 // Customers CRUD
-app.get('/api/customers', (req, res) => {
-  const db = readDB();
+app.get('/api/customers', async (req, res) => {
+  const db = await readDB();
   res.json(db.customers);
 });
 
-app.post('/api/customers', (req, res) => {
-  const db = readDB();
+app.post('/api/customers', async (req, res) => {
+  const db = await readDB();
   const { name, phone, email, city } = req.body;
   const newCustomer = {
     id: `cust-${Date.now()}`,
@@ -1567,23 +1641,23 @@ app.post('/api/customers', (req, res) => {
   };
   db.customers = db.customers || [];
   db.customers.unshift(newCustomer);
-  writeDB(db);
+  await writeDB(db);
   res.status(201).json(newCustomer);
 });
 
-app.put('/api/customers/:id', (req, res) => {
-  const db = readDB();
+app.put('/api/customers/:id', async (req, res) => {
+  const db = await readDB();
   const targetIdStr = String(req.params.id);
   const index = db.customers.findIndex((c) => String(c.id) === targetIdStr);
   if (index === -1) return res.status(404).json({ message: 'Клиент не найден' });
 
   db.customers[index] = { ...db.customers[index], ...req.body };
-  writeDB(db);
+  await writeDB(db);
   res.json(db.customers[index]);
 });
 
-app.delete('/api/customers/:id', (req, res) => {
-  const db = readDB();
+app.delete('/api/customers/:id', async (req, res) => {
+  const db = await readDB();
   const targetParam = String(req.params.id).toLowerCase();
   const initialLen = db.customers.length;
   db.customers = db.customers.filter(
@@ -1594,18 +1668,18 @@ app.delete('/api/customers/:id', (req, res) => {
   if (db.customers.length === initialLen) {
     return res.status(404).json({ message: 'Клиент не найден' });
   }
-  writeDB(db);
+  await writeDB(db);
   res.json({ success: true, message: 'Клиент удален' });
 });
 
 // 2.6.1 WAREHOUSES ENDPOINTS
-app.get('/api/warehouses', (req, res) => {
-  const db = readDB();
+app.get('/api/warehouses', async (req, res) => {
+  const db = await readDB();
   res.json(db.warehouses || []);
 });
 
-app.post('/api/warehouses', (req, res) => {
-  const db = readDB();
+app.post('/api/warehouses', async (req, res) => {
+  const db = await readDB();
   const newWh = {
     id: Date.now(),
     name: req.body.name || 'Новый склад',
@@ -1617,19 +1691,19 @@ app.post('/api/warehouses', (req, res) => {
   };
   db.warehouses = db.warehouses || [];
   db.warehouses.push(newWh);
-  writeDB(db);
+  await writeDB(db);
   res.status(201).json(newWh);
 });
 
 // SELLERS (Suppliers) ENDPOINTS
-app.get('/api/sellers', (req, res) => {
-  const db = readDB();
-  const safeSellers = (db.sellers || []).map(({ password, password_hash, ...rest }) => rest);
+app.get('/api/sellers', async (req, res) => {
+  const db = await readDB();
+  const safeSellers = (db.sellers || []).filter(s => !req.sellerSession || String(s.id) === String(req.sellerSession.sellerId)).map(({ password, password_hash, ...rest }) => rest);
   res.json(safeSellers);
 });
 
-app.post('/api/sellers', (req, res) => {
-  const dbData = readDB();
+app.post('/api/sellers', async (req, res) => {
+  const dbData = await readDB();
   dbData.sellers = dbData.sellers || [];
   const code = 'SUP-' + String(Math.floor(1000 + Math.random() * 9000));
   const rawPass = req.body.password || 'supplier123';
@@ -1651,7 +1725,7 @@ app.post('/api/sellers', (req, res) => {
     createdAt: new Date().toISOString().slice(0, 10)
   };
   dbData.sellers.unshift(newSeller);
-  writeDB(dbData);
+  await writeDB(dbData);
 
   // Sync with SQLite
   try {
@@ -1664,8 +1738,8 @@ app.post('/api/sellers', (req, res) => {
   res.status(201).json(newSeller);
 });
 
-app.put('/api/sellers/:id', (req, res) => {
-  const dbData = readDB();
+app.put('/api/sellers/:id', async (req, res) => {
+  const dbData = await readDB();
   dbData.sellers = dbData.sellers || [];
   const idx = dbData.sellers.findIndex((s) => s.id === req.params.id);
   if (idx === -1) return res.status(404).json({ message: 'Поставщик не найден' });
@@ -1680,7 +1754,7 @@ app.put('/api/sellers/:id', (req, res) => {
     ...req.body,
     password_hash: updatedPassHash
   };
-  writeDB(dbData);
+  await writeDB(dbData);
 
   // Sync with SQLite
   try {
@@ -1694,16 +1768,16 @@ app.put('/api/sellers/:id', (req, res) => {
   res.json(dbData.sellers[idx]);
 });
 
-app.delete('/api/sellers/:id', (req, res) => {
-  const db = readDB();
+app.delete('/api/sellers/:id', async (req, res) => {
+  const db = await readDB();
   db.sellers = (db.sellers || []).filter((s) => s.id !== req.params.id);
-  writeDB(db);
+  await writeDB(db);
   res.json({ success: true });
 });
 
 // Seller-specific stats
-app.get('/api/sellers/:id/stats', (req, res) => {
-  const db = readDB();
+app.get('/api/sellers/:id/stats', async (req, res) => {
+  const db = await readDB();
   const sellerId = req.params.id;
   const sellerProducts = (db.products || []).filter((p) => String(p.seller_id) === sellerId);
   const productIds = new Set(sellerProducts.map((p) => String(p.id)));
@@ -1727,13 +1801,13 @@ app.get('/api/sellers/:id/stats', (req, res) => {
 });
 
 // STORES ENDPOINTS
-app.get('/api/stores', (req, res) => {
-  const db = readDB();
+app.get('/api/stores', async (req, res) => {
+  const db = await readDB();
   res.json(db.stores || []);
 });
 
-app.post('/api/stores', (req, res) => {
-  const db = readDB();
+app.post('/api/stores', async (req, res) => {
+  const db = await readDB();
   db.stores = db.stores || [];
   const newStore = {
     id: `store-${Date.now()}`,
@@ -1745,35 +1819,35 @@ app.post('/api/stores', (req, res) => {
     status: req.body.status || 'active'
   };
   db.stores.push(newStore);
-  writeDB(db);
+  await writeDB(db);
   res.status(201).json(newStore);
 });
 
-app.put('/api/stores/:id', (req, res) => {
-  const db = readDB();
+app.put('/api/stores/:id', async (req, res) => {
+  const db = await readDB();
   db.stores = db.stores || [];
   const idx = db.stores.findIndex((s) => s.id === req.params.id);
   if (idx === -1) return res.status(404).json({ message: 'Магазин не найден' });
   db.stores[idx] = { ...db.stores[idx], ...req.body };
-  writeDB(db);
+  await writeDB(db);
   res.json(db.stores[idx]);
 });
 
-app.delete('/api/stores/:id', (req, res) => {
-  const db = readDB();
+app.delete('/api/stores/:id', async (req, res) => {
+  const db = await readDB();
   db.stores = (db.stores || []).filter((s) => s.id !== req.params.id);
-  writeDB(db);
+  await writeDB(db);
   res.json({ success: true });
 });
 
 // 2.6.2 ROLES & PERMISSIONS ENDPOINTS
-app.get('/api/roles', (req, res) => {
-  const db = readDB();
+app.get('/api/roles', async (req, res) => {
+  const db = await readDB();
   res.json(db.roles || []);
 });
 
-app.post('/api/roles', (req, res) => {
-  const db = readDB();
+app.post('/api/roles', async (req, res) => {
+  const db = await readDB();
   const newRole = {
     id: Date.now(),
     title: req.body.title || 'Новая роль',
@@ -1783,13 +1857,13 @@ app.post('/api/roles', (req, res) => {
   };
   db.roles = db.roles || [];
   db.roles.push(newRole);
-  writeDB(db);
+  await writeDB(db);
   res.status(201).json(newRole);
 });
 
 // Banners CRUD
-app.get('/api/banners', (req, res) => {
-  const db = readDB();
+app.get('/api/banners', async (req, res) => {
+  const db = await readDB();
   const allBanners = db.banners || [];
   if (req.query.all === 'true') {
     return res.json(allBanners);
@@ -1798,8 +1872,8 @@ app.get('/api/banners', (req, res) => {
   res.json(publicBanners);
 });
 
-app.post('/api/banners', (req, res) => {
-  const db = readDB();
+app.post('/api/banners', async (req, res) => {
+  const db = await readDB();
   db.banners = db.banners || [];
   const newBanner = {
     id: Date.now(),
@@ -1812,12 +1886,12 @@ app.post('/api/banners', (req, res) => {
     createdAt: new Date().toISOString().slice(0, 10)
   };
   db.banners.unshift(newBanner);
-  writeDB(db);
+  await writeDB(db);
   res.status(201).json(newBanner);
 });
 
-app.put('/api/banners/:id', (req, res) => {
-  const db = readDB();
+app.put('/api/banners/:id', async (req, res) => {
+  const db = await readDB();
   db.banners = db.banners || [];
   const bannerId = String(req.params.id);
   const index = db.banners.findIndex((b) => String(b.id) === bannerId);
@@ -1830,38 +1904,39 @@ app.put('/api/banners/:id', (req, res) => {
     ...db.banners[index],
     ...req.body
   };
-  writeDB(db);
+  await writeDB(db);
   res.json(db.banners[index]);
 });
 
-app.delete('/api/banners/:id', (req, res) => {
-  const db = readDB();
+app.delete('/api/banners/:id', async (req, res) => {
+  const db = await readDB();
   const bannerId = String(req.params.id);
   db.banners = (db.banners || []).filter((b) => String(b.id) !== bannerId);
-  writeDB(db);
+  await writeDB(db);
   res.json({ success: true, message: 'Баннер успешно удален' });
 });
 
 // Settings
-app.get('/api/settings', (req, res) => {
-  const db = readDB();
+app.get('/api/settings', async (req, res) => {
+  const db = await readDB();
   res.json(db.settings);
 });
 
-app.put('/api/settings', (req, res) => {
-  const db = readDB();
+app.put('/api/settings', async (req, res) => {
+  const db = await readDB();
   db.settings = {
     ...db.settings,
     ...req.body
   };
-  writeDB(db);
+  await writeDB(db);
   res.json(db.settings);
 });
 
 // Admin Staff / Users CRUD
-app.get('/api/admin-users', (req, res) => {
-  const db = readDB();
+app.get('/api/admin-users', async (req, res) => {
+  const db = await readDB();
   if (!db.adminUsers || db.adminUsers.length === 0) {
+    if (HOSTED) return res.status(503).json({ message: 'Аккаунты администратора ещё не перенесены' });
     db.adminUsers = [
       {
         id: 1,
@@ -1886,19 +1961,22 @@ app.get('/api/admin-users', (req, res) => {
         createdAt: '2026-02-10'
       }
     ];
-    writeDB(db);
+    await writeDB(db);
   }
-  res.json(db.adminUsers);
+  res.json(db.adminUsers.map(({ password, password_hash, ...user }) => user));
 });
 
-app.post('/api/admin-users', (req, res) => {
-  const db = readDB();
+app.post('/api/admin-users', async (req, res) => {
+  const db = await readDB();
+  if (!req.body.username || String(req.body.password || '').length < 12) {
+    return res.status(400).json({ message: 'Укажите логин и пароль длиной не менее 12 символов' });
+  }
   db.adminUsers = db.adminUsers || [];
   const newUser = {
     id: Date.now(),
     name: req.body.name || req.body.username || 'Сотрудник',
     username: req.body.username,
-    password: req.body.password || 'admin123',
+    password_hash: await bcrypt.hash(req.body.password, 12),
     role: req.body.role || 'manager',
     email: req.body.email || '',
     phone: req.body.phone || '',
@@ -1906,40 +1984,45 @@ app.post('/api/admin-users', (req, res) => {
     createdAt: new Date().toISOString().slice(0, 10)
   };
   db.adminUsers.unshift(newUser);
-  writeDB(db);
-  res.status(201).json(newUser);
+  await writeDB(db);
+  const { password_hash, ...safeUser } = newUser;
+  res.status(201).json(safeUser);
 });
 
-app.put('/api/admin-users/:id', (req, res) => {
-  const db = readDB();
+app.put('/api/admin-users/:id', async (req, res) => {
+  const db = await readDB();
   db.adminUsers = db.adminUsers || [];
   const userId = String(req.params.id);
   const index = db.adminUsers.findIndex((u) => String(u.id) === userId);
   if (index === -1) {
     return res.status(404).json({ message: 'Сотрудник не найден' });
   }
-  db.adminUsers[index] = {
-    ...db.adminUsers[index],
-    ...req.body
-  };
-  writeDB(db);
-  res.json(db.adminUsers[index]);
+  const { password, password_hash, id, ...updates } = req.body;
+  if (password && String(password).length < 12) return res.status(400).json({ message: 'Пароль должен содержать не менее 12 символов' });
+  db.adminUsers[index] = { ...db.adminUsers[index], ...updates };
+  if (password) {
+    db.adminUsers[index].password_hash = await bcrypt.hash(password, 12);
+    delete db.adminUsers[index].password;
+  }
+  await writeDB(db);
+  const { password: hiddenPassword, password_hash: hiddenHash, ...safeUser } = db.adminUsers[index];
+  res.json(safeUser);
 });
 
-app.delete('/api/admin-users/:id', (req, res) => {
-  const db = readDB();
+app.delete('/api/admin-users/:id', async (req, res) => {
+  const db = await readDB();
   const userId = String(req.params.id);
   db.adminUsers = (db.adminUsers || []).filter((u) => String(u.id) !== userId);
-  writeDB(db);
+  await writeDB(db);
   res.json({ success: true });
 });
 
 // Admin Authentication with Rate Limiting, bcrypt, and JWT Token signing
-app.post('/api/admin/login', loginRateLimiter, (req, res) => {
+app.post('/api/admin/login', loginRateLimiter, async (req, res) => {
   const reqUsername = (req.body.username || '').trim().toLowerCase();
   const reqPassword = (req.body.password || '').trim();
   const portalType = req.body.portalType || 'admin';
-  const dbData = readDB();
+  const dbData = await readDB();
 
   const matchSeller = (s, input) => {
     if (!s || !input) return false;
@@ -1988,8 +2071,7 @@ app.post('/api/admin/login', loginRateLimiter, (req, res) => {
       }
       const isPassValid = seller.password === reqPassword ||
         (seller.password_hash && bcrypt.compareSync(reqPassword, seller.password_hash)) ||
-        reqPassword === '1234' ||
-        reqPassword === 'supplier123';
+        (!HOSTED && (reqPassword === '1234' || reqPassword === 'supplier123'));
 
       if (isPassValid) {
         const payload = { sellerId: seller.id, roleKey: 'seller', name: seller.name, code: seller.code };
@@ -2012,6 +2094,7 @@ app.post('/api/admin/login', loginRateLimiter, (req, res) => {
 
   // 2. Admin / Staff Authentication Flow
   if (
+    !HOSTED &&
     (reqUsername === 'admin' || reqUsername === 'autolider') &&
     (reqPassword === 'admin' || reqPassword === 'admin123' || reqPassword === 'password123' || reqPassword === '1234')
   ) {
@@ -2036,14 +2119,13 @@ app.post('/api/admin/login', loginRateLimiter, (req, res) => {
 
     const isPassValid =
       staff.password === reqPassword ||
-      reqPassword === 'admin' ||
-      reqPassword === 'manager' ||
-      reqPassword === '1234';
+      (staff.password_hash && bcrypt.compareSync(reqPassword, staff.password_hash)) ||
+      (!HOSTED && ['admin', 'manager', '1234'].includes(reqPassword));
 
     if (isPassValid) {
       return res.json({
         success: true,
-        token: `autolider-staff-token-${Date.now()}`,
+        token: jwt.sign({ staffId: staff.id, roleKey: staff.role === 'admin' ? 'admin' : 'staff', name: staff.name }, JWT_SECRET, { expiresIn: '7d' }),
         user: {
           name: staff.name,
           role: staff.role === 'admin' ? 'Главный Администратор' : 'Менеджер',
@@ -2060,7 +2142,7 @@ app.post('/api/admin/login', loginRateLimiter, (req, res) => {
 });
 
 // Root Route: Backend API Landing Dashboard
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
   if (req.query.json === 'true' || (req.headers.accept && req.headers.accept.includes('application/json'))) {
     return res.json({
       status: 'online',
@@ -2329,7 +2411,7 @@ app.get('/', (req, res) => {
 });
 
 // Catch-all 404 for unmapped API routes
-app.use('/api', (req, res) => {
+app.use('/api', async (req, res) => {
   res.status(404).json({
     success: false,
     message: `API endpoint '${req.originalUrl}' не найден на сервере`
@@ -2351,13 +2433,13 @@ if (fs.existsSync(DIST_DIR)) {
 // Global JSON Error Handler
 app.use((err, req, res, next) => {
   console.error('API Error:', err.message || err);
-  res.status(err.status || 500).json({
+  res.status(err.code === 'DB_CONFLICT' ? 409 : (err.status || 500)).json({
     success: false,
     message: err.message || 'Ошибка выполнения запроса на сервере'
   });
 });
 
-if (!process.env.VERCEL) {
+if (!HOSTED) {
   const server = app.listen(PORT, () => {
     console.log(`🚀 Autolider Node.js Express Backend running on http://localhost:${PORT}`);
   });

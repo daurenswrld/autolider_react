@@ -1,3 +1,4 @@
+import { adminFetch } from '../../services/adminFetch';
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ShieldCheck, Lock, User, ArrowRight, Truck } from "lucide-react";
@@ -26,7 +27,7 @@ export const AdminLogin = () => {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/admin/login", {
+      const res = await adminFetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password, portalType: activeTab }),

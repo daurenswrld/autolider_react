@@ -310,14 +310,6 @@ export const CheckoutPage = () => {
         const updatedUser = { ...currentUser, bonusBalance: newBonusBalance };
         if (setCurrentUser) setCurrentUser(updatedUser);
         localStorage.setItem("autolider_user", JSON.stringify(updatedUser));
-
-        if (currentUser.id) {
-          fetch(`/api/customers/${currentUser.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ bonusBalance: newBonusBalance }),
-          }).catch((err) => console.warn("Customer bonus update error:", err));
-        }
       }
 
       setSubmittedOrderTotal(finalTotal);

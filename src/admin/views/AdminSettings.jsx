@@ -1,3 +1,4 @@
+import { adminFetch } from '../../services/adminFetch';
 import React, { useState, useEffect } from 'react';
 import { Settings, Save, CheckCircle2 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -21,7 +22,7 @@ export const AdminSettings = () => {
 
   const loadSettings = async () => {
     try {
-      const res = await fetch('/api/settings');
+      const res = await adminFetch('/api/settings');
       if (res.ok) setSettings(await res.json());
     } catch (err) {
       console.error('Failed to load settings:', err);
@@ -35,7 +36,7 @@ export const AdminSettings = () => {
   const handleSaveSettings = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/settings', {
+      const res = await adminFetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings)

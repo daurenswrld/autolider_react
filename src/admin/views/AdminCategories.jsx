@@ -1,3 +1,4 @@
+import { adminFetch } from '../../services/adminFetch';
 import React, { useState, useEffect } from "react";
 import {
   Plus,
@@ -103,7 +104,7 @@ export const AdminCategories = () => {
   const loadCategories = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/categories?all=true");
+      const res = await adminFetch("/api/categories?all=true");
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
@@ -202,7 +203,7 @@ export const AdminCategories = () => {
     if (!window.confirm(`Удалить категорию "${name}"?`)) return;
 
     try {
-      const res = await fetch(`/api/categories/${id}`, { method: "DELETE" });
+      const res = await adminFetch(`/api/categories/${id}`, { method: "DELETE" });
       if (res.ok) {
         setCategories((prev) => prev.filter((c) => c.id !== id));
         if (refreshCategories) refreshCategories();
@@ -216,7 +217,7 @@ export const AdminCategories = () => {
   const handleToggleStatus = async (cat) => {
     const newStatus = cat.status === "disabled" ? "enabled" : "disabled";
     try {
-      const res = await fetch(`/api/categories/${cat.id}`, {
+      const res = await adminFetch(`/api/categories/${cat.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
@@ -245,7 +246,7 @@ export const AdminCategories = () => {
 
     try {
       if (editingId) {
-        const res = await fetch(`/api/categories/${editingId}`, {
+        const res = await adminFetch(`/api/categories/${editingId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
@@ -259,7 +260,7 @@ export const AdminCategories = () => {
           showToast(`Категория "${updated.name}" обновлена!`);
         }
       } else {
-        const res = await fetch("/api/categories", {
+        const res = await adminFetch("/api/categories", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),

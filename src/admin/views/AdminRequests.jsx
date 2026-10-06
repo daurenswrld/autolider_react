@@ -1,3 +1,4 @@
+import { adminFetch } from '../../services/adminFetch';
 import React, { useState, useEffect } from 'react';
 import { FileText, Search, RefreshCw, CheckCircle2, Clock, XCircle, Trash2, Phone, Copy, Check, MessageSquare, AlertCircle, Filter } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -16,7 +17,7 @@ export const AdminRequests = () => {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/vin-requests');
+      const res = await adminFetch('/api/vin-requests');
       if (res.ok) {
         const data = await res.json();
         setRequests(data);
@@ -37,7 +38,7 @@ export const AdminRequests = () => {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      const res = await fetch(`/api/vin-requests/${id}/status`, {
+      const res = await adminFetch(`/api/vin-requests/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
@@ -55,7 +56,7 @@ export const AdminRequests = () => {
 
   const handleSaveNote = async (id) => {
     try {
-      const res = await fetch(`/api/vin-requests/${id}/status`, {
+      const res = await adminFetch(`/api/vin-requests/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ note: noteText })
@@ -75,7 +76,7 @@ export const AdminRequests = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Вы действительно хотите удалить эту заявку?')) return;
     try {
-      const res = await fetch(`/api/vin-requests/${id}`, {
+      const res = await adminFetch(`/api/vin-requests/${id}`, {
         method: 'DELETE'
       });
       if (res.ok) {

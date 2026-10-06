@@ -1,3 +1,4 @@
+import { adminFetch } from '../../services/adminFetch';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Users, Award, Edit2, Trash2, X, Save, Search, ArrowUpDown } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -15,7 +16,7 @@ export const AdminCustomers = () => {
   const loadCustomers = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/customers');
+      const res = await adminFetch('/api/customers');
       if (res.ok) setCustomers(await res.json());
     } catch (err) {
       console.error('Failed to load customers:', err);
@@ -60,7 +61,7 @@ export const AdminCustomers = () => {
     if (!selectedCust) return;
 
     try {
-      const res = await fetch(`/api/customers/${selectedCust.id}`, {
+      const res = await adminFetch(`/api/customers/${selectedCust.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bonusBalance: Number(bonusInput) || 0 })
@@ -82,7 +83,7 @@ export const AdminCustomers = () => {
 
     try {
       const targetId = cust.id || cust.email;
-      const res = await fetch(`/api/customers/${encodeURIComponent(targetId)}`, {
+      const res = await adminFetch(`/api/customers/${encodeURIComponent(targetId)}`, {
         method: 'DELETE'
       });
       if (res.ok) {

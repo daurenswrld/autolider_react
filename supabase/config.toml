@@ -1,0 +1,6 @@
+project_id = "autolider"
+
+[functions.autolider]
+# Existing customer/admin JWTs are verified by Express per route.
+verify_jwt = false
+entrypoint = "./functions/autolider/index.ts"
