@@ -2,7 +2,8 @@
 
 Budget constraint: no paid upgrades or purchases. The proposed target is one
 Supabase Free project providing Postgres, Storage and Edge Functions. The
-existing frontend remains in its owner's Vercel project. No cutover has occurred.
+existing frontend remains in its owner's Vercel project. Main cutover is pending;
+root vercel.json is configured for the preview branch.
 
 Free currently includes 500 MB database, 1 GB files and 500,000 function calls
 per month. Transfer limits also apply. A project may pause after one week of
@@ -17,7 +18,8 @@ https://supabase.com/docs/guides/functions/limits.
 2. Apply supabase/migrations/202610060001_storage.sql. The state table has RLS
    and no browser access. Only the backend service role can modify it. The public
    image bucket accepts WebP up to 4 MB; no anonymous writes are allowed.
-3. Set backend secrets JWT_SECRET, OTP_DELIVERY_PRIVATE_KEY and OTP_DELIVERY_URL.
+3. Set backend secrets STORAGE_BACKEND=supabase, JWT_SECRET,
+   OTP_DELIVERY_PRIVATE_KEY and OTP_DELIVERY_URL.
    Supabase provides SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to its functions.
    Reuse the ignored prepared signing keys to preserve the main OTP relay.
 4. Put STORAGE_BACKEND=supabase, SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in
@@ -47,5 +49,12 @@ the free production plan. No Vercel Pro subscription has been purchased.
 Frontend builds. Local Deno checks passed: hashed admin login, protected private
 API, image upload, model save and rejection of conflicting state writes against
 a local REST/Storage stand-in. No live database was changed by those checks.
-Account/project connection and tests on Supabase's hosted runtime are pending.
-Do not treat local Deno validation as a hosted Edge Functions test.
+Created organization AutoLider (dzpwxbgmocsmiufcgcaq), verified plan=free via the
+Management API. Project autolider-storage (rxbochoeobudllwztprq), Frankfurt.
+Live catalog snapshot imported into a protected table, default staff passwords
+renewed locally. Hosted Edge login, upload/model save, public image availability
+and redeploy persistence tests passed. Original model photo was restored.
+API: https://rxbochoeobudllwztprq.supabase.co/functions/v1/autolider
+Pending: frontend preview, OTP relay configuration probe, fresh comparison and
+main cutover. Supabase's hosted runtime forbids process.env writes; configure
+STORAGE_BACKEND as a secret, never assign it in the function entrypoint.

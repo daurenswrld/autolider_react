@@ -24,6 +24,11 @@ See SUPABASE_SETUP.md for the alternative, quotas and inactivity pause.
 Supabase adapter, browser WebP preparation, Edge packaging and SQL migration
 are ready. Local Deno tests passed login, upload, model save, private API and
 version conflicts against a local provider stand-in. Hosted runtime not tested.
-Pending work: connect/seed Supabase, cloud upload and redeploy persistence tests,
-OTP relay and frontend preview, live-data comparison, main cutover.
-Root vercel.json still routes to the original API; no main cutover has occurred.
+Created AutoLider organization dzpwxbgmocsmiufcgcaq, verified plan=free.
+Created Frankfurt project rxbochoeobudllwztprq, autolider-storage; migrated fresh
+snapshot live-1791288853210.json. API secrets configured, Edge function deployed.
+Cloud login, upload, model save and persistence after redeploy passed; original
+model photo restored. Default staff passwords renewed in ignored admin-access.
+Pending: OTP relay and frontend preview, live-data comparison, main cutover.
+Root vercel.json now points to Supabase on this preview branch only. Main has
+not been merged or switched. Database password rotated via Management API.

@@ -3,7 +3,7 @@
     { "source": "/api/otp-delivery", "destination": "/api/otp-delivery.js" },
     {
       "source": "/api/:path*",
-      "destination": "https://autolider-storage-api.vercel.app/api/:path*"
+      "destination": "https://rxbochoeobudllwztprq.supabase.co/functions/v1/autolider/api/:path*"
     },
     { "source": "/uploads/(.*)", "destination": "/api/index.js" },
     {

@@ -1,10 +1,5 @@
-import process from 'node:process';
-process.env.STORAGE_BACKEND = 'supabase';
-for (const name of ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'JWT_SECRET',
-  'OTP_DELIVERY_PRIVATE_KEY', 'OTP_DELIVERY_URL']) {
-  const value = Deno.env.get(name);
-  if (value) process.env[name] = value;
-}
+// Supabase's hosted runtime exposes secrets through process.env, but forbids
+// writing environment variables. STORAGE_BACKEND is configured as a secret.
 // Generated from the canonical Express sources. No database snapshot is bundled.
 const { default: app } = await import('./generated/index.js');
 // Mount the entire existing API below the Supabase function's required prefix.

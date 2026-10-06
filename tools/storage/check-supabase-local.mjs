@@ -49,7 +49,7 @@ await once(provider, 'listening');
 const serviceUrl = `http://127.0.0.1:${provider.address().port}`;
 const child = spawn(executable, ['run', '--no-check', '--node-modules-dir=none', '-A',
   'supabase/functions/autolider/index.ts'], {
-  env: { ...process.env, SUPABASE_URL: serviceUrl, SUPABASE_SERVICE_ROLE_KEY: key,
+  env: { ...process.env, STORAGE_BACKEND: 'supabase', SUPABASE_URL: serviceUrl, SUPABASE_SERVICE_ROLE_KEY: key,
     JWT_SECRET: crypto.randomBytes(32).toString('hex'), VERCEL: '',
     OTP_DELIVERY_URL: '', OTP_DELIVERY_PRIVATE_KEY: '' },
   stdio: ['ignore', 'pipe', 'pipe'],

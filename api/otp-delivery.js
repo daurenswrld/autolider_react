@@ -18,6 +18,14 @@ export default async function handler(req, res) {
   } catch {
     return res.status(401).json({ success: false });
   }
+  // An authenticated setup probe checks configuration without sending a message.
+  if (payload.action === 'health') {
+    return res.json({ success: true,
+      emailConfigured: Boolean((process.env.GMAIL_USER || process.env.SMTP_USER)
+        && (process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS)),
+      smsConfigured: Boolean(process.env.SMS_GATEWAY_URL && process.env.SMS_API_KEY),
+    });
+  }
   const { target, code } = payload;
   if (typeof target !== 'string' || target.length > 254 || !/^\d{4}$/.test(code)) {
     return res.status(400).json({ success: false });
