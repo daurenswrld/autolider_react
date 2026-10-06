@@ -1,3 +1,4 @@
+import { adminFetch } from '../../services/adminFetch';
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, X, Save, User, Search, Eye, EyeOff, Copy } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -53,7 +54,7 @@ export const AdminSellers = () => {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/sellers');
+      const res = await adminFetch('/api/sellers');
       if (res.ok) setSellers(await res.json());
     } catch (e) { console.error(e); }
     setLoading(false);
@@ -77,7 +78,7 @@ export const AdminSellers = () => {
     if (!form.username.trim()) { toast('Укажите логин поставщика', 'error'); return; }
     const method = editingId ? 'PUT' : 'POST';
     const url = editingId ? `/api/sellers/${editingId}` : '/api/sellers';
-    const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
+    const res = await adminFetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
     if (res.ok) {
       toast(editingId ? 'Поставщик обновлён' : 'Поставщик создан', 'success');
       setIsModalOpen(false);
@@ -87,7 +88,7 @@ export const AdminSellers = () => {
 
   const handleDelete = async (id, name) => {
     if (!window.confirm(`Удалить поставщика "${name}"?`)) return;
-    const res = await fetch(`/api/sellers/${id}`, { method: 'DELETE' });
+    const res = await adminFetch(`/api/sellers/${id}`, { method: 'DELETE' });
     if (res.ok) { toast('Поставщик удалён'); load(); }
   };
 

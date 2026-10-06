@@ -16,6 +16,7 @@ import sqliteDb from './sqlite-db.js';
 import nodemailer from 'nodemailer';
 import sharp from 'sharp';
 import { put } from '@vercel/blob';
+import { guardAdminApi } from './admin-auth.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'autolider_super_secret_jwt_key_2026_kz';
 
@@ -58,6 +59,10 @@ app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false 
 app.use(cors());
 app.use(express.json({ limit: '15mb' }));
 app.use('/uploads', express.static(UPLOADS_DIR));
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+}, guardAdminApi);
 
 // Rate Limiter for Login Endpoint (Max 15 requests per minute per IP to prevent Brute-Force/DDoS)
 const loginRateLimiter = rateLimit({
@@ -251,6 +256,30 @@ app.post('/api/auth/send-otp', checkIpBan, otpRateLimiter, async (req, res) => {
   // The token goes to the browser, so it carries only a keyed hash of the code, never the code itself
   const otpToken = jwt.sign({ target: cleanTarget, codeHash: hashOtp(cleanTarget, code), expiresAt }, JWT_SECRET, { expiresIn: '10m' });
   otpStore.set(cleanTarget, { code, expiresAt, createdAt: Date.now(), user: existingUser || null });
+
+  if (process.env.OTP_DELIVERY_URL && process.env.OTP_DELIVERY_PRIVATE_KEY) {
+    const deliveryToken = jwt.sign({ target: cleanTarget, code }, process.env.OTP_DELIVERY_PRIVATE_KEY, {
+      algorithm: 'RS256', audience: 'autolider-otp-delivery', issuer: 'autolider-storage-api',
+      expiresIn: '30s', jwtid: crypto.randomUUID(),
+    });
+    try {
+      const delivery = await fetch(process.env.OTP_DELIVERY_URL, {
+        method: 'POST', headers: { Authorization: `Bearer ${deliveryToken}` },
+        signal: AbortSignal.timeout(20000),
+      });
+      if (!delivery.ok) {
+        const result = await delivery.json().catch(() => ({}));
+        otpStore.delete(cleanTarget);
+        return res.status(503).json({ success: false, message: result.message || 'Не удалось отправить код' });
+      }
+    } catch {
+      otpStore.delete(cleanTarget);
+      return res.status(503).json({ success: false, message: 'Сервис отправки кодов временно недоступен' });
+    }
+    return res.json({ success: true, isRegistered: !!existingUser,
+      message: `Код подтверждения отправлен на ${cleanTarget}`, otpToken,
+    });
+  }
 
   // 1. Gmail SMTP Dispatcher (App Password)
   const gmailUser = process.env.GMAIL_USER || process.env.SMTP_USER;
@@ -464,6 +493,22 @@ app.post('/api/auth/register', async (req, res) => {
 });
 
 // Update Profile Endpoint
+app.get('/api/auth/profile', async (req, res) => {
+  const customer = getAuthCustomer(req, await readDB());
+  if (!customer) return res.status(401).json({ message: 'Войдите в аккаунт повторно' });
+  const { password, password_hash, ...safeCustomer } = customer;
+  res.json(safeCustomer);
+});
+
+app.delete('/api/auth/profile', async (req, res) => {
+  const db = await readDB();
+  const customer = getAuthCustomer(req, db);
+  if (!customer) return res.status(401).json({ message: 'Войдите в аккаунт повторно' });
+  db.customers = db.customers.filter(c => String(c.id) !== String(customer.id));
+  await writeDB(db);
+  res.json({ success: true });
+});
+
 // Edits the logged-in customer (from the Bearer token): name, phone, city, email
 app.put('/api/auth/profile', async (req, res) => {
   const db = await readDB();
@@ -636,7 +681,8 @@ app.get('/api/stats', async (req, res) => {
 // Products CRUD & Filters
 app.get('/api/products', async (req, res) => {
   const db = await readDB();
-  const { search, category, carMake, carModel, minPrice, maxPrice, status, all, seller_id } = req.query;
+  const { search, category, carMake, carModel, minPrice, maxPrice, status, all } = req.query;
+  const seller_id = req.sellerSession?.sellerId || req.query.seller_id;
   let items = db.products || [];
 
   // Filter by seller if requested
@@ -1223,6 +1269,13 @@ app.get('/api/orders/count', async (req, res) => {
 
 app.get('/api/orders', async (req, res) => {
   const db = await readDB();
+  if (req.sellerSession) {
+    const sellerId = String(req.sellerSession.sellerId);
+    return res.json((db.orders || []).filter(o => (o.items || []).some(item => String(item.seller_id) === sellerId)).map(o => ({
+      ...o,
+      items: (o.items || []).filter(item => String(item.seller_id) === sellerId),
+    })));
+  }
   res.json(db.orders);
 });
 
@@ -1636,7 +1689,7 @@ app.post('/api/warehouses', async (req, res) => {
 // SELLERS (Suppliers) ENDPOINTS
 app.get('/api/sellers', async (req, res) => {
   const db = await readDB();
-  const safeSellers = (db.sellers || []).map(({ password, password_hash, ...rest }) => rest);
+  const safeSellers = (db.sellers || []).filter(s => !req.sellerSession || String(s.id) === String(req.sellerSession.sellerId)).map(({ password, password_hash, ...rest }) => rest);
   res.json(safeSellers);
 });
 
@@ -1874,6 +1927,7 @@ app.put('/api/settings', async (req, res) => {
 app.get('/api/admin-users', async (req, res) => {
   const db = await readDB();
   if (!db.adminUsers || db.adminUsers.length === 0) {
+    if (process.env.VERCEL) return res.status(503).json({ message: 'Аккаунты администратора ещё не перенесены' });
     db.adminUsers = [
       {
         id: 1,
@@ -1900,17 +1954,20 @@ app.get('/api/admin-users', async (req, res) => {
     ];
     await writeDB(db);
   }
-  res.json(db.adminUsers);
+  res.json(db.adminUsers.map(({ password, password_hash, ...user }) => user));
 });
 
 app.post('/api/admin-users', async (req, res) => {
   const db = await readDB();
+  if (!req.body.username || String(req.body.password || '').length < 12) {
+    return res.status(400).json({ message: 'Укажите логин и пароль длиной не менее 12 символов' });
+  }
   db.adminUsers = db.adminUsers || [];
   const newUser = {
     id: Date.now(),
     name: req.body.name || req.body.username || 'Сотрудник',
     username: req.body.username,
-    password: req.body.password || 'admin123',
+    password_hash: await bcrypt.hash(req.body.password, 12),
     role: req.body.role || 'manager',
     email: req.body.email || '',
     phone: req.body.phone || '',
@@ -1919,7 +1976,8 @@ app.post('/api/admin-users', async (req, res) => {
   };
   db.adminUsers.unshift(newUser);
   await writeDB(db);
-  res.status(201).json(newUser);
+  const { password_hash, ...safeUser } = newUser;
+  res.status(201).json(safeUser);
 });
 
 app.put('/api/admin-users/:id', async (req, res) => {
@@ -1930,12 +1988,16 @@ app.put('/api/admin-users/:id', async (req, res) => {
   if (index === -1) {
     return res.status(404).json({ message: 'Сотрудник не найден' });
   }
-  db.adminUsers[index] = {
-    ...db.adminUsers[index],
-    ...req.body
-  };
+  const { password, password_hash, id, ...updates } = req.body;
+  if (password && String(password).length < 12) return res.status(400).json({ message: 'Пароль должен содержать не менее 12 символов' });
+  db.adminUsers[index] = { ...db.adminUsers[index], ...updates };
+  if (password) {
+    db.adminUsers[index].password_hash = await bcrypt.hash(password, 12);
+    delete db.adminUsers[index].password;
+  }
   await writeDB(db);
-  res.json(db.adminUsers[index]);
+  const { password: hiddenPassword, password_hash: hiddenHash, ...safeUser } = db.adminUsers[index];
+  res.json(safeUser);
 });
 
 app.delete('/api/admin-users/:id', async (req, res) => {
@@ -2000,8 +2062,7 @@ app.post('/api/admin/login', loginRateLimiter, async (req, res) => {
       }
       const isPassValid = seller.password === reqPassword ||
         (seller.password_hash && bcrypt.compareSync(reqPassword, seller.password_hash)) ||
-        reqPassword === '1234' ||
-        reqPassword === 'supplier123';
+        (!process.env.VERCEL && (reqPassword === '1234' || reqPassword === 'supplier123'));
 
       if (isPassValid) {
         const payload = { sellerId: seller.id, roleKey: 'seller', name: seller.name, code: seller.code };
@@ -2024,6 +2085,7 @@ app.post('/api/admin/login', loginRateLimiter, async (req, res) => {
 
   // 2. Admin / Staff Authentication Flow
   if (
+    !process.env.VERCEL &&
     (reqUsername === 'admin' || reqUsername === 'autolider') &&
     (reqPassword === 'admin' || reqPassword === 'admin123' || reqPassword === 'password123' || reqPassword === '1234')
   ) {
@@ -2048,14 +2110,13 @@ app.post('/api/admin/login', loginRateLimiter, async (req, res) => {
 
     const isPassValid =
       staff.password === reqPassword ||
-      reqPassword === 'admin' ||
-      reqPassword === 'manager' ||
-      reqPassword === '1234';
+      (staff.password_hash && bcrypt.compareSync(reqPassword, staff.password_hash)) ||
+      (!process.env.VERCEL && ['admin', 'manager', '1234'].includes(reqPassword));
 
     if (isPassValid) {
       return res.json({
         success: true,
-        token: jwt.sign({ staffId: staff.id, roleKey: 'staff', name: staff.name }, JWT_SECRET, { expiresIn: '7d' }),
+        token: jwt.sign({ staffId: staff.id, roleKey: staff.role === 'admin' ? 'admin' : 'staff', name: staff.name }, JWT_SECRET, { expiresIn: '7d' }),
         user: {
           name: staff.name,
           role: staff.role === 'admin' ? 'Главный Администратор' : 'Менеджер',

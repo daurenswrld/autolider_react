@@ -46,12 +46,8 @@ async function initializeRemoteDB() {
         version bigint NOT NULL DEFAULT 1,
         updated_at timestamptz NOT NULL DEFAULT now()
       )`;
-      const seed = fs.existsSync(DB_FILE)
-        ? fs.readFileSync(DB_FILE, 'utf8')
-        : JSON.stringify(INITIAL_DATA);
-      await query`INSERT INTO autolider_state (id, data)
-        VALUES (1, ${seed}::jsonb)
-        ON CONFLICT (id) DO NOTHING`;
+      // Live data is imported explicitly before cutover. Never silently replace
+      // a missing production database with bundled demo accounts or orders.
     })().catch((error) => {
       initialization = null;
       throw error;

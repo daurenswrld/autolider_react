@@ -1,3 +1,4 @@
+import { adminFetch } from '../../services/adminFetch';
 import React, { useState, useEffect } from "react";
 import {
   Car,
@@ -51,7 +52,7 @@ export const AdminBrands = () => {
   const fetchBrands = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/brands?all=true");
+      const res = await adminFetch("/api/brands?all=true");
       if (res.ok) {
         const data = await res.json();
         setBrands(data);
@@ -127,7 +128,7 @@ export const AdminBrands = () => {
         : "/api/brands";
       const method = editingBrand ? "PUT" : "POST";
 
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(brandForm),
@@ -159,7 +160,7 @@ export const AdminBrands = () => {
       return;
 
     try {
-      const res = await fetch(`/api/brands/${brandId}`, { method: "DELETE" });
+      const res = await adminFetch(`/api/brands/${brandId}`, { method: "DELETE" });
       if (res.ok) {
         showToast(`Марка "${brandName}" удалена!`);
         fetchBrands();
@@ -204,7 +205,7 @@ export const AdminBrands = () => {
         : `/api/brands/${activeBrandForModel.id}/models`;
       const method = editingModel ? "PUT" : "POST";
 
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(modelForm),
@@ -231,7 +232,7 @@ export const AdminBrands = () => {
     if (!window.confirm(`Удалить модель "${modelName}"?`)) return;
 
     try {
-      const res = await fetch(`/api/brands/${brandId}/models/${modelId}`, {
+      const res = await adminFetch(`/api/brands/${brandId}/models/${modelId}`, {
         method: "DELETE",
       });
       if (res.ok) {

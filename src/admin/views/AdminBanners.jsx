@@ -1,3 +1,4 @@
+import { adminFetch } from '../../services/adminFetch';
 import React, { useState, useEffect } from "react";
 import {
   Plus,
@@ -39,7 +40,7 @@ export const AdminBanners = () => {
   const loadBanners = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/banners?all=true");
+      const res = await adminFetch("/api/banners?all=true");
       if (res.ok) setBanners(await res.json());
     } catch (err) {
       console.error("Failed to load banners:", err);
@@ -88,7 +89,7 @@ export const AdminBanners = () => {
     body.append("type", "banner");
 
     try {
-      const res = await fetch("/api/upload", {
+      const res = await adminFetch("/api/upload", {
         method: "POST",
         body,
         headers: {
@@ -114,7 +115,7 @@ export const AdminBanners = () => {
   const handleToggleStatus = async (banner) => {
     const newStatus = banner.status === "disabled" ? "active" : "disabled";
     try {
-      const res = await fetch(`/api/banners/${banner.id}`, {
+      const res = await adminFetch(`/api/banners/${banner.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
@@ -140,7 +141,7 @@ export const AdminBanners = () => {
   const handleDeleteBanner = async (id) => {
     if (!window.confirm("Вы действительно хотите удалить этот баннер?")) return;
     try {
-      const res = await fetch(`/api/banners/${id}`, { method: "DELETE" });
+      const res = await adminFetch(`/api/banners/${id}`, { method: "DELETE" });
       if (res.ok) {
         setBanners((prev) => prev.filter((b) => b.id !== id));
         if (showToast) showToast("Баннер успешно удален");
@@ -160,7 +161,7 @@ export const AdminBanners = () => {
         : "/api/banners";
       const method = editingBanner ? "PUT" : "POST";
 
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

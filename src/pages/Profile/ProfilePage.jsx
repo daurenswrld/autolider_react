@@ -1,3 +1,4 @@
+import { customerFetch } from '../../services/customerFetch';
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
@@ -103,16 +104,11 @@ export const ProfilePage = () => {
       });
       if (!KNOWN_CITIES.includes(sc)) setCustomCity(sc);
 
-      // Sync bonus balance & details from backend /api/customers
-      fetch('/api/customers')
+      // Retrieve only the signed-in customer's profile.
+      customerFetch('/api/auth/profile')
         .then((res) => res.json())
-        .then((customers) => {
-          if (Array.isArray(customers)) {
-            const matched = customers.find(
-              (c) =>
-                String(c.id) === String(currentUser.id) ||
-                (c.email && currentUser.email && c.email.toLowerCase() === currentUser.email.toLowerCase())
-            );
+        .then((matched) => {
+          if (matched && !matched.message) {
             if (matched && matched.bonusBalance !== currentUser.bonusBalance) {
               const updated = { ...currentUser, ...matched };
               if (setCurrentUser) setCurrentUser(updated);
@@ -346,7 +342,8 @@ export const ProfilePage = () => {
     try {
       const targetId = currentUser?.id || currentUser?.email || user?.id || user?.email;
       if (targetId) {
-        await fetch(`/api/customers/${encodeURIComponent(targetId)}`, { method: 'DELETE' });
+        const response = await customerFetch('/api/auth/profile', { method: 'DELETE' });
+        if (!response.ok) throw new Error('Account deletion failed');
       }
       if (logout) {
         logout();

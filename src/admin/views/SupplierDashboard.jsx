@@ -1,3 +1,4 @@
+import { adminFetch } from '../../services/adminFetch';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -23,7 +24,7 @@ export const SupplierDashboard = () => {
     if (!sellerInfo?.sellerId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/sellers/${sellerInfo.sellerId}/stats`);
+      const res = await adminFetch(`/api/sellers/${sellerInfo.sellerId}/stats`);
       if (res.ok) setStats(await res.json());
     } catch (err) {
       console.error('Failed to load seller stats:', err);

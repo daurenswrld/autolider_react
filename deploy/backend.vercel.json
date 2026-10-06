@@ -1,0 +1,10 @@
+{
+  "framework": null,
+  "buildCommand": "node tools/storage/build-backend.mjs",
+  "outputDirectory": "backend-public",
+  "regions": ["fra1"],
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.js" },
+    { "source": "/uploads/(.*)", "destination": "/api/index.js" }
+  ]
+}

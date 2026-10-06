@@ -1,3 +1,4 @@
+import { adminFetch } from '../../services/adminFetch';
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -245,7 +246,7 @@ export const AdminDashboard = () => {
   const fetchStats = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/stats");
+      const res = await adminFetch("/api/stats");
       if (res.ok) {
         const data = await res.json();
         setStats(data);

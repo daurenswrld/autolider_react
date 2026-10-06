@@ -1,3 +1,4 @@
+import { adminFetch } from '../../services/adminFetch';
 import React, { useState, useEffect } from "react";
 import {
   Plus,
@@ -42,7 +43,7 @@ export const AdminRoles = () => {
   const loadUsers = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin-users");
+      const res = await adminFetch("/api/admin-users");
       if (res.ok) setUsers(await res.json());
     } catch (err) {
       console.error("Failed to load admin users:", err);
@@ -88,7 +89,7 @@ export const AdminRoles = () => {
   const handleToggleStatus = async (user) => {
     const newStatus = user.status === "disabled" ? "active" : "disabled";
     try {
-      const res = await fetch(`/api/admin-users/${user.id}`, {
+      const res = await adminFetch(`/api/admin-users/${user.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
@@ -112,7 +113,7 @@ export const AdminRoles = () => {
   const handleDeleteUser = async (id) => {
     if (!window.confirm("Удалить данный аккаунт сотрудника?")) return;
     try {
-      const res = await fetch(`/api/admin-users/${id}`, { method: "DELETE" });
+      const res = await adminFetch(`/api/admin-users/${id}`, { method: "DELETE" });
       if (res.ok) {
         setUsers((prev) => prev.filter((u) => u.id !== id));
         if (showToast) showToast("Аккаунт сотрудника удален");
@@ -135,7 +136,7 @@ export const AdminRoles = () => {
         : "/api/admin-users";
       const method = editingUser ? "PUT" : "POST";
 
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

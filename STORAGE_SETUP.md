@@ -1,39 +1,59 @@
-# Persistent uploads and catalog data on Vercel
+# AutoLider storage API and cutover
 
-The main site cannot save uploads in `server/uploads`: Vercel functions have a
-read-only deployment filesystem. This change stores new images in a public
-Vercel Blob store and saves the JSON catalog state in Postgres. Local development
-continues to use `server/uploads` and `server/db.json`.
+The main site's uploads write into Vercel's read-only filesystem. Admin edits
+also use temporary JSON storage. The new API uses Blob for images and Postgres
+for catalog state.
 
-## Before deploying `main`
+## Projects
+- Original frontend: autolider-react.vercel.app, owned by daurenswrlds-projects.
+- Separate API: autolider-storage-api.vercel.app, owned by nariman-s-projects2.
+- Backend config: deploy/backend.vercel.json.
+- Prepared frontend routing: deploy/main-proxy.vercel.json. Copy it to root
+  vercel.json only after cloud verification and resolving the commercial plan.
+  Root vercel.json currently keeps the original API routing.
 
-1. In the **main site's Vercel project**, create and connect a **public Blob**
-   store. Confirm `BLOB_READ_WRITE_TOKEN` is available in Production.
-2. Connect a Postgres database (for example Neon) to the same project. Provide
-   its connection string as `DATABASE_URL` or `POSTGRES_URL` in Production.
-   Set a strong, private `JWT_SECRET` in Production; the upload endpoint rejects
-   requests without a valid admin/staff/seller session. Existing staff sessions
-   must sign in again because staff logins now return signed tokens.
-3. Back up any live catalog or order data. On first request the new database
-   table is seeded from the `server/db.json` included in the deployment. Data
-   previously written only to Vercel `/tmp/db.json` cannot be reliably recovered
-   from another function instance.
-4. Redeploy `main` only after both variables are set. Test a model image upload,
-   save the model, then load the catalog in a new browser session and after a
-   fresh deployment. Check that the new image URL uses the Blob domain.
+## Required backend variables
+BLOB_READ_WRITE_TOKEN, DATABASE_URL (or POSTGRES_URL), JWT_SECRET,
+OTP_DELIVERY_PRIVATE_KEY, OTP_DELIVERY_URL.
 
-`/api/upload` accepts source images up to 4 MB on Vercel because Vercel Functions
-limit the whole request body to 4.5 MB. Larger images need a separate client
-upload flow. Existing `/uploads/...` files bundled in the deployment remain
-served by Express; newly uploaded images use their public Blob URLs.
+The OTP relay stays in the original project and uses its existing SMTP/SMS
+variables. The public verification key is committed; the private signing key
+must never be committed or sent to the browser. Without a configured provider,
+the relay reports that codes cannot be sent instead of claiming success.
 
-Postgres updates use a version check. If another request changes the catalog
-first, the API returns HTTP 409 and the admin must reload and retry. This
-avoids silently overwriting newer changes, but the JSON document remains a
-single record; a larger production migration should normalize orders and
-inventory into separate tables.
+## Migration and verification
+1. Run node tools/storage/capture-live.mjs. It saves an ignored .migration/
+   snapshot and prints only counts and hashes. Old temporary Vercel data varies
+   between instances; this capture cannot guarantee recovery of all historical
+   writes. Sellers' hidden credentials are reused only for exact source matches.
+2. Accept Neon integration terms as the account owner. Connect the explicitly
+   selected Free plan in Frankfurt to the separate backend.
+3. Run vercel env pull .env.storage.local --environment production.
+4. Run node tools/storage/bootstrap-db.mjs .migration/live-<timestamp>.json.
+   It refuses to overwrite an existing database. Known default staff passwords
+   are renewed and saved only in .migration/admin-access.txt.
+5. Deploy: vercel deploy --prod --yes --local-config deploy/backend.vercel.json.
+6. Run node tools/storage/check-storage.mjs https://autolider-storage-api.vercel.app.
+7. Deploy the backend again, then run node tools/storage/check-persistence.mjs
+   https://autolider-storage-api.vercel.app. It checks persistence and restores
+   the original model photo; the tiny verification image stays in Blob.
+8. Compare a fresh capture of the original site with the imported snapshot.
+   Resolve changed data, copy deploy/main-proxy.vercel.json to root vercel.json,
+   test a frontend preview and the OTP relay, merge the reviewed PR, and verify
+   the main site.
 
-The upload endpoint now checks a signed session, but other admin APIs still
-lack server-side authorization and the existing default admin passwords are
-unsafe. Remove these defaults and protect the remaining admin routes before
-relying on the site for real orders or broad public use.
+## Access and limits
+Admin requests send signed sessions. Private lists and catalog writes require
+admin/staff authorization; staff cannot manage administrator accounts. Suppliers
+are restricted to their own products and filtered order data. Customers retrieve
+only their own signed-in profile. Sessions need a fresh login after cutover.
+
+Server uploads accept up to 4 MB on Vercel. Postgres stores one JSON document
+with version checks; conflicting writes return 409. Existing order business
+rules still trust client-supplied totals and bonus values; this is not a payment
+system audit.
+
+The user's team is on Hobby, which permits personal noncommercial use. Testing
+can proceed there; the live store requires a commercial plan. No paid upgrade
+has been authorized. Migration backups, access credentials, private keys and
+pulled environment variables remain ignored and must never be published.

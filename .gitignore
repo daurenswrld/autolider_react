@@ -26,3 +26,7 @@ dist-ssr
 *.db-shm
 .env
 .env.*
+.vercel
+.env*
+.migration/
+backend-public/

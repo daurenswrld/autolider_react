@@ -1,3 +1,4 @@
+import { adminFetch } from '../../services/adminFetch';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   ShoppingCart,
@@ -67,7 +68,7 @@ export const AdminOrders = () => {
   const sellerId = sellerInfo?.sellerId || null;
 
   useEffect(() => {
-    fetch('/api/sellers')
+    adminFetch('/api/sellers')
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => setSellersList(data || []))
       .catch(() => {});
@@ -228,12 +229,12 @@ export const AdminOrders = () => {
   const loadOrders = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/orders');
+      const res = await adminFetch('/api/orders');
       if (res.ok) {
         let data = await res.json();
         // Filter for seller: only orders containing seller's products
         if (isSeller && sellerId) {
-          const sellerProdRes = await fetch(`/api/products?all=true&seller_id=${sellerId}`);
+          const sellerProdRes = await adminFetch(`/api/products?all=true&seller_id=${sellerId}`);
           if (sellerProdRes.ok) {
             const sellerProds = await sellerProdRes.json();
             const productIds = new Set(sellerProds.map((p) => String(p.id)));
@@ -326,7 +327,7 @@ export const AdminOrders = () => {
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      const res = await fetch(`/api/orders/${orderId}/status`, {
+      const res = await adminFetch(`/api/orders/${orderId}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
@@ -347,7 +348,7 @@ export const AdminOrders = () => {
   const handleDeleteOrder = async (orderId) => {
     if (!window.confirm(`Вы действительно хотите удалить заказ #${orderId}?`)) return;
     try {
-      const res = await fetch(`/api/orders/${orderId}`, {
+      const res = await adminFetch(`/api/orders/${orderId}`, {
         method: 'DELETE'
       });
       if (res.ok) {

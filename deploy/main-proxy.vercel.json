@@ -1,0 +1,14 @@
+{
+  "rewrites": [
+    { "source": "/api/otp-delivery", "destination": "/api/otp-delivery.js" },
+    {
+      "source": "/api/:path*",
+      "destination": "https://autolider-storage-api.vercel.app/api/:path*"
+    },
+    { "source": "/uploads/(.*)", "destination": "/api/index.js" },
+    {
+      "source": "/((?!api|uploads|assets|.*\\..*).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
