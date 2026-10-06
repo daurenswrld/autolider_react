@@ -1,4 +1,5 @@
 import { adminFetch } from '../../services/adminFetch';
+import { uploadImageFile } from '../../services/api';
 import React, { useState, useEffect } from "react";
 import {
   Plus,
@@ -84,20 +85,9 @@ export const AdminBanners = () => {
     if (!file) return;
 
     setUploading(true);
-    const body = new FormData();
-    body.append("image", file);
-    body.append("type", "banner");
-
     try {
-      const res = await adminFetch("/api/upload", {
-        method: "POST",
-        body,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("autolider_admin_token") || ""}`,
-        },
-      });
-      const data = await res.json();
-      if (res.ok && data.url) {
+      const data = await uploadImageFile(file, "banner");
+      if (data.url) {
         setFormData((prev) => ({ ...prev, image: data.url }));
         if (showToast) showToast("Изображение успешно загружено");
       } else {
@@ -106,7 +96,7 @@ export const AdminBanners = () => {
       }
     } catch (err) {
       console.error("Upload error:", err);
-      if (showToast) showToast("Ошибка соединения с сервером", "error");
+      if (showToast) showToast(err.message || "Ошибка загрузки изображения", "error");
     } finally {
       setUploading(false);
     }

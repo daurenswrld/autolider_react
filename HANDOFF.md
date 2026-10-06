@@ -29,6 +29,11 @@ Created Frankfurt project rxbochoeobudllwztprq, autolider-storage; migrated fres
 snapshot live-1791288853210.json. API secrets configured, Edge function deployed.
 Cloud login, upload, model save and persistence after redeploy passed; original
 model photo restored. Default staff passwords renewed in ignored admin-access.
-Pending: OTP relay and frontend preview, live-data comparison, main cutover.
-Root vercel.json now points to Supabase on this preview branch only. Main has
-not been merged or switched. Database password rotated via Management API.
+Published via PR #1 squash merge 898a1945c2e56ddd959345226e5b40d7fa1cf496.
+Main Vercel deployment succeeded, health reports environment=supabase.
+Verified through the main domain: hashed admin login, protected API, image
+upload/model save, public image availability and restoration of original photo.
+Signed OTP config probe passed: email configured, SMS not configured; no actual
+messages sent. Fresh live data matched migrated state before cutover. Database
+password rotated via the supported Management API. New staff access is in
+ignored .migration/admin-access.txt. All upload UI paths use browser WebP.

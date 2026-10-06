@@ -2,8 +2,8 @@
 
 Budget constraint: no paid upgrades or purchases. The proposed target is one
 Supabase Free project providing Postgres, Storage and Edge Functions. The
-existing frontend remains in its owner's Vercel project. Main cutover is pending;
-root vercel.json is configured for the preview branch.
+existing frontend remains in its owner's Vercel project. Main cutover completed
+through PR #1, squash commit 898a1945c2e56ddd959345226e5b40d7fa1cf496.
 
 Free currently includes 500 MB database, 1 GB files and 500,000 function calls
 per month. Transfer limits also apply. A project may pause after one week of
@@ -55,6 +55,10 @@ Live catalog snapshot imported into a protected table, default staff passwords
 renewed locally. Hosted Edge login, upload/model save, public image availability
 and redeploy persistence tests passed. Original model photo was restored.
 API: https://rxbochoeobudllwztprq.supabase.co/functions/v1/autolider
-Pending: frontend preview, OTP relay configuration probe, fresh comparison and
-main cutover. Supabase's hosted runtime forbids process.env writes; configure
+Verified on the main domain: login, protected API, upload, model save and photo
+restoration. Fresh data matched the migration. OTP relay rejects unsigned
+requests; signed configuration probe passed, emailConfigured=true,
+smsConfigured=false. No real email/SMS was sent. Default administrator passwords
+were renewed; local ignored .migration/admin-access.txt contains the new access.
+Supabase's hosted runtime forbids process.env writes; configure
 STORAGE_BACKEND as a secret, never assign it in the function entrypoint.
