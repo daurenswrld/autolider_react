@@ -91,6 +91,9 @@ export const AdminBanners = () => {
       const res = await fetch("/api/upload", {
         method: "POST",
         body,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("autolider_admin_token") || ""}`,
+        },
       });
       const data = await res.json();
       if (res.ok && data.url) {

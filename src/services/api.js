@@ -50,13 +50,15 @@ export async function uploadImageFile(file, type = 'img') {
   formData.append('type', type);
 
   const url = `${API_BASE_URL}/api/upload`;
+  const sessionToken = localStorage.getItem('autolider_admin_token');
 
   try {
     const response = await fetch(url, {
       method: 'POST',
       body: formData,
       headers: {
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        ...(sessionToken ? { 'Authorization': `Bearer ${sessionToken}` } : {})
       }
     });
 

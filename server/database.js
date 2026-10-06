@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { neon } from '@neondatabase/serverless';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,6 +23,42 @@ const INITIAL_DATA = {
 };
 
 let inMemoryCache = null;
+let sql = null;
+let initialization = null;
+const versions = new WeakMap();
+
+function databaseClient() {
+  if (!sql) {
+    const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    if (!url) throw new Error('DATABASE_URL is required for persistent data on Vercel');
+    sql = neon(url);
+  }
+  return sql;
+}
+
+async function initializeRemoteDB() {
+  if (!initialization) {
+    initialization = (async () => {
+      const query = databaseClient();
+      await query`CREATE TABLE IF NOT EXISTS autolider_state (
+        id integer PRIMARY KEY,
+        data jsonb NOT NULL,
+        version bigint NOT NULL DEFAULT 1,
+        updated_at timestamptz NOT NULL DEFAULT now()
+      )`;
+      const seed = fs.existsSync(DB_FILE)
+        ? fs.readFileSync(DB_FILE, 'utf8')
+        : JSON.stringify(INITIAL_DATA);
+      await query`INSERT INTO autolider_state (id, data)
+        VALUES (1, ${seed}::jsonb)
+        ON CONFLICT (id) DO NOTHING`;
+    })().catch((error) => {
+      initialization = null;
+      throw error;
+    });
+  }
+  await initialization;
+}
 
 function sanitizeDBData(data) {
   if (!data) return INITIAL_DATA;
@@ -51,22 +88,27 @@ function sanitizeDBData(data) {
   return clone;
 }
 
-export function readDB() {
+export async function readDB() {
+  if (process.env.VERCEL) {
+    await initializeRemoteDB();
+    const rows = await databaseClient()`SELECT data, version FROM autolider_state WHERE id = 1`;
+    if (rows.length !== 1) throw new Error('Persistent catalog data is unavailable');
+    const data = sanitizeDBData(rows[0].data);
+    versions.set(data, Number(rows[0].version));
+    return data;
+  }
+
   try {
     if (inMemoryCache) {
       return sanitizeDBData(inMemoryCache);
     }
 
-    const isVercel = Boolean(process.env.VERCEL);
-    const targetFile = isVercel && fs.existsSync('/tmp/db.json') ? '/tmp/db.json' : DB_FILE;
+    const targetFile = DB_FILE;
 
     if (!fs.existsSync(targetFile)) {
       if (fs.existsSync(DB_FILE)) {
         const initialContent = fs.readFileSync(DB_FILE, 'utf8');
         const data = JSON.parse(initialContent);
-        if (isVercel) {
-          try { fs.writeFileSync('/tmp/db.json', initialContent, 'utf8'); } catch (e) {}
-        }
         inMemoryCache = data;
         return sanitizeDBData(data);
       }
@@ -83,16 +125,33 @@ export function readDB() {
   }
 }
 
-export function writeDB(data) {
+export async function writeDB(data) {
+  if (process.env.VERCEL) {
+    await initializeRemoteDB();
+    const expectedVersion = versions.get(data);
+    if (expectedVersion === undefined) {
+      throw new Error('Catalog update requires a fresh read before writing');
+    }
+    const rows = await databaseClient()`UPDATE autolider_state
+      SET data = ${JSON.stringify(data)}::jsonb,
+          version = version + 1,
+          updated_at = now()
+      WHERE id = 1 AND version = ${expectedVersion}
+      RETURNING version`;
+    if (rows.length !== 1) {
+      const error = new Error('Данные изменились в другом запросе. Обновите страницу и повторите действие.');
+      error.code = 'DB_CONFLICT';
+      throw error;
+    }
+    versions.set(data, Number(rows[0].version));
+    return;
+  }
+
   try {
     inMemoryCache = data;
-    const isVercel = Boolean(process.env.VERCEL);
-    const targetFile = isVercel ? '/tmp/db.json' : DB_FILE;
-    fs.writeFileSync(targetFile, JSON.stringify(data, null, 2), 'utf8');
-    if (isVercel) {
-      try { fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8'); } catch (e) {}
-    }
+    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
   } catch (err) {
     console.error('Error writing DB file:', err);
+    throw err;
   }
 }
