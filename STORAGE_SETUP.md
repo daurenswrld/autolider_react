@@ -1,5 +1,9 @@
 # AutoLider storage API and cutover
 
+**Budget update:** the user requires no spending. The Vercel/Neon deployment
+below is the previous test plan. Production work now follows SUPABASE_SETUP.md.
+No paid hosting or subscriptions have been purchased.
+
 The main site's uploads write into Vercel's read-only filesystem. Admin edits
 also use temporary JSON storage. The new API uses Blob for images and Postgres
 for catalog state.
@@ -53,7 +57,7 @@ with version checks; conflicting writes return 409. Existing order business
 rules still trust client-supplied totals and bonus values; this is not a payment
 system audit.
 
-The user's team is on Hobby, which permits personal noncommercial use. Testing
-can proceed there; the live store requires a commercial plan. No paid upgrade
-has been authorized. Migration backups, access credentials, private keys and
+The user's team is on Hobby, which permits personal noncommercial use. The
+independent Vercel API is not the production target under the new zero-budget
+constraint. Migration backups, access credentials, private keys and
 pulled environment variables remain ignored and must never be published.

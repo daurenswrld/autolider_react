@@ -30,3 +30,6 @@ dist-ssr
 .env*
 .migration/
 backend-public/
+supabase/functions/autolider/generated/
+supabase/.temp/
+deno.lock

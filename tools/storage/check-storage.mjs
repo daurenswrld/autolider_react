@@ -22,14 +22,17 @@ const brand = brands.find(b => b.models?.length);
 assert(brand, 'existing brand and model');
 const model = brand.models[0];
 const form = new FormData();
-const png = await sharp({ create: { width: 16, height: 16, channels: 3, background: '#d32f2f' } }).png().toBuffer();
-form.append('image', new Blob([png], { type: 'image/png' }), 'storage-check.png');
+const png = await sharp({ create: { width: 16, height: 16, channels: 3, background: '#d32f2f' } }).webp().toBuffer();
+form.append('image', new Blob([png], { type: 'image/webp' }), 'storage-check.webp');
 form.append('type', 'model');
 const upload = await fetch(`${base}/api/upload`, { method: 'POST', headers, body: form });
 assert.equal(upload.status, 200, 'image upload');
 const image = await upload.json();
 assert(image.success, 'successful upload');
-if (!base.includes('localhost')) assert(image.url.includes('.public.blob.vercel-storage.com/'), 'persistent Blob URL');
+if (!base.includes('localhost')) assert(
+  image.url.includes('.public.blob.vercel-storage.com/') ||
+  image.url.includes('.supabase.co/storage/v1/object/public/autolider-images/'),
+  'persistent storage URL');
 assert.equal((await fetch(new URL(image.url, base))).status, 200, 'uploaded image available');
 const save = await fetch(`${base}/api/brands/${brand.id}/models/${model.id}`, {
   method: 'PUT', headers: { ...headers, 'Content-Type': 'application/json' },

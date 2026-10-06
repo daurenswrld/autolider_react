@@ -17,6 +17,9 @@ import nodemailer from 'nodemailer';
 import sharp from 'sharp';
 import { put } from '@vercel/blob';
 import { guardAdminApi } from './admin-auth.js';
+import { uploadSupabaseImage } from './supabase-storage.js';
+
+const HOSTED = Boolean(process.env.VERCEL || process.env.STORAGE_BACKEND === 'supabase');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'autolider_super_secret_jwt_key_2026_kz';
 
@@ -24,7 +27,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
 
-if (!process.env.VERCEL && !fs.existsSync(UPLOADS_DIR)) {
+if (!HOSTED && !fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
@@ -93,7 +96,7 @@ const checkIpBan = (req, res, next) => {
 };
 
 app.get('/api/health', async (req, res) => {
-  res.json({ status: 'ok', environment: process.env.VERCEL ? 'vercel' : 'local', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', environment: process.env.STORAGE_BACKEND === 'supabase' ? 'supabase' : process.env.VERCEL ? 'vercel' : 'local', timestamp: new Date().toISOString() });
 });
 
 const otpRateLimiter = rateLimit({
@@ -115,11 +118,11 @@ const otpRateLimiter = rateLimit({
 const upload = multer({
   storage: multer.memoryStorage(),
   // Vercel Functions reject request bodies above 4.5 MB before Sharp can compress them.
-  limits: { fileSize: process.env.VERCEL ? 4 * 1024 * 1024 : 20 * 1024 * 1024 }
+  limits: { fileSize: HOSTED ? 4 * 1024 * 1024 : 20 * 1024 * 1024 }
 });
 
 function requireUploadSession(req, res, next) {
-  if (process.env.VERCEL && !process.env.JWT_SECRET) {
+  if (HOSTED && !process.env.JWT_SECRET) {
     return res.status(503).json({ success: false, message: 'Сервер загрузки не настроен: отсутствует JWT_SECRET' });
   }
   const header = req.get('authorization') || '';
@@ -152,18 +155,24 @@ app.post('/api/upload', requireUploadSession, (req, res, next) => {
     const timestamp = Date.now();
     const random = Math.floor(1000 + Math.random() * 9000);
     const filename = `${type}-${timestamp}-${random}.webp`;
-    let image = sharp(req.file.buffer);
-    if (type === 'logo') {
-      image = image.resize({ width: 400, height: 400, fit: 'inside', withoutEnlargement: true });
-    } else if (type === 'hero' || type === 'model') {
-      image = image.resize({ width: 1200, fit: 'inside', withoutEnlargement: true });
-    } else {
-      image = image.resize({ width: 1000, fit: 'inside', withoutEnlargement: true });
+    const supabase = process.env.STORAGE_BACKEND === 'supabase';
+    let output = req.file.buffer;
+    if (!supabase) {
+      let image = sharp(req.file.buffer);
+      if (type === 'logo') {
+        image = image.resize({ width: 400, height: 400, fit: 'inside', withoutEnlargement: true });
+      } else if (type === 'hero' || type === 'model') {
+        image = image.resize({ width: 1200, fit: 'inside', withoutEnlargement: true });
+      } else {
+        image = image.resize({ width: 1000, fit: 'inside', withoutEnlargement: true });
+      }
+      output = await image.webp({ quality: 75, effort: 6 }).toBuffer();
     }
-    const output = await image.webp({ quality: 75, effort: 6 }).toBuffer();
 
     let fileUrl;
-    if (process.env.VERCEL) {
+    if (supabase) {
+      fileUrl = await uploadSupabaseImage(filename, output);
+    } else if (process.env.VERCEL) {
       if (!process.env.BLOB_READ_WRITE_TOKEN) {
         throw new Error('BLOB_READ_WRITE_TOKEN is required for image uploads on Vercel');
       }
@@ -187,7 +196,7 @@ app.post('/api/upload', requireUploadSession, (req, res, next) => {
     });
   } catch (err) {
     console.error('Error processing image in /api/upload:', err);
-    res.status(500).json({ success: false, message: `Ошибка обработки изображения: ${err.message}` });
+    res.status(err.status || 500).json({ success: false, message: `Ошибка обработки изображения: ${err.message}` });
   }
 });
 
@@ -1927,7 +1936,7 @@ app.put('/api/settings', async (req, res) => {
 app.get('/api/admin-users', async (req, res) => {
   const db = await readDB();
   if (!db.adminUsers || db.adminUsers.length === 0) {
-    if (process.env.VERCEL) return res.status(503).json({ message: 'Аккаунты администратора ещё не перенесены' });
+    if (HOSTED) return res.status(503).json({ message: 'Аккаунты администратора ещё не перенесены' });
     db.adminUsers = [
       {
         id: 1,
@@ -2062,7 +2071,7 @@ app.post('/api/admin/login', loginRateLimiter, async (req, res) => {
       }
       const isPassValid = seller.password === reqPassword ||
         (seller.password_hash && bcrypt.compareSync(reqPassword, seller.password_hash)) ||
-        (!process.env.VERCEL && (reqPassword === '1234' || reqPassword === 'supplier123'));
+        (!HOSTED && (reqPassword === '1234' || reqPassword === 'supplier123'));
 
       if (isPassValid) {
         const payload = { sellerId: seller.id, roleKey: 'seller', name: seller.name, code: seller.code };
@@ -2085,7 +2094,7 @@ app.post('/api/admin/login', loginRateLimiter, async (req, res) => {
 
   // 2. Admin / Staff Authentication Flow
   if (
-    !process.env.VERCEL &&
+    !HOSTED &&
     (reqUsername === 'admin' || reqUsername === 'autolider') &&
     (reqPassword === 'admin' || reqPassword === 'admin123' || reqPassword === 'password123' || reqPassword === '1234')
   ) {
@@ -2111,7 +2120,7 @@ app.post('/api/admin/login', loginRateLimiter, async (req, res) => {
     const isPassValid =
       staff.password === reqPassword ||
       (staff.password_hash && bcrypt.compareSync(reqPassword, staff.password_hash)) ||
-      (!process.env.VERCEL && ['admin', 'manager', '1234'].includes(reqPassword));
+      (!HOSTED && ['admin', 'manager', '1234'].includes(reqPassword));
 
     if (isPassValid) {
       return res.json({
@@ -2430,7 +2439,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-if (!process.env.VERCEL) {
+if (!HOSTED) {
   const server = app.listen(PORT, () => {
     console.log(`🚀 Autolider Node.js Express Backend running on http://localhost:${PORT}`);
   });

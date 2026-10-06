@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { neon } from '@neondatabase/serverless';
+import { readSupabaseState, writeSupabaseState } from './supabase-storage.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -85,9 +86,13 @@ function sanitizeDBData(data) {
 }
 
 export async function readDB() {
-  if (process.env.VERCEL) {
-    await initializeRemoteDB();
-    const rows = await databaseClient()`SELECT data, version FROM autolider_state WHERE id = 1`;
+  if (process.env.VERCEL || process.env.STORAGE_BACKEND === 'supabase') {
+    let rows;
+    if (process.env.STORAGE_BACKEND === 'supabase') rows = await readSupabaseState();
+    else {
+      await initializeRemoteDB();
+      rows = await databaseClient()`SELECT data, version FROM autolider_state WHERE id = 1`;
+    }
     if (rows.length !== 1) throw new Error('Persistent catalog data is unavailable');
     const data = sanitizeDBData(rows[0].data);
     versions.set(data, Number(rows[0].version));
@@ -122,18 +127,22 @@ export async function readDB() {
 }
 
 export async function writeDB(data) {
-  if (process.env.VERCEL) {
-    await initializeRemoteDB();
+  if (process.env.VERCEL || process.env.STORAGE_BACKEND === 'supabase') {
     const expectedVersion = versions.get(data);
     if (expectedVersion === undefined) {
       throw new Error('Catalog update requires a fresh read before writing');
     }
-    const rows = await databaseClient()`UPDATE autolider_state
+    let rows;
+    if (process.env.STORAGE_BACKEND === 'supabase') rows = await writeSupabaseState(data, expectedVersion);
+    else {
+      await initializeRemoteDB();
+      rows = await databaseClient()`UPDATE autolider_state
       SET data = ${JSON.stringify(data)}::jsonb,
           version = version + 1,
           updated_at = now()
       WHERE id = 1 AND version = ${expectedVersion}
       RETURNING version`;
+    }
     if (rows.length !== 1) {
       const error = new Error('Данные изменились в другом запросе. Обновите страницу и повторите действие.');
       error.code = 'DB_CONFLICT';

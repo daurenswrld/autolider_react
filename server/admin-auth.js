@@ -5,7 +5,7 @@ const publicGets = /^\/(health|products(?:\/[^/]+)?|brands|foreign-brands|catego
 const publicPosts = new Set(['/orders', '/orders/one-click', '/vin-requests']);
 
 export async function guardAdminApi(req, res, next) {
-  if (process.env.VERCEL && !process.env.JWT_SECRET) {
+  if ((process.env.VERCEL || process.env.STORAGE_BACKEND === 'supabase') && !process.env.JWT_SECRET) {
     return res.status(503).json({ message: 'Сервер не настроен: отсутствует ключ сессии' });
   }
   // Customer routes have their own customer-token / OTP checks.
